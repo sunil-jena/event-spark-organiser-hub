@@ -11,7 +11,7 @@ import {
   Ticket, 
   Users,
   Calendar,
-  PieChart,
+  PieChartIcon, // Renamed to avoid conflict with recharts
   TrendingUp,
   Download
 } from 'lucide-react';
@@ -27,7 +27,7 @@ import {
   Line,
   LineChart,
   Pie,
-  PieChart,
+  PieChart, // This is from recharts
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -46,12 +46,12 @@ const salesData = [
   { name: 'Jul', online: 3490, offline: 4300, total: 7790 },
 ];
 
-// Order statistics data
+// Order statistics data with proper types
 const orderStatsData = [
-  { status: 'completed', count: 358 },
-  { status: 'pending', count: 124 },
-  { status: 'cancelled', count: 23 },
-  { status: 'refunded', count: 15 },
+  { status: 'completed' as const, count: 358 },
+  { status: 'pending' as const, count: 124 },
+  { status: 'cancelled' as const, count: 23 },
+  { status: 'refunded' as const, count: 15 },
 ];
 
 // Audience data for pie chart

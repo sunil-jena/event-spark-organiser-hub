@@ -3,7 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, AlertCircle, Clock } from 'lucide-react';
 
-type OrderStatus = 'completed' | 'pending' | 'cancelled' | 'refunded';
+export type OrderStatus = 'completed' | 'pending' | 'cancelled' | 'refunded';
 
 interface OrderData {
   status: OrderStatus;
