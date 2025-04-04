@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ArrowRight, IndianRupee } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Clock, CheckCircle2, XCircle, AlertCircle, Eye } from 'lucide-react';
 
 export type OrderStatus = 'completed' | 'pending' | 'cancelled' | 'refunded';
 
@@ -21,105 +20,102 @@ export interface Order {
 
 interface RecentOrdersProps {
   orders: Order[];
-  onViewOrder?: (order: Order) => void;
+  onViewOrder: (order: Order) => void;
   className?: string;
+  currency?: string;
 }
 
-export function RecentOrders({
-  orders,
-  onViewOrder,
-  className,
-}: RecentOrdersProps) {
-  const statusConfig = {
-    completed: {
-      label: 'Completed',
-      icon: CheckCircle2,
-      className: 'bg-green-50 text-green-600 border-green-200',
-    },
-    pending: {
-      label: 'Pending',
-      icon: Clock,
-      className: 'bg-amber-50 text-amber-600 border-amber-200',
-    },
-    cancelled: {
-      label: 'Cancelled',
-      icon: XCircle,
-      className: 'bg-red-50 text-red-600 border-red-200',
-    },
-    refunded: {
-      label: 'Refunded',
-      icon: AlertCircle,
-      className: 'bg-blue-50 text-blue-600 border-blue-200',
-    },
+export function RecentOrders({ orders, onViewOrder, className, currency = "₹" }: RecentOrdersProps) {
+  const getOrderStatusClass = (status: OrderStatus) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-amber-100 text-amber-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      case 'refunded':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
     <Card className={cn("", className)}>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
+      <CardHeader>
+        <div className="flex justify-between items-center">
           <div>
             <CardTitle>Recent Orders</CardTitle>
-            <CardDescription>Latest ticket purchases and reservations</CardDescription>
+            <CardDescription>Overview of your latest ticket orders</CardDescription>
           </div>
-          <Button variant="outline" size="sm">View All</Button>
+          <Button variant="outline" className="hidden sm:flex items-center gap-1">
+            View All Orders
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="text-xs text-left text-muted-foreground">
-                <th className="font-medium p-3">Order ID</th>
-                <th className="font-medium p-3">Event</th>
-                <th className="font-medium p-3">Customer</th>
-                <th className="font-medium p-3">Date</th>
-                <th className="font-medium p-3">Amount</th>
-                <th className="font-medium p-3">Tickets</th>
-                <th className="font-medium p-3">Status</th>
-                <th className="font-medium p-3">Type</th>
-                <th className="font-medium p-3 text-right">Action</th>
+              <tr className="border-b text-xs font-medium text-gray-500">
+                <th className="text-left whitespace-nowrap p-2 pb-3">Order ID</th>
+                <th className="text-left whitespace-nowrap p-2 pb-3">Event</th>
+                <th className="text-left whitespace-nowrap p-2 pb-3 hidden sm:table-cell">Customer</th>
+                <th className="text-left whitespace-nowrap p-2 pb-3 hidden md:table-cell">Date</th>
+                <th className="text-right whitespace-nowrap p-2 pb-3">Amount</th>
+                <th className="text-center whitespace-nowrap p-2 pb-3">Status</th>
+                <th className="text-right whitespace-nowrap p-2 pb-3">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => {
-                const StatusIcon = statusConfig[order.status].icon;
-                
-                return (
-                  <tr key={order.id} className="border-b hover:bg-gray-50">
-                    <td className="p-3 text-sm">#{order.id}</td>
-                    <td className="p-3 text-sm font-medium">{order.eventName}</td>
-                    <td className="p-3 text-sm">{order.customer}</td>
-                    <td className="p-3 text-sm text-muted-foreground">{order.date}</td>
-                    <td className="p-3 text-sm font-medium">${order.amount.toLocaleString()}</td>
-                    <td className="p-3 text-sm">{order.tickets}</td>
-                    <td className="p-3 text-sm">
-                      <div className="flex items-center gap-1">
-                        <StatusIcon className="h-3.5 w-3.5" />
-                        <span>{statusConfig[order.status].label}</span>
-                      </div>
-                    </td>
-                    <td className="p-3 text-sm">
-                      <Badge variant={order.isOffline ? "outline" : "default"} className="text-xs">
-                        {order.isOffline ? 'Offline' : 'Online'}
-                      </Badge>
-                    </td>
-                    <td className="p-3 text-right">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="h-8 w-8 p-0" 
-                        onClick={() => onViewOrder?.(order)}
-                      >
-                        <span className="sr-only">View order</span>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {orders.map((order) => (
+                <tr key={order.id} className="border-b hover:bg-gray-50">
+                  <td className="p-2 text-sm">{order.id}</td>
+                  <td className="p-2 text-sm">
+                    <div className="flex items-center">
+                      {order.eventName}
+                      {order.isOffline && (
+                        <span className="ml-2 text-xs bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded-full">Offline</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-2 text-sm hidden sm:table-cell">{order.customer}</td>
+                  <td className="p-2 text-sm text-gray-500 hidden md:table-cell">{order.date}</td>
+                  <td className="p-2 text-sm text-right">
+                    <div className="flex justify-end items-center">
+                      {currency}{order.amount.toLocaleString()}
+                      <span className="text-xs text-gray-500 ml-1">({order.tickets})</span>
+                    </div>
+                  </td>
+                  <td className="p-2">
+                    <div className="flex justify-center">
+                      <span className={cn(
+                        "text-xs px-2 py-1 rounded-full whitespace-nowrap",
+                        getOrderStatusClass(order.status)
+                      )}>
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-2 text-right">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => onViewOrder(order)}
+                    >
+                      View
+                    </Button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+        <Button variant="outline" className="w-full mt-4 sm:hidden">
+          View All Orders
+        </Button>
       </CardContent>
     </Card>
   );

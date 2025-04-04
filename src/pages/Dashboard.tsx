@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { StatsCard } from '@/components/ui/stats-card';
 import { EventCard, Event } from '@/components/ui/event-card';
@@ -16,13 +15,12 @@ import {
   TrendingUp, 
   PlusCircle, 
   ChevronRight,
-  TicketIcon,
-  DollarSign,
+  IndianRupee,
   Badge,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
-// Mock data for the dashboard
 const mockEvents: Event[] = [
   {
     id: '1',
@@ -55,7 +53,6 @@ const mockEvents: Event[] = [
   }
 ];
 
-// Sales data for the chart
 const salesData = [
   { name: 'Jan', online: 4000, offline: 2400, total: 6400 },
   { name: 'Feb', online: 3000, offline: 1398, total: 4398 },
@@ -66,7 +63,6 @@ const salesData = [
   { name: 'Jul', online: 3490, offline: 4300, total: 7790 },
 ];
 
-// Recent orders data
 const recentOrders: Order[] = [
   {
     id: '1001',
@@ -116,7 +112,6 @@ const recentOrders: Order[] = [
   },
 ];
 
-// Order statistics data with proper types
 const orderStatsData = [
   { status: 'completed' as OrderStatus, count: 358 },
   { status: 'pending' as OrderStatus, count: 124 },
@@ -149,9 +144,19 @@ const Dashboard = () => {
     });
   };
 
+  const animationConfig = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <motion.div 
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+        initial="hidden"
+        animate="visible"
+        variants={animationConfig}
+      >
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Welcome back! Here's what's happening with your events.</p>
@@ -160,60 +165,93 @@ const Dashboard = () => {
           <PlusCircle className="h-4 w-4" />
           <span>Create Event</span>
         </Button>
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard 
-          title="Total Revenue" 
-          value="$15,250" 
-          icon={<TrendingUp className="h-8 w-8" />} 
-          trend={{ value: 12.5, isPositive: true }}
-        />
-        <StatsCard 
-          title="Tickets Sold" 
-          value="1,520" 
-          icon={<Ticket className="h-8 w-8" />} 
-          trend={{ value: 8.2, isPositive: true }}
-        />
-        <StatsCard 
-          title="Active Events" 
-          value="5" 
-          icon={<CalendarDays className="h-8 w-8" />} 
-        />
-        <StatsCard 
-          title="Total Attendees" 
-          value="1,250" 
-          icon={<Users className="h-8 w-8" />} 
-          trend={{ value: 3.1, isPositive: false }}
-        />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <StatsCard 
+            title="Total Revenue" 
+            value="₹15,25,000" 
+            icon={<TrendingUp className="h-8 w-8" />} 
+            trend={{ value: 12.5, isPositive: true }}
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <StatsCard 
+            title="Tickets Sold" 
+            value="1,520" 
+            icon={<Ticket className="h-8 w-8" />} 
+            trend={{ value: 8.2, isPositive: true }}
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <StatsCard 
+            title="Active Events" 
+            value="5" 
+            icon={<CalendarDays className="h-8 w-8" />} 
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <StatsCard 
+            title="Total Attendees" 
+            value="1,250" 
+            icon={<Users className="h-8 w-8" />} 
+            trend={{ value: 3.1, isPositive: false }}
+          />
+        </motion.div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SalesChart 
-          data={salesData} 
-          title="Sales Overview"
-          description="Compare online vs offline ticket sales"
+        <motion.div 
           className="lg:col-span-2"
-        />
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <SalesChart 
+            data={salesData} 
+            title="Sales Overview"
+            description="Compare online vs offline ticket sales"
+          />
+        </motion.div>
         
         <div className="space-y-6">
-          <SalesStatistics
-            title="Ticket Sales"
-            totalSales={15250}
-            onlineSales={12450}
-            offlineSales={2800}
-            percentageChange={8.2}
-          />
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <SalesStatistics
+              title="Ticket Sales"
+              totalSales={1525000}
+              onlineSales={1245000}
+              offlineSales={280000}
+              percentageChange={8.2}
+              currency="₹"
+            />
+          </motion.div>
           
-          <OrderStatistics
-            title="Order Status"
-            totalOrders={520}
-            data={orderStatsData}
-          />
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <OrderStatistics
+              title="Order Status"
+              totalOrders={520}
+              data={orderStatsData}
+            />
+          </motion.div>
         </div>
       </div>
 
-      <RecentOrders orders={recentOrders} onViewOrder={handleViewOrder} />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <RecentOrders orders={recentOrders} onViewOrder={handleViewOrder} currency="₹" />
+      </motion.div>
 
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
@@ -224,58 +262,103 @@ const Dashboard = () => {
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockEvents.map((event) => (
-            <EventCard 
-              key={event.id} 
-              event={event} 
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+          {mockEvents.map((event, index) => (
+            <motion.div
+              key={event.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + index * 0.1 }}
+            >
+              <EventCard 
+                event={event} 
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                currency="₹"
+              />
+            </motion.div>
           ))}
         </div>
       </div>
 
-      <Card className="bg-gradient-to-br from-primary/90 to-primary-light/80 text-white mb-8">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <h3 className="text-2xl font-bold mb-2">Manage Your Offline Sales</h3>
-              <p className="text-white/80 mb-4">Track your offline ticket sales and manage them efficiently in one place.</p>
-              <div className="flex gap-3 mt-6">
-                <Button variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white">
-                  Add Offline Orders
-                </Button>
-                <Button variant="default" className="bg-white text-primary hover:bg-white/90">
-                  Learn More
-                </Button>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+      >
+        <Card className="bg-gradient-to-br from-primary/90 to-primary-light/80 text-white mb-8">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <h3 className="text-2xl font-bold mb-2">Manage Your Offline Sales</h3>
+                <p className="text-white/80 mb-4">Track your offline ticket sales and manage them efficiently in one place.</p>
+                <div className="flex gap-3 mt-6">
+                  <Button variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white">
+                    Add Offline Orders
+                  </Button>
+                  <Button variant="default" className="bg-white text-primary hover:bg-white/90">
+                    Learn More
+                  </Button>
+                </div>
+              </div>
+              <div className="hidden md:flex justify-end">
+                <div className="rounded-full bg-white/10 p-6">
+                  <Ticket className="h-16 w-16" />
+                </div>
               </div>
             </div>
-            <div className="hidden md:flex justify-end">
-              <div className="rounded-full bg-white/10 p-6">
-                <TicketIcon className="h-16 w-16" />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center" onClick={() => window.location.href = '/orders'}>
-          <Ticket className="h-8 w-8 mb-2 text-primary" />
-          <span>Manage Orders</span>
-        </Button>
-        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center" onClick={() => window.location.href = '/reports'}>
-          <BarChart3 className="h-8 w-8 mb-2 text-primary" />
-          <span>View Reports</span>
-        </Button>
-        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center" onClick={() => window.location.href = '/payouts'}>
-          <DollarSign className="h-8 w-8 mb-2 text-primary" />
-          <span>Payouts</span>
-        </Button>
-        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center">
-          <Badge className="h-8 w-8 mb-2 text-primary" />
-          <span>Generate Badges</span>
-        </Button>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center w-full" onClick={() => window.location.href = '/orders'}>
+            <Ticket className="h-8 w-8 mb-2 text-primary" />
+            <span>Manage Orders</span>
+          </Button>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.85 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center w-full" onClick={() => window.location.href = '/reports'}>
+            <BarChart3 className="h-8 w-8 mb-2 text-primary" />
+            <span>View Reports</span>
+          </Button>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center w-full" onClick={() => window.location.href = '/payouts'}>
+            <IndianRupee className="h-8 w-8 mb-2 text-primary" />
+            <span>Payouts</span>
+          </Button>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.95 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center w-full">
+            <Badge className="h-8 w-8 mb-2 text-primary" />
+            <span>Generate Badges</span>
+          </Button>
+        </motion.div>
       </div>
     </div>
   );
