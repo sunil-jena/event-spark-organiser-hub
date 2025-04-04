@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BarChart3, CalendarDays, Home, Settings, Users, Ticket, TrendingUp, PieChart, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -65,6 +65,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: SidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate()
 
   const sidebarClasses = cn(
     'flex flex-col h-screen bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',
@@ -77,26 +78,24 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
     <div className={sidebarClasses}>
       <div className="p-4 border-b border-primary-light/20 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <span className="bg-primary-light text-white font-bold rounded-md p-1">ES</span>
-          {!minimized && <h1 className="text-xl font-semibold">EventSpark</h1>}
+          {
+            minimized &&
+            <div className="w-7 h-8 p-1">
+              <img src="/logo/logo1.png" alt="" />
+            </div>
+          }
+          {!minimized && <div className="w-30 h-8 p-0">
+            <img src="/logo/sm_logo.png" alt="" />
+          </div>}
         </div>
-        {!isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleMinimize}
-            className="text-white hover:bg-white/10"
-          >
-            {minimized ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </Button>
-        )}
+
       </div>
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <motion.li 
+              <motion.li
                 key={item.href}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -111,8 +110,8 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
                   onClick={isMobile ? onClose : undefined}
                   title={minimized ? item.title : undefined}
                 >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  {!minimized && <span>{item.title}</span>}
+                  <item.icon className="w-5 h-5" />
+                  {!minimized && <span className='ml-3'>{item.title}</span>}
                 </Link>
               </motion.li>
             );
@@ -123,9 +122,10 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
         <Button
           variant="outline"
           className={cn(
-            "bg-transparent border-white/20 hover:bg-white/10 flex items-center gap-2",
+            "bg-transparent border-white/20 hover:bg-white/10  hover:text-white/90 flex items-center gap-2",
             minimized ? "justify-center w-8 h-8 p-0 mx-auto" : "w-full"
           )}
+          onClick={() => navigate('/login')}
         >
           <LogOut className="w-4 h-4" />
           {!minimized && <span>Logout</span>}

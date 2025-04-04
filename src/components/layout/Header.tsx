@@ -58,12 +58,12 @@ const Header = ({ onMenuClick, minimized, toggleMinimize }: HeaderProps) => {
             <Menu className="h-6 w-6" />
           </Button>
         )}
-        <h1 className="text-xl font-semibold hidden md:block">Event Organizer Hub</h1>
+        {/* <h1 className="text-xl font-semibold hidden md:block">Event Organizer Hub</h1> */}
       </div>
-      
+
       <AnimatePresence>
         {searchOpen ? (
-          <motion.div 
+          <motion.div
             className="absolute left-0 right-0 top-0 bg-white dark:bg-gray-900 z-10 h-16 px-4 flex items-center"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -93,7 +93,7 @@ const Header = ({ onMenuClick, minimized, toggleMinimize }: HeaderProps) => {
           </div>
         )}
       </AnimatePresence>
-      
+
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="relative hidden sm:flex" onClick={toggleCalendar}>
           <Calendar className="h-5 w-5" />
@@ -106,8 +106,8 @@ const Header = ({ onMenuClick, minimized, toggleMinimize }: HeaderProps) => {
           <span className="absolute top-1 right-1 bg-primary w-2 h-2 rounded-full"></span>
         </Button>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="flex items-center gap-2 p-1 rounded-full border border-gray-200"
           >
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">

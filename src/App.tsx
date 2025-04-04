@@ -14,6 +14,9 @@ import Reports from "./pages/Reports";
 import Payouts from "./pages/Payouts";
 import EventDetails from "./pages/EventDetails";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +27,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/events" element={<Events />} />
