@@ -10,6 +10,10 @@ import Events from "./pages/Events";
 import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Orders from "./pages/Orders";
+import Reports from "./pages/Reports";
+import Payouts from "./pages/Payouts";
+import EventDetails from "./pages/EventDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,9 +28,13 @@ const App = () => (
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/events" element={<Events />} />
+            <Route path="/events/:id" element={<EventDetails />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/payouts" element={<Payouts />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

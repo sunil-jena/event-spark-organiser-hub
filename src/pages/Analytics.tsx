@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/ui/stats-card';
 import { SalesChart } from '@/components/ui/sales-chart';
-import { OrderStatistics } from '@/components/ui/order-statistics';
+import { OrderStatistics, OrderStatus } from '@/components/ui/order-statistics';
 import { SalesStatistics } from '@/components/ui/sales-statistics';
 import { 
   BarChart3, 
@@ -48,10 +48,10 @@ const salesData = [
 
 // Order statistics data with proper types
 const orderStatsData = [
-  { status: 'completed' as const, count: 358 },
-  { status: 'pending' as const, count: 124 },
-  { status: 'cancelled' as const, count: 23 },
-  { status: 'refunded' as const, count: 15 },
+  { status: 'completed' as OrderStatus, count: 358 },
+  { status: 'pending' as OrderStatus, count: 124 },
+  { status: 'cancelled' as OrderStatus, count: 23 },
+  { status: 'refunded' as OrderStatus, count: 15 },
 ];
 
 // Audience data for pie chart

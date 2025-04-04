@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SalesChart } from '@/components/ui/sales-chart';
 import { SalesStatistics } from '@/components/ui/sales-statistics';
-import { OrderStatistics } from '@/components/ui/order-statistics';
+import { OrderStatistics, OrderStatus } from '@/components/ui/order-statistics';
 import { RecentOrders, Order } from '@/components/ui/recent-orders';
 import { 
   BarChart3, 
@@ -116,12 +116,12 @@ const recentOrders: Order[] = [
   },
 ];
 
-// Order statistics data
+// Order statistics data with proper types
 const orderStatsData = [
-  { status: 'completed', count: 358 },
-  { status: 'pending', count: 124 },
-  { status: 'cancelled', count: 23 },
-  { status: 'refunded', count: 15 },
+  { status: 'completed' as OrderStatus, count: 358 },
+  { status: 'pending' as OrderStatus, count: 124 },
+  { status: 'cancelled' as OrderStatus, count: 23 },
+  { status: 'refunded' as OrderStatus, count: 15 },
 ];
 
 const Dashboard = () => {
@@ -260,17 +260,17 @@ const Dashboard = () => {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center">
-          <TicketIcon className="h-8 w-8 mb-2 text-primary" />
-          <span>Add Offline Tickets</span>
+        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center" onClick={() => window.location.href = '/orders'}>
+          <Ticket className="h-8 w-8 mb-2 text-primary" />
+          <span>Manage Orders</span>
         </Button>
-        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center">
-          <DollarSign className="h-8 w-8 mb-2 text-primary" />
-          <span>View Revenue</span>
-        </Button>
-        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center">
+        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center" onClick={() => window.location.href = '/reports'}>
           <BarChart3 className="h-8 w-8 mb-2 text-primary" />
-          <span>Analytics</span>
+          <span>View Reports</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center" onClick={() => window.location.href = '/payouts'}>
+          <DollarSign className="h-8 w-8 mb-2 text-primary" />
+          <span>Payouts</span>
         </Button>
         <Button variant="outline" className="h-auto py-6 flex flex-col items-center justify-center">
           <Badge className="h-8 w-8 mb-2 text-primary" />
