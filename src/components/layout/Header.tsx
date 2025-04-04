@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Menu, Bell, Search, User, Calendar, X, IndianRupee } from 'lucide-react';
+import { Menu, Bell, Search, User, Calendar, X, IndianRupee, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
