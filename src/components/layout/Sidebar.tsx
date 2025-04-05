@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -31,6 +30,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NestedNavigation, NavItem } from './NestedNavigation';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface SidebarProps {
   isMobile: boolean;
@@ -262,99 +262,101 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
       )}
 
       {/* Sidebar */}
-      <motion.aside
-        className="fixed top-0 left-0 z-50 h-full border-r border-purple-300"
-        style={sidebarStyle}
-        variants={sidebarVariants}
-        initial={isMobile ? "closed" : "open"}
-        animate={isOpen || !isMobile ? "open" : "closed"}
-      >
-        <div className={`h-full flex flex-col ${minimized ? 'items-center' : ''}`}>
-          {/* Logo */}
-          <div className={`p-4 border-b border-purple-300 flex ${minimized ? 'justify-center' : 'justify-between'} items-center`}>
-            {!minimized ? (
-              <Link to="/" className="flex items-center gap-2">
-                <img src="/logo/white-icon.png" alt="Logo" className="h-8 w-auto" />
-                <span className="font-bold text-lg text-white">TicketBuddy</span>
-              </Link>
-            ) : (
-              <Link to="/" className="flex items-center justify-center">
-                <img src="/logo/white-icon.png" alt="Logo" className="h-8 w-auto" />
-              </Link>
-            )}
-            
-            {!minimized && !isMobile && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleMinimize}
-                className="rounded-full h-8 w-8 hover:bg-purple-400/20 text-white"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+      <TooltipProvider>
+        <motion.aside
+          className="fixed top-0 left-0 z-50 h-full border-r border-purple-300"
+          style={sidebarStyle}
+          variants={sidebarVariants}
+          initial={isMobile ? "closed" : "open"}
+          animate={isOpen || !isMobile ? "open" : "closed"}
+        >
+          <div className={`h-full flex flex-col ${minimized ? 'items-center' : ''}`}>
+            {/* Logo */}
+            <div className={`p-4 border-b border-purple-300 flex ${minimized ? 'justify-center' : 'justify-between'} items-center`}>
+              {!minimized ? (
+                <Link to="/" className="flex items-center gap-2">
+                  <img src="/logo/white-icon.png" alt="Logo" className="h-8 w-auto" />
+                  <span className="font-bold text-lg text-white">TicketBuddy</span>
+                </Link>
+              ) : (
+                <Link to="/" className="flex items-center justify-center">
+                  <img src="/logo/white-icon.png" alt="Logo" className="h-8 w-auto" />
+                </Link>
+              )}
+              
+              {!minimized && !isMobile && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleMinimize}
+                  className="rounded-full h-8 w-8 hover:bg-purple-400/20 text-white"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
 
-          {/* Nav sections */}
-          <div className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar">
-            <nav className="space-y-6">
-              <div>
-                {!minimized && <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Main</h2>}
-                <NestedNavigation items={mainNavItems} minimized={minimized} className="text-white" />
-              </div>
-
-              <div>
-                {!minimized && <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Support</h2>}
-                <NestedNavigation items={secondaryNavItems} minimized={minimized} className="text-white" />
-              </div>
-            </nav>
-          </div>
-
-          {/* User profile section */}
-          <div className={`p-4 border-t border-purple-300 mt-auto ${minimized ? 'text-center' : ''}`}>
-            {!minimized ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center mr-2">
-                    <span className="text-sm font-medium text-purple-700">AR</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white">Ankit Raj</p>
-                    <p className="text-xs text-white/70">admin@ticketbuddy.com</p>
-                  </div>
+            {/* Nav sections */}
+            <div className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar">
+              <nav className="space-y-6">
+                <div>
+                  {!minimized && <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Main</h2>}
+                  <NestedNavigation items={mainNavItems} minimized={minimized} className="text-white" />
                 </div>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-purple-400/20" asChild>
-                  <Link to="/logout">
-                    <LogOut className="h-4 w-4" />
+
+                <div>
+                  {!minimized && <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Support</h2>}
+                  <NestedNavigation items={secondaryNavItems} minimized={minimized} className="text-white" />
+                </div>
+              </nav>
+            </div>
+
+            {/* User profile section */}
+            <div className={`p-4 border-t border-purple-300 mt-auto ${minimized ? 'text-center' : ''}`}>
+              {!minimized ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center mr-2">
+                      <span className="text-sm font-medium text-purple-700">AR</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">Ankit Raj</p>
+                      <p className="text-xs text-white/70">admin@ticketbuddy.com</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-purple-400/20" asChild>
+                    <Link to="/logout">
+                      <LogOut className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-purple-400/20" asChild>
+                  <Link to="/profile">
+                    <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center">
+                      <span className="text-sm font-medium text-purple-700">AR</span>
+                    </div>
                   </Link>
                 </Button>
+              )}
+            </div>
+            
+            {/* Minimize/Expand button for non-mobile */}
+            {!isMobile && minimized && (
+              <div className="p-4 flex justify-center">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={toggleMinimize}
+                  className="rounded-full h-8 w-8 border-white text-white hover:bg-purple-400/20"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-            ) : (
-              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-purple-400/20" asChild>
-                <Link to="/profile">
-                  <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center">
-                    <span className="text-sm font-medium text-purple-700">AR</span>
-                  </div>
-                </Link>
-              </Button>
             )}
           </div>
-          
-          {/* Minimize/Expand button for non-mobile */}
-          {!isMobile && minimized && (
-            <div className="p-4 flex justify-center">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={toggleMinimize}
-                className="rounded-full h-8 w-8 border-white text-white hover:bg-purple-400/20"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </motion.aside>
+        </motion.aside>
+      </TooltipProvider>
     </>
   );
 };
