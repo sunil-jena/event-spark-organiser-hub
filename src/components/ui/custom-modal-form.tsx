@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Dialog, 
@@ -58,7 +59,7 @@ export interface CustomModalFormProps {
   onSubmit: (data: Record<string, any>) => void | Promise<void>;
   submitText?: string;
   cancelText?: string;
-  isOpen: boolean; // Change from 'open' to 'isOpen' to match what components expect
+  isOpen: boolean; // Using isOpen instead of open
   onOpenChange: (open: boolean) => void;
   width?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 }
@@ -70,13 +71,26 @@ export function CustomModalForm({
   onSubmit,
   submitText = 'Submit',
   cancelText = 'Cancel',
-  isOpen, // Changed from 'open'
+  isOpen,
   onOpenChange,
   width = 'md',
 }: CustomModalFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit?.(e);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const formValues: Record<string, any> = {};
+    
+    fields.forEach(field => {
+      if (field.type === 'switch') {
+        formValues[field.id] = formData.get(field.id) === 'on';
+      } else if (field.type === 'file') {
+        formValues[field.id] = formData.get(field.id);
+      } else {
+        formValues[field.id] = formData.get(field.id);
+      }
+    });
+    
+    onSubmit(formValues);
   };
 
   const getMaxWidthClass = () => {
@@ -108,6 +122,7 @@ export function CustomModalForm({
                   <Input
                     type="text"
                     id={field.id}
+                    name={field.id}
                     placeholder={field.placeholder}
                     required={field.required}
                     defaultValue={field.defaultValue}
@@ -116,6 +131,7 @@ export function CustomModalForm({
                 {field.type === 'textarea' && (
                   <Textarea
                     id={field.id}
+                    name={field.id}
                     placeholder={field.placeholder}
                     required={field.required}
                     defaultValue={field.defaultValue}
@@ -125,6 +141,7 @@ export function CustomModalForm({
                   <Input
                     type="number"
                     id={field.id}
+                    name={field.id}
                     placeholder={field.placeholder}
                     required={field.required}
                     defaultValue={field.defaultValue}
@@ -134,6 +151,7 @@ export function CustomModalForm({
                   <Input
                     type="email"
                     id={field.id}
+                    name={field.id}
                     placeholder={field.placeholder}
                     required={field.required}
                     defaultValue={field.defaultValue}
@@ -143,13 +161,14 @@ export function CustomModalForm({
                   <Input
                     type="password"
                     id={field.id}
+                    name={field.id}
                     placeholder={field.placeholder}
                     required={field.required}
                     defaultValue={field.defaultValue}
                   />
                 )}
                 {field.type === 'select' && field.options && (
-                  <Select defaultValue={field.defaultValue}>
+                  <Select defaultValue={field.defaultValue} name={field.id}>
                     <SelectTrigger id={field.id}>
                       <SelectValue placeholder={field.placeholder || field.label} />
                     </SelectTrigger>
@@ -164,7 +183,7 @@ export function CustomModalForm({
                 )}
                 {field.type === 'switch' && (
                   <div className="flex items-center space-x-2">
-                    <Switch id={field.id} defaultChecked={field.defaultValue} />
+                    <Switch id={field.id} name={field.id} defaultChecked={field.defaultValue} />
                     <Label htmlFor={field.id}>{field.label}</Label>
                   </div>
                 )}
@@ -172,9 +191,22 @@ export function CustomModalForm({
                   <Input
                     type="file"
                     id={field.id}
+                    name={field.id}
                     accept={field.accept}
                     required={field.required}
                   />
+                )}
+                {field.type === 'checkbox' && (
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="checkbox"
+                      id={field.id}
+                      name={field.id}
+                      className="h-4 w-4"
+                      defaultChecked={field.defaultValue}
+                    />
+                    <Label htmlFor={field.id}>{field.label}</Label>
+                  </div>
                 )}
                 {field.helperText && (
                   <p className="text-sm text-muted-foreground">{field.helperText}</p>
@@ -189,7 +221,7 @@ export function CustomModalForm({
                 {cancelText}
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={false}>
+            <Button type="submit">
               {submitText}
             </Button>
           </DialogFooter>

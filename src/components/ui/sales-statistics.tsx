@@ -1,21 +1,35 @@
+
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
-// Update SalesStatisticsProps to accept the data format being passed
 export interface SalesStatisticsProps {
-  // Either accept the original data format with online/offline/total
-  // or add a more flexible format for different chart types
   data: Array<{
     name: string;
     value?: number;
     online?: number;
     offline?: number;
     total?: number;
+    sales?: number;
   }>;
   type: 'pie' | 'bar' | 'line';
+  title?: string;
+  totalSales?: number;
+  onlineSales?: number;
+  offlineSales?: number;
+  percentageChange?: number;
+  currency?: string;
 }
 
-export function SalesStatistics({ data, type }: SalesStatisticsProps) {
+export function SalesStatistics({ 
+  data, 
+  type, 
+  title, 
+  totalSales, 
+  onlineSales, 
+  offlineSales, 
+  percentageChange, 
+  currency 
+}: SalesStatisticsProps) {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#9c6ade'];
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {

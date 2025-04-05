@@ -43,10 +43,32 @@ import {
 import { motion } from 'framer-motion';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { DataPagination } from '@/components/ui/data-pagination';
-import { AdvancedSearch, Filter as SearchFilter } from '@/components/ui/advanced-search';
-import { FilterDropdown, FilterGroup as FilterGroupComponent } from '@/components/ui/filter-dropdown';
+import { AdvancedSearch, Filter } from '@/components/ui/advanced-search';
+import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 
 interface Transaction {
   id: string;
@@ -60,9 +82,10 @@ interface Transaction {
 
 interface SalesData {
   name: string;
-  online: number;
-  offline: number;
-  total: number;
+  online?: number;
+  offline?: number;
+  total?: number;
+  value?: number;
 }
 
 const Sales = () => {
@@ -72,7 +95,7 @@ const Sales = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [activeTab, setActiveTab] = useState('overview');
-  const [activeFilters, setActiveFilters] = useState<SearchFilter[]>([]);
+  const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const [importModalOpen, setImportModalOpen] = useState(false);
 
   const transactions: Transaction[] = [
@@ -188,11 +211,11 @@ const Sales = () => {
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = 
-      (typeof transaction.customer === 'string' && typeof searchQuery === 'string' && 
+      (typeof transaction.customer === 'string' && 
         transaction.customer.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (typeof transaction.id === 'string' && typeof searchQuery === 'string' && 
+      (typeof transaction.id === 'string' && 
         transaction.id.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (typeof transaction.eventName === 'string' && typeof searchQuery === 'string' && 
+      (typeof transaction.eventName === 'string' && 
         transaction.eventName.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesFilters = activeFilters.every(filter => {
@@ -265,14 +288,14 @@ const Sales = () => {
     { name: 'Apr 5', online: 3800, offline: 795, total: 4595 },
   ];
 
-  const paymentMethodsData = [
+  const paymentMethodsData: SalesData[] = [
     { name: 'Credit Card', value: 14791 },
     { name: 'UPI', value: 9993 },
     { name: 'NetBanking', value: 5495 },
     { name: 'Debit Card', value: 1499 },
   ];
 
-  const eventSalesData = [
+  const eventSalesData: SalesData[] = [
     { name: 'Summer Music Festival', value: 8997 },
     { name: 'Tech Conference 2025', value: 5996 },
     { name: 'Food & Wine Expo', value: 4298 },
@@ -322,7 +345,7 @@ const Sales = () => {
     setCurrentPage(1);
   };
 
-  const handleSearch = (query: string, filters: SearchFilter[]) => {
+  const handleSearch = (query: string, filters: Filter[]) => {
     setSearchQuery(query);
     setActiveFilters(filters);
     setCurrentPage(1);
@@ -332,7 +355,7 @@ const Sales = () => {
     {
       id: 'file',
       label: 'Upload File',
-      type: 'file' as const,
+      type: 'file',
       accept: '.csv, .xlsx',
       required: true,
     },
@@ -361,12 +384,12 @@ const Sales = () => {
     {
       id: 'skipHeaders',
       label: 'Skip Header Row',
-      type: 'switch' as const,
+      type: 'switch',
       defaultValue: true,
     },
   ];
 
-  const handleImportSubmit = async (data: Record<string, any>) => {
+  const handleImportSubmit = async (data: Record<string, any>): Promise<void> => {
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     toast({
@@ -525,7 +548,7 @@ const Sales = () => {
                 <CardDescription>Daily sales for the selected period</CardDescription>
               </CardHeader>
               <CardContent>
-                <SalesChart data={dailySales} />
+                <SalesChart data={dailySales} title="Sales Data" />
               </CardContent>
             </Card>
             <Card>
@@ -581,6 +604,11 @@ const Sales = () => {
                       <TableCell className="text-right">3</TableCell>
                     </TableRow>
                     <TableRow>
+                      <TableCell className="font-medium">Tech Workshop</TableCell>
+                      <TableCell>₹998</TableCell>
+                      <TableCell className="text-right">3</TableCell>
+                    </TableRow>
+                    <TableRow>
                       <TableCell className="font-medium">Art Exhibition</TableCell>
                       <TableCell>₹2,697</TableCell>
                       <TableCell className="text-right">3</TableCell>
@@ -617,14 +645,6 @@ const Sales = () => {
                   <AdvancedSearch 
                     onSearch={handleSearch} 
                     placeholder="Search transactions..." 
-                    fields={[
-                      { name: 'customer', label: 'Customer' },
-                      { name: 'id', label: 'Transaction ID' },
-                      { name: 'eventName', label: 'Event' },
-                      { name: 'amount', label: 'Amount', type: 'number' },
-                      { name: 'status', label: 'Status' },
-                      { name: 'paymentMethod', label: 'Payment Method' }
-                    ]}
                   />
                 </div>
                 <div className="flex gap-2 flex-wrap">
@@ -634,7 +654,7 @@ const Sales = () => {
                       triggerText={filterGroup.name}
                       icon={<FilterIcon className="h-4 w-4" />}
                     >
-                      <FilterGroupComponent>
+                      <FilterGroup>
                         {filterGroup.options.map((option) => {
                           const field = filterGroup.name === 'Event' ? 'eventName' : 
                                         filterGroup.name === 'Status' ? 'status' : 'paymentMethod';
@@ -658,7 +678,7 @@ const Sales = () => {
                             </div>
                           );
                         })}
-                      </FilterGroupComponent>
+                      </FilterGroup>
                     </FilterDropdown>
                   ))}
                   

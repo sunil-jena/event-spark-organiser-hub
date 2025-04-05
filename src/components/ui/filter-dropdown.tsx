@@ -1,3 +1,4 @@
+
 import React, { ReactNode, useState } from 'react';
 import { 
   Popover, 
@@ -45,7 +46,7 @@ export function FilterDropdown({
   onFilterChange,
 }: FilterDropdownProps) {
   const [open, setOpen] = useState(false);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<Record<string, string[]>>({});
 
   const handleFilterChange = (groupName: string, value: string, checked: boolean) => {
     setFilters(prevFilters => {
@@ -70,13 +71,7 @@ export function FilterDropdown({
 
   const applyFilters = () => {
     if (onFilterChange) {
-      const filterValues = {};
-      for (const groupName in filters) {
-        if (filters.hasOwnProperty(groupName)) {
-          filterValues[groupName] = filters[groupName];
-        }
-      }
-      onFilterChange(filterValues);
+      onFilterChange(filters);
     }
     setOpen(false);
   };
@@ -99,7 +94,7 @@ export function FilterDropdown({
                 <div key={optionIndex} className="space-x-2">
                   <Checkbox
                     id={option.value}
-                    onCheckedChange={(checked) => handleFilterChange(group.name, option.value, checked)}
+                    onCheckedChange={(checked) => handleFilterChange(group.name, option.value, checked === true)}
                     defaultChecked={filters[group.name]?.includes(option.value)}
                   />
                   <Label htmlFor={option.value}>{option.label}</Label>

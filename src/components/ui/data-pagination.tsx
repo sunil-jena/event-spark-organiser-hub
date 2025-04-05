@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Pagination,
@@ -10,12 +11,10 @@ import {
 } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
 
-// Update DataPaginationProps to not require totalPages since it's calculated internally
 export interface DataPaginationProps {
   currentPage: number;
-  // totalPages is removed as it should be calculated from totalItems and pageSize
   totalItems: number;
-  pageSize: number; // renamed from itemsPerPage to be consistent
+  pageSize: number;
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   showPageSizeSelector?: boolean;
@@ -87,22 +86,27 @@ export function DataPagination({
         )}
         <Pagination>
           <PaginationContent>
-            <PaginationPrevious
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                handlePageChange(currentPage - 1);
-              }}
-              disabled={currentPage === 1}
-            />
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage - 1);
+                }}
+                aria-disabled={currentPage === 1}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
             {getPageNumbers().map((page, i) =>
               page === '...' ? (
-                <PaginationEllipsis key={`ellipsis-${i}`} />
+                <PaginationItem key={`ellipsis-${i}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
               ) : (
                 <PaginationItem key={page}>
                   <PaginationLink
                     href="#"
-                    isCurrent={currentPage === page}
+                    isActive={currentPage === page}
                     onClick={(e) => {
                       e.preventDefault();
                       handlePageChange(page as number);
@@ -113,14 +117,17 @@ export function DataPagination({
                 </PaginationItem>
               )
             )}
-            <PaginationNext
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                handlePageChange(currentPage + 1);
-              }}
-              disabled={currentPage === totalPages}
-            />
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage + 1);
+                }}
+                aria-disabled={currentPage === totalPages}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
           </PaginationContent>
         </Pagination>
       </div>
