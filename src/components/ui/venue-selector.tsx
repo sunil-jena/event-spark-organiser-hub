@@ -5,6 +5,24 @@ import { Label } from './label';
 import { Button } from './button';
 import { MapPin, Search } from 'lucide-react';
 
+// Add Google Maps types declaration
+declare global {
+  interface Window {
+    google: {
+      maps: {
+        Map: any;
+        places: {
+          AutocompleteService: any;
+          PlacesService: any;
+          PlacesServiceStatus: {
+            OK: string;
+          };
+        }
+      }
+    }
+  }
+}
+
 interface VenueSelectorProps {
   onSelectVenue: (venue: {
     name: string;
@@ -21,23 +39,23 @@ interface VenueSelectorProps {
 
 export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProps) {
   const [searchQuery, setSearchQuery] = useState(defaultValue || '');
-  const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [predictions, setPredictions] = useState<any[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesService = useRef<google.maps.places.PlacesService | null>(null);
+  const autocompleteService = useRef<any>(null);
+  const placesService = useRef<any>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (window.google && window.google.maps) {
-      autocompleteService.current = new google.maps.places.AutocompleteService();
+      autocompleteService.current = new window.google.maps.places.AutocompleteService();
       
       // Create a dummy div for PlacesService (required by the API)
       if (mapRef.current) {
-        const map = new google.maps.Map(mapRef.current, {
+        const map = new window.google.maps.Map(mapRef.current, {
           center: { lat: 0, lng: 0 },
           zoom: 1
         });
-        placesService.current = new google.maps.places.PlacesService(map);
+        placesService.current = new window.google.maps.places.PlacesService(map);
       }
     }
   }, []);
@@ -55,8 +73,8 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
 
     autocompleteService.current.getPlacePredictions(
       request,
-      (predictions, status) => {
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+      (predictions: any, status: string) => {
+        if (status !== window.google.maps.places.PlacesServiceStatus.OK || !predictions) {
           setPredictions([]);
           return;
         }
@@ -74,15 +92,15 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
       fields: ['name', 'formatted_address', 'address_components', 'geometry']
     };
 
-    placesService.current.getDetails(request, (place, status) => {
-      if (status !== google.maps.places.PlacesServiceStatus.OK || !place) return;
+    placesService.current.getDetails(request, (place: any, status: string) => {
+      if (status !== window.google.maps.places.PlacesServiceStatus.OK || !place) return;
 
       let city = '';
       let state = '';
       let country = '';
       let postalCode = '';
 
-      place.address_components?.forEach(component => {
+      place.address_components?.forEach((component: any) => {
         if (component.types.includes('locality')) {
           city = component.long_name;
         } else if (component.types.includes('administrative_area_level_1')) {
