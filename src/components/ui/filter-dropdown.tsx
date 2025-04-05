@@ -1,158 +1,101 @@
 
-import React, { useState } from 'react';
-import { Check, ChevronDown, Filter } from 'lucide-react';
+import React from 'react';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from './button';
-import { Badge } from './badge';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export interface FilterOption {
-  id: string;
-  label: string;
-  colorClass?: string;
+export interface FilterDropdownProps {
+  triggerText: string;
   icon?: React.ReactNode;
-}
-
-export interface FilterGroup {
-  id: string;
-  label: string;
-  options: FilterOption[];
-  multiSelect?: boolean;
-}
-
-interface FilterDropdownProps {
-  trigger?: React.ReactNode;
-  groups: FilterGroup[];
-  onFilterChange: (selectedFilters: Record<string, string | string[]>) => void;
-  initialFilters?: Record<string, string | string[]>;
-  align?: 'start' | 'end' | 'center';
   className?: string;
-  triggerClassName?: string;
+  align?: 'start' | 'center' | 'end';
+  sideOffset?: number;
+  children?: React.ReactNode;
 }
+
+export interface FilterGroupProps {
+  title?: string;
+  children?: React.ReactNode;
+}
+
+export const FilterGroup: React.FC<FilterGroupProps> = ({ title, children }) => {
+  return (
+    <div className="space-y-2">
+      {title && <div className="text-sm font-medium">{title}</div>}
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+};
 
 export const FilterDropdown: React.FC<FilterDropdownProps> = ({
-  trigger,
-  groups,
-  onFilterChange,
-  initialFilters = {},
+  triggerText,
+  icon,
+  className,
   align = 'end',
-  className = '',
-  triggerClassName = ''
+  sideOffset = 4,
+  children,
 }) => {
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, string | string[]>>(initialFilters);
-  const [open, setOpen] = useState(false);
-
-  const handleSelect = (
-    groupId: string, 
-    optionId: string, 
-    multiSelect: boolean = false
-  ) => {
-    setSelectedFilters(prev => {
-      const newFilters = { ...prev };
-      
-      if (multiSelect) {
-        const currentValues = Array.isArray(prev[groupId]) 
-          ? [...prev[groupId] as string[]] 
-          : [];
-        
-        if (currentValues.includes(optionId)) {
-          const newValues = currentValues.filter(val => val !== optionId);
-          newFilters[groupId] = newValues.length > 0 ? newValues : undefined;
-          if (newValues.length === 0) {
-            delete newFilters[groupId];
-          }
-        } else {
-          newFilters[groupId] = [...currentValues, optionId];
-        }
-      } else {
-        if (prev[groupId] === optionId) {
-          delete newFilters[groupId];
-        } else {
-          newFilters[groupId] = optionId;
-        }
-      }
-      
-      onFilterChange(newFilters);
-      return newFilters;
-    });
-  };
-
-  const countSelectedFilters = () => {
-    return Object.keys(selectedFilters).length;
-  };
-
-  const isSelected = (groupId: string, optionId: string) => {
-    const value = selectedFilters[groupId];
-    
-    if (Array.isArray(value)) {
-      return value.includes(optionId);
-    }
-    
-    return value === optionId;
-  };
-
-  const defaultTrigger = (
-    <Button 
-      variant="outline" 
-      className={cn("flex items-center gap-2", triggerClassName)}
-    >
-      <Filter className="h-4 w-4" />
-      <span>Filter</span>
-      {countSelectedFilters() > 0 && (
-        <Badge variant="secondary" className="ml-1">
-          {countSelectedFilters()}
-        </Badge>
-      )}
-    </Button>
-  );
+  const [open, setOpen] = React.useState(false);
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        {trigger || defaultTrigger}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align={align} className={cn("w-56", className)}>
-        {groups.map(group => (
-          <React.Fragment key={group.id}>
-            <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              {group.options.map(option => {
-                const selected = isSelected(group.id, option.id);
-                
-                return (
-                  <DropdownMenuItem
-                    key={option.id}
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleSelect(group.id, option.id, group.multiSelect);
-                    }}
-                    className={cn(
-                      "flex items-center gap-2 cursor-pointer",
-                      selected && "bg-accent"
-                    )}
-                  >
-                    {option.icon}
-                    {option.colorClass && (
-                      <span className={cn("h-2 w-2 rounded-full", option.colorClass)} />
-                    )}
-                    <span>{option.label}</span>
-                    {selected && <Check className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuGroup>
-          </React.Fragment>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn('justify-between', className)}
+        >
+          {icon && <span className="mr-1">{icon}</span>}
+          {triggerText}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 min-w-48" align={align} sideOffset={sideOffset}>
+        <div className="p-2 space-y-4 max-h-[300px] overflow-auto">
+          {children}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+export interface FilterItemProps {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  label: string;
+  value: string;
+}
+
+export const FilterItem: React.FC<FilterItemProps> = ({
+  checked,
+  onCheckedChange,
+  label,
+  value,
+}) => {
+  return (
+    <div className="flex items-center space-x-2">
+      <div
+        className={cn(
+          'h-4 w-4 rounded border flex items-center justify-center',
+          checked ? 'bg-primary border-primary' : 'border-input'
+        )}
+        onClick={() => onCheckedChange(!checked)}
+      >
+        {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+      </div>
+      <label
+        htmlFor={`filter-${value}`}
+        className="text-sm cursor-pointer"
+        onClick={() => onCheckedChange(!checked)}
+      >
+        {label}
+      </label>
+    </div>
   );
 };
