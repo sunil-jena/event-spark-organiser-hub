@@ -59,9 +59,10 @@ export interface CustomModalFormProps {
   onSubmit: (data: Record<string, any>) => void | Promise<void>;
   submitText?: string;
   cancelText?: string;
-  isOpen: boolean; // Using isOpen instead of open
+  isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   width?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  children?: React.ReactNode;
 }
 
 export function CustomModalForm({
@@ -74,6 +75,7 @@ export function CustomModalForm({
   isOpen,
   onOpenChange,
   width = 'md',
+  children,
 }: CustomModalFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +116,8 @@ export function CustomModalForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
+          {children}
+          
           <div className="py-4">
             {fields.map((field) => (
               <div key={field.id} className="grid gap-2 mb-4">

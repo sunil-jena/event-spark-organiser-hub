@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -14,26 +14,30 @@ import {
   Printer,
   FileText,
   ArrowRight,
+  ArrowUpRight,
+  ArrowDownRight,
+  DollarSign,
+  Users,
+  Calendar as CalendarIcon,
   Search,
   Plus,
   MoreHorizontal,
   RefreshCw,
+  PackageCheck,
+  Truck,
+  MapPin,
+  User,
+  ShoppingCart,
+  LucideIcon,
+  Package,
+  Receipt,
+  ChevronsUpDown,
+  Copy,
   Mail,
   Phone,
-  User,
-  Users,
-  Calendar as CalendarIcon,
-  IdCard,
-  CreditCard,
-  MapPin,
-  Badge as BadgeIcon,
-  Package,
-  Wallet,
-  TrendingUp,
-  TrendingDown,
-  BarChart,
-  PieChart,
-  BarChart2,
+  Map,
+  Edit,
+  X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -44,21 +48,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { motion } from 'framer-motion';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { DataPagination } from '@/components/ui/data-pagination';
 import { AdvancedSearch, Filter } from '@/components/ui/advanced-search';
 import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Customer {
   id: string;
@@ -66,219 +81,180 @@ interface Customer {
   email: string;
   phone: string;
   address: string;
-  city: string;
-  country: string;
-  registrationDate: string;
-  lastOrderDate: string;
-  totalOrders: number;
+  joinDate: string;
+  lastActive: string;
   totalSpent: number;
-  paymentMethod: string;
-  loyaltyPoints: number;
-  membershipTier: 'bronze' | 'silver' | 'gold';
+  ordersCount: number;
+  status: 'active' | 'inactive' | 'new';
+  tags: string[];
 }
 
 const Customers = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState('7d');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-  const customersData: Customer[] = [
+  const customers: Customer[] = [
     {
-      id: 'CUST-1001',
-      name: 'Rajesh Kumar',
-      email: 'rajesh.kumar@example.com',
+      id: 'CUST-1122',
+      name: 'Raj Patel',
+      email: 'raj.patel@example.com',
       phone: '9876543210',
-      address: '123, Main Street',
-      city: 'Mumbai',
-      country: 'India',
-      registrationDate: '2024-01-15',
-      lastOrderDate: '2024-04-01',
-      totalOrders: 15,
-      totalSpent: 4500,
-      paymentMethod: 'Credit Card',
-      loyaltyPoints: 450,
-      membershipTier: 'silver',
+      address: '123, Main Street, Mumbai',
+      joinDate: '2023-01-15',
+      lastActive: '2023-04-01',
+      totalSpent: 12500,
+      ordersCount: 5,
+      status: 'active',
+      tags: ['vip', 'regular'],
     },
     {
-      id: 'CUST-1002',
+      id: 'CUST-1123',
       name: 'Priya Sharma',
       email: 'priya.sharma@example.com',
       phone: '8765432109',
-      address: '456, Park Avenue',
-      city: 'Delhi',
-      country: 'India',
-      registrationDate: '2024-02-20',
-      lastOrderDate: '2024-04-05',
-      totalOrders: 8,
-      totalSpent: 2200,
-      paymentMethod: 'UPI',
-      loyaltyPoints: 220,
-      membershipTier: 'bronze',
+      address: '456, Linking Road, Bandra',
+      joinDate: '2023-02-20',
+      lastActive: '2023-04-02',
+      totalSpent: 8750,
+      ordersCount: 3,
+      status: 'active',
+      tags: ['regular'],
     },
     {
-      id: 'CUST-1003',
-      name: 'Amit Patel',
-      email: 'amit.patel@example.com',
+      id: 'CUST-1124',
+      name: 'Anil Kumar',
+      email: 'anil.kumar@example.com',
       phone: '7654321098',
-      address: '789, MG Road',
-      city: 'Bangalore',
-      country: 'India',
-      registrationDate: '2024-03-10',
-      lastOrderDate: '2024-04-10',
-      totalOrders: 20,
-      totalSpent: 6000,
-      paymentMethod: 'NetBanking',
-      loyaltyPoints: 600,
-      membershipTier: 'gold',
+      address: '789, MG Road, Bangalore',
+      joinDate: '2023-03-10',
+      lastActive: '2023-03-25',
+      totalSpent: 5000,
+      ordersCount: 2,
+      status: 'inactive',
+      tags: [],
     },
     {
-      id: 'CUST-1004',
-      name: 'Anjali Reddy',
-      email: 'anjali.reddy@example.com',
+      id: 'CUST-1125',
+      name: 'Sunita Reddy',
+      email: 'sunita.reddy@example.com',
       phone: '6543210987',
-      address: '101, Church Street',
-      city: 'Chennai',
-      country: 'India',
-      registrationDate: '2024-04-01',
-      lastOrderDate: '2024-04-15',
-      totalOrders: 5,
-      totalSpent: 1500,
-      paymentMethod: 'Debit Card',
-      loyaltyPoints: 150,
-      membershipTier: 'bronze',
+      address: '101, Brigade Road, Bangalore',
+      joinDate: '2023-03-15',
+      lastActive: '2023-04-03',
+      totalSpent: 15000,
+      ordersCount: 4,
+      status: 'active',
+      tags: ['vip'],
     },
     {
-      id: 'CUST-1005',
+      id: 'CUST-1126',
       name: 'Vikram Singh',
       email: 'vikram.singh@example.com',
       phone: '5432109876',
-      address: '222, Linking Road',
-      city: 'Mumbai',
-      country: 'India',
-      registrationDate: '2023-12-25',
-      lastOrderDate: '2024-04-20',
-      totalOrders: 12,
-      totalSpent: 3800,
-      paymentMethod: 'Credit Card',
-      loyaltyPoints: 380,
-      membershipTier: 'silver',
+      address: '222, Park Street, Kolkata',
+      joinDate: '2023-01-05',
+      lastActive: '2023-02-15',
+      totalSpent: 3500,
+      ordersCount: 1,
+      status: 'inactive',
+      tags: [],
     },
     {
-      id: 'CUST-1006',
-      name: 'Deepika Menon',
-      email: 'deepika.menon@example.com',
+      id: 'CUST-1127',
+      name: 'Neha Verma',
+      email: 'neha.verma@example.com',
       phone: '4321098765',
-      address: '333, Brigade Road',
-      city: 'Bangalore',
-      country: 'India',
-      registrationDate: '2024-01-01',
-      lastOrderDate: '2024-04-25',
-      totalOrders: 18,
-      totalSpent: 5200,
-      paymentMethod: 'UPI',
-      loyaltyPoints: 520,
-      membershipTier: 'gold',
+      address: '333, Camac Street, Kolkata',
+      joinDate: '2023-03-25',
+      lastActive: '2023-04-04',
+      totalSpent: 7500,
+      ordersCount: 2,
+      status: 'active',
+      tags: ['regular'],
     },
     {
-      id: 'CUST-1007',
-      name: 'Karthik Iyer',
-      email: 'karthik.iyer@example.com',
+      id: 'CUST-1128',
+      name: 'Rahul Gupta',
+      email: 'rahul.gupta@example.com',
       phone: '3210987654',
-      address: '444, Anna Salai',
-      city: 'Chennai',
-      country: 'India',
-      registrationDate: '2024-02-10',
-      lastOrderDate: '2024-04-30',
-      totalOrders: 7,
+      address: '444, Central Avenue, Chennai',
+      joinDate: '2023-04-01',
+      lastActive: '2023-04-05',
       totalSpent: 2000,
-      paymentMethod: 'NetBanking',
-      loyaltyPoints: 200,
-      membershipTier: 'bronze',
+      ordersCount: 1,
+      status: 'new',
+      tags: [],
     },
     {
-      id: 'CUST-1008',
-      name: 'Sneha Reddy',
-      email: 'sneha.reddy@example.com',
+      id: 'CUST-1129',
+      name: 'Anjali Das',
+      email: 'anjali.das@example.com',
       phone: '2109876543',
-      address: '555, Banjara Hills',
-      city: 'Hyderabad',
-      country: 'India',
-      registrationDate: '2024-03-01',
-      lastOrderDate: '2024-05-05',
-      totalOrders: 14,
-      totalSpent: 4200,
-      paymentMethod: 'Debit Card',
-      loyaltyPoints: 420,
-      membershipTier: 'silver',
+      address: '555, Mount Road, Chennai',
+      joinDate: '2023-04-02',
+      lastActive: '2023-04-05',
+      totalSpent: 1500,
+      ordersCount: 1,
+      status: 'new',
+      tags: [],
     },
     {
-      id: 'CUST-1009',
-      name: 'Gaurav Sharma',
-      email: 'gaurav.sharma@example.com',
+      id: 'CUST-1130',
+      name: 'Sanjay Joshi',
+      email: 'sanjay.joshi@example.com',
       phone: '1098765432',
-      address: '666, Park Street',
-      city: 'Kolkata',
-      country: 'India',
-      registrationDate: '2023-12-15',
-      lastOrderDate: '2024-05-10',
-      totalOrders: 22,
-      totalSpent: 6500,
-      paymentMethod: 'Credit Card',
-      loyaltyPoints: 650,
-      membershipTier: 'gold',
+      address: '666, Anna Salai, Chennai',
+      joinDate: '2023-02-10',
+      lastActive: '2023-03-20',
+      totalSpent: 9000,
+      ordersCount: 3,
+      status: 'active',
+      tags: ['regular'],
     },
     {
-      id: 'CUST-1010',
-      name: 'Aishwarya Nair',
-      email: 'aishwarya.nair@example.com',
+      id: 'CUST-1131',
+      name: 'Kavita Nair',
+      email: 'kavita.nair@example.com',
       phone: '9988776655',
-      address: '777, MG Road',
-      city: 'Pune',
-      country: 'India',
-      registrationDate: '2024-01-20',
-      lastOrderDate: '2024-05-15',
-      totalOrders: 9,
-      totalSpent: 2500,
-      paymentMethod: 'UPI',
-      loyaltyPoints: 250,
-      membershipTier: 'bronze',
+      address: '777, T Nagar, Chennai',
+      joinDate: '2023-01-20',
+      lastActive: '2023-04-03',
+      totalSpent: 18000,
+      ordersCount: 6,
+      status: 'active',
+      tags: ['vip', 'regular'],
     },
     {
-      id: 'CUST-1011',
-      name: 'Rohit Verma',
-      email: 'rohit.verma@example.com',
+      id: 'CUST-1132',
+      name: 'Mohammed Khan',
+      email: 'mohammed.khan@example.com',
       phone: '8877665544',
-      address: '888, Linking Road',
-      city: 'Mumbai',
-      country: 'India',
-      registrationDate: '2024-02-25',
-      lastOrderDate: '2024-05-20',
-      totalOrders: 16,
-      totalSpent: 4800,
-      paymentMethod: 'NetBanking',
-      loyaltyPoints: 480,
-      membershipTier: 'silver',
+      address: '888, Nungambakkam, Chennai',
+      joinDate: '2023-03-05',
+      lastActive: '2023-04-04',
+      totalSpent: 6500,
+      ordersCount: 2,
+      status: 'active',
+      tags: ['regular'],
     },
     {
-      id: 'CUST-1012',
-      name: 'Shilpa Menon',
-      email: 'shilpa.menon@example.com',
+      id: 'CUST-1133',
+      name: 'Lakshmi Pillai',
+      email: 'lakshmi.pillai@example.com',
       phone: '7766554433',
-      address: '999, Brigade Road',
-      city: 'Bangalore',
-      country: 'India',
-      registrationDate: '2024-03-15',
-      lastOrderDate: '2024-05-25',
-      totalOrders: 11,
-      totalSpent: 3200,
-      paymentMethod: 'Debit Card',
-      loyaltyPoints: 320,
-      membershipTier: 'bronze',
+      address: '999, Adyar, Chennai',
+      joinDate: '2023-04-03',
+      lastActive: '2023-04-05',
+      totalSpent: 1000,
+      ordersCount: 1,
+      status: 'new',
+      tags: [],
     },
   ];
 
@@ -292,35 +268,55 @@ const Customers = () => {
     return String(value).includes(search);
   };
 
-  // Helper function for safe date comparison
-  const safeDateCompare = (dateValue: string, compareDate: Date): boolean => {
-    try {
-      const valueDate = new Date(dateValue);
-      return !isNaN(valueDate.getTime()) ? valueDate >= compareDate : false;
-    } catch {
+  const matchesDateFilter = (customerDate: string, operator: string, filterValue: string): boolean => {
+    // Convert both dates to Date objects for comparison
+    const dateToCheck = new Date(customerDate);
+    const filterDate = new Date(filterValue);
+    
+    // Check if both dates are valid
+    if (isNaN(dateToCheck.getTime()) || isNaN(filterDate.getTime())) {
       return false;
     }
+    
+    // Now compare dates based on operator
+    if (operator === 'equals') {
+      return dateToCheck.toDateString() === filterDate.toDateString();
+    } else if (operator === 'greaterThan' || operator === 'after') {
+      return dateToCheck > filterDate;
+    } else if (operator === 'lessThan' || operator === 'before') {
+      return dateToCheck < filterDate;
+    } else if (operator === 'between') {
+      // For between operator, we expect filterValue to be in format "start,end"
+      const [start, end] = filterValue.split(',').map(d => new Date(d.trim()));
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return false;
+      }
+      return dateToCheck >= start && dateToCheck <= end;
+    }
+    
+    return false;
   };
 
-  const filteredCustomers = customersData.filter(customer => {
+  const filteredCustomers = customers.filter(customer => {
     const matchesSearch = 
+      safeIncludes(customer.id, searchQuery) ||
       safeIncludes(customer.name, searchQuery) ||
       safeIncludes(customer.email, searchQuery) ||
-      safeIncludes(customer.phone, searchQuery) ||
-      safeIncludes(customer.id, searchQuery);
-
+      safeIncludes(customer.phone, searchQuery);
+    
     const matchesFilters = activeFilters.every(filter => {
-      const value = customer[filter.field as keyof Customer];
-
+      const field = filter.field as keyof Customer;
+      const value = customer[field];
+      
+      if (field === 'joinDate' || field === 'lastActive') {
+        return matchesDateFilter(value as string, filter.operator, filter.value);
+      }
+      
       if (typeof value === 'string') {
         if (filter.operator === 'equals') {
           return value === filter.value;
         } else if (filter.operator === 'contains') {
           return value.toLowerCase().includes(filter.value.toLowerCase());
-        } else if (filter.operator === 'startsWith') {
-          return value.toLowerCase().startsWith(filter.value.toLowerCase());
-        } else if (filter.operator === 'endsWith') {
-          return value.toLowerCase().endsWith(filter.value.toLowerCase());
         }
       } else if (typeof value === 'number') {
         const numValue = Number(filter.value);
@@ -331,23 +327,13 @@ const Customers = () => {
         } else if (filter.operator === 'lessThan') {
           return value < numValue;
         }
-      } else if (filter.field === 'registrationDate' || filter.field === 'lastOrderDate') {
-        if (filter.operator === 'after') {
-          return safeDateCompare(value as string, new Date(filter.value));
-        } else if (filter.operator === 'before') {
-          return !safeDateCompare(value as string, new Date(filter.value));
-        } else if (filter.operator === 'between') {
-          const [startDateStr, endDateStr] = filter.value.split(',');
-          const startDate = new Date(startDateStr.trim());
-          const endDate = new Date(endDateStr.trim());
-          const valueDate = new Date(value as string);
-          return !isNaN(valueDate.getTime()) && valueDate >= startDate && valueDate < endDate;
-        }
+      } else if (Array.isArray(value)) {
+        return value.includes(filter.value);
       }
-
+      
       return true;
     });
-
+    
     return matchesSearch && matchesFilters;
   });
 
@@ -356,20 +342,27 @@ const Customers = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleSearch = (query: string, filters: Filter[]) => {
-    setSearchQuery(query);
-    setActiveFilters(filters);
-    setCurrentPage(1);
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case 'active':
+        return <StatusBadge status="success" label="Active" />;
+      case 'inactive':
+        return <StatusBadge status="warning" label="Inactive" />;
+      case 'new':
+        return <StatusBadge status="info" label="New" />;
+      default:
+        return <StatusBadge status="default" label={status} />;
+    }
   };
 
   const filterOptions = [
     {
-      name: 'Membership Tier',
-      options: ['bronze', 'silver', 'gold'],
+      name: 'Status',
+      options: ['active', 'inactive', 'new'],
     },
     {
-      name: 'Payment Method',
-      options: ['Credit Card', 'Debit Card', 'UPI', 'NetBanking'],
+      name: 'Tags',
+      options: ['vip', 'regular'],
     },
   ];
 
@@ -377,13 +370,13 @@ const Customers = () => {
     setActiveFilters(prev => {
       if (isSelected) {
         return [...prev, {
-          field: filterName === 'Membership Tier' ? 'membershipTier' : 'paymentMethod',
-          operator: 'equals',
+          field: filterName === 'Status' ? 'status' : 'tags',
+          operator: filterName === 'Status' ? 'equals' : 'contains',
           value: option
         }];
       } else {
         return prev.filter(filter => 
-          !(filter.field === (filterName === 'Membership Tier' ? 'membershipTier' : 'paymentMethod') && 
+          !(filter.field === (filterName === 'Status' ? 'status' : 'tags') && 
           filter.value === option)
         );
       }
@@ -392,12 +385,35 @@ const Customers = () => {
     setCurrentPage(1);
   };
 
-  const addCustomerFields: FormField[] = [
+  const handleSearch = (query: string, filters: Filter[]) => {
+    setSearchQuery(query);
+    setActiveFilters(filters);
+    setCurrentPage(1);
+  };
+
+  const handleOpenDetailsModal = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setDetailsModalOpen(true);
+  };
+
+  const handleSubmitDetails = async (data: Record<string, any>) => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    toast({
+      title: "Customer updated",
+      description: `Customer ${selectedCustomer?.name} has been updated successfully`,
+    });
+    
+    setDetailsModalOpen(false);
+  };
+
+  const customerDetailFields: FormField[] = [
     {
       id: 'name',
       label: 'Name',
       type: 'text',
       placeholder: 'Enter customer name',
+      defaultValue: selectedCustomer?.name || '',
       required: true,
     },
     {
@@ -405,6 +421,7 @@ const Customers = () => {
       label: 'Email',
       type: 'email',
       placeholder: 'Enter customer email',
+      defaultValue: selectedCustomer?.email || '',
       required: true,
     },
     {
@@ -412,148 +429,54 @@ const Customers = () => {
       label: 'Phone',
       type: 'text',
       placeholder: 'Enter customer phone',
-      required: true,
+      defaultValue: selectedCustomer?.phone || '',
     },
     {
       id: 'address',
       label: 'Address',
       type: 'textarea',
       placeholder: 'Enter customer address',
+      defaultValue: selectedCustomer?.address || '',
     },
     {
-      id: 'city',
-      label: 'City',
-      type: 'text',
-      placeholder: 'Enter customer city',
-    },
-    {
-      id: 'country',
-      label: 'Country',
-      type: 'text',
-      placeholder: 'Enter customer country',
-    },
-    {
-      id: 'registrationDate',
-      label: 'Registration Date',
-      type: 'date',
-    },
-    {
-      id: 'paymentMethod',
-      label: 'Payment Method',
+      id: 'status',
+      label: 'Status',
       type: 'select',
       options: [
-        { value: 'Credit Card', label: 'Credit Card' },
-        { value: 'Debit Card', label: 'Debit Card' },
-        { value: 'UPI', label: 'UPI' },
-        { value: 'NetBanking', label: 'NetBanking' },
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Inactive' },
+        { value: 'new', label: 'New' },
       ],
-    },
-    {
-      id: 'membershipTier',
-      label: 'Membership Tier',
-      type: 'select',
-      options: [
-        { value: 'bronze', label: 'Bronze' },
-        { value: 'silver', label: 'Silver' },
-        { value: 'gold', label: 'Gold' },
-      ],
+      defaultValue: selectedCustomer?.status || 'active',
     },
   ];
-
-  const handleAddCustomer = async (data: Record<string, any>) => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Customer added successfully",
-      description: `Added new customer: ${data.name}`,
-    });
-  };
-
-  const editCustomerFields: FormField[] = [
-    {
-      id: 'name',
-      label: 'Name',
-      type: 'text',
-      placeholder: 'Enter customer name',
-      required: true,
-    },
-    {
-      id: 'email',
-      label: 'Email',
-      type: 'email',
-      placeholder: 'Enter customer email',
-      required: true,
-    },
-    {
-      id: 'phone',
-      label: 'Phone',
-      type: 'text',
-      placeholder: 'Enter customer phone',
-      required: true,
-    },
-    {
-      id: 'address',
-      label: 'Address',
-      type: 'textarea',
-      placeholder: 'Enter customer address',
-    },
-    {
-      id: 'city',
-      label: 'City',
-      type: 'text',
-      placeholder: 'Enter customer city',
-    },
-    {
-      id: 'country',
-      label: 'Country',
-      type: 'text',
-      placeholder: 'Enter customer country',
-    },
-    {
-      id: 'registrationDate',
-      label: 'Registration Date',
-      type: 'date',
-    },
-    {
-      id: 'paymentMethod',
-      label: 'Payment Method',
-      type: 'select',
-      options: [
-        { value: 'Credit Card', label: 'Credit Card' },
-        { value: 'Debit Card', label: 'Debit Card' },
-        { value: 'UPI', label: 'UPI' },
-        { value: 'NetBanking', label: 'NetBanking' },
-      ],
-    },
-    {
-      id: 'membershipTier',
-      label: 'Membership Tier',
-      type: 'select',
-      options: [
-        { value: 'bronze', label: 'Bronze' },
-        { value: 'silver', label: 'Silver' },
-        { value: 'gold', label: 'Gold' },
-      ],
-    },
-  ];
-
-  const handleEditCustomer = async (data: Record<string, any>) => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Customer updated successfully",
-      description: `Updated customer: ${data.name}`,
-    });
-  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">Customers</h1>
-          <p className="text-muted-foreground">Manage your customer base</p>
+          <p className="text-muted-foreground">Manage your customer database</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Select defaultValue={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-[160px]">
+              <Calendar className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="yesterday">Yesterday</SelectItem>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 90 days</SelectItem>
+              <SelectItem value="year">This year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Customer
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -573,22 +496,18 @@ const Customers = () => {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => toast({ title: "Print initiated" })}>
-                <Printer className="mr-2 h-4 w-4" /> Print Customers Report
+                <Printer className="mr-2 h-4 w-4" /> Print Customer List
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button onClick={() => setAddModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Customer
-          </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>Customer List</CardTitle>
+          <CardTitle>Customer Database</CardTitle>
           <CardDescription>
-            Showing {filteredCustomers.length} customers
+            Showing {filteredCustomers.length} customers for the selected period
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -598,19 +517,15 @@ const Customers = () => {
                 onSearch={handleSearch} 
                 placeholder="Search customers..." 
                 fields={[
+                  { name: 'id', label: 'Customer ID' },
                   { name: 'name', label: 'Name' },
                   { name: 'email', label: 'Email' },
                   { name: 'phone', label: 'Phone' },
-                  { name: 'address', label: 'Address' },
-                  { name: 'city', label: 'City' },
-                  { name: 'country', label: 'Country' },
-                  { name: 'registrationDate', label: 'Registration Date', type: 'date' },
-                  { name: 'lastOrderDate', label: 'Last Order Date', type: 'date' },
-                  { name: 'totalOrders', label: 'Total Orders', type: 'number' },
-                  { name: 'totalSpent', label: 'Total Spent', type: 'number' },
-                  { name: 'paymentMethod', label: 'Payment Method' },
-                  { name: 'loyaltyPoints', label: 'Loyalty Points', type: 'number' },
-                  { name: 'membershipTier', label: 'Membership Tier' },
+                  { name: 'status', label: 'Status' },
+                  { name: 'joinDate', label: 'Join Date' },
+                  { name: 'lastActive', label: 'Last Active' },
+                  { name: 'totalSpent', label: 'Total Spent' },
+                  { name: 'ordersCount', label: 'Orders Count' },
                 ]}
               />
             </div>
@@ -623,7 +538,7 @@ const Customers = () => {
                 >
                   <FilterGroup>
                     {filterGroup.options.map((option) => {
-                      const field = filterGroup.name === 'Membership Tier' ? 'membershipTier' : 'paymentMethod';
+                      const field = filterGroup.name === 'Status' ? 'status' : 'tags';
                       const isActive = activeFilters.some(f => f.field === field && f.value === option);
                       
                       return (
@@ -635,12 +550,12 @@ const Customers = () => {
                             onChange={(e) => handleFilterChange(filterGroup.name, option, e.target.checked)}
                             className="rounded text-primary focus:ring-primary"
                           />
-                          <label 
+                          <Label 
                             htmlFor={`filter-${filterGroup.name}-${option}`}
                             className="text-sm cursor-pointer"
                           >
                             {option}
-                          </label>
+                          </Label>
                         </div>
                       );
                     })}
@@ -667,19 +582,20 @@ const Customers = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
+                  <TableHead>Customer ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Registration Date</TableHead>
-                  <TableHead>Membership</TableHead>
+                  <TableHead>Join Date</TableHead>
+                  <TableHead>Total Spent</TableHead>
+                  <TableHead>Orders</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedCustomers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                       No customers found. Try a different search or filter.
                     </TableCell>
                   </TableRow>
@@ -689,38 +605,31 @@ const Customers = () => {
                       <TableCell className="font-medium">{customer.id}</TableCell>
                       <TableCell>{customer.name}</TableCell>
                       <TableCell>{customer.email}</TableCell>
-                      <TableCell>{customer.phone}</TableCell>
-                      <TableCell>{new Date(customer.registrationDate).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{customer.membershipTier}</Badge>
-                      </TableCell>
+                      <TableCell>{new Date(customer.joinDate).toLocaleDateString()}</TableCell>
+                      <TableCell>₹{customer.totalSpent.toLocaleString()}</TableCell>
+                      <TableCell>{customer.ordersCount}</TableCell>
+                      <TableCell>{getStatusBadge(customer.status)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
+                            <Button variant="ghost" size="sm">
                               <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Actions</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedCustomer(customer);
-                              setEditModalOpen(true);
-                            }}>
-                              <User className="mr-2 h-4 w-4" /> Edit
+                            <DropdownMenuItem onClick={() => handleOpenDetailsModal(customer)}>
+                              <User className="mr-2 h-4 w-4" /> View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast({ title: "Customer details" })}>
-                              <IdCard className="mr-2 h-4 w-4" /> View Details
+                            <DropdownMenuItem>
+                              <Edit className="mr-2 h-4 w-4" /> Edit Customer
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast({ title: "Customer orders" })}>
-                              <Package className="mr-2 h-4 w-4" /> View Orders
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast({ title: "Customer payments" })}>
-                              <Wallet className="mr-2 h-4 w-4" /> View Payments
+                            <DropdownMenuItem>
+                              <Mail className="mr-2 h-4 w-4" /> Send Email
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => toast({ title: "Customer support" })}>
-                              <Mail className="mr-2 h-4 w-4" /> Contact Support
+                            <DropdownMenuItem className="text-red-600">
+                              <X className="mr-2 h-4 w-4" /> Delete Customer
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -746,30 +655,102 @@ const Customers = () => {
       </Card>
 
       <CustomModalForm
-        title="Add New Customer"
-        description="Enter customer details"
-        fields={addCustomerFields}
-        onSubmit={handleAddCustomer}
-        submitText="Add Customer"
-        cancelText="Cancel"
-        isOpen={addModalOpen}
-        onOpenChange={setAddModalOpen}
+        title="Customer Details"
+        description="View and edit customer information"
+        fields={customerDetailFields}
+        onSubmit={handleSubmitDetails}
+        submitText="Update Customer"
+        cancelText="Close"
+        isOpen={detailsModalOpen}
+        onOpenChange={setDetailsModalOpen}
         width="lg"
-      />
+      >
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-lg font-semibold">Customer Information</h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedCustomer?.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedCustomer?.email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedCustomer?.phone}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedCustomer?.address}</span>
+                </div>
+              </div>
+            </div>
 
-      {selectedCustomer && (
-        <CustomModalForm
-          title="Edit Customer"
-          description="Edit customer details"
-          fields={editCustomerFields}
-          onSubmit={handleEditCustomer}
-          submitText="Update Customer"
-          cancelText="Cancel"
-          isOpen={editModalOpen}
-          onOpenChange={setEditModalOpen}
-          width="lg"
-        />
-      )}
+            <div>
+              <h3 className="text-lg font-semibold">Account Information</h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                  <span>Joined: {new Date(selectedCustomer?.joinDate || '').toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                  <span>Last Active: {new Date(selectedCustomer?.lastActive || '').toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <span>Total Spent: ₹{selectedCustomer?.totalSpent.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                  <span>Orders: {selectedCustomer?.ordersCount}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold">Tags</h3>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {selectedCustomer?.tags.length === 0 ? (
+                <span className="text-muted-foreground">No tags</span>
+              ) : (
+                selectedCustomer?.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold">Recent Orders</h3>
+            <div className="border rounded-md mt-2">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                      No recent orders to display
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+      </CustomModalForm>
     </div>
   );
 };

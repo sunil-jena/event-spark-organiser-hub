@@ -1,113 +1,101 @@
 
-import React, { ReactNode, useState } from 'react';
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
+import React from 'react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { ChevronDown } from 'lucide-react';
-import { Checkbox } from './checkbox';
-import { Label } from './label';
-
-export interface FilterGroupProps {
-  children: ReactNode;
-}
-
-export function FilterGroup({ children }: FilterGroupProps) {
-  return (
-    <div className="p-4 space-y-4">
-      {children}
-    </div>
-  );
-}
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface FilterDropdownProps {
-  triggerText?: string;
-  icon?: ReactNode;
-  groups?: {
-    name: string;
-    options: {
-      label: string;
-      value: string;
-    }[];
-  }[];
-  children?: ReactNode;
-  triggerClassName?: string;
-  onFilterChange?: (filters: Record<string, string[]>) => void;
+  triggerText: string;
+  icon?: React.ReactNode;
+  className?: string;
+  align?: 'start' | 'center' | 'end';
+  sideOffset?: number;
+  children?: React.ReactNode;
 }
 
-export function FilterDropdown({
-  triggerText = 'Filter',
+export interface FilterGroupProps {
+  title?: string;
+  children?: React.ReactNode;
+}
+
+export const FilterGroup: React.FC<FilterGroupProps> = ({ title, children }) => {
+  return (
+    <div className="space-y-2">
+      {title && <div className="text-sm font-medium">{title}</div>}
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+};
+
+export const FilterDropdown: React.FC<FilterDropdownProps> = ({
+  triggerText,
   icon,
-  groups,
+  className,
+  align = 'end',
+  sideOffset = 4,
   children,
-  triggerClassName = '',
-  onFilterChange,
-}: FilterDropdownProps) {
-  const [open, setOpen] = useState(false);
-  const [filters, setFilters] = useState<Record<string, string[]>>({});
-
-  const handleFilterChange = (groupName: string, value: string, checked: boolean) => {
-    setFilters(prevFilters => {
-      const groupFilters = prevFilters[groupName] || [];
-      let updatedFilters;
-
-      if (checked) {
-        updatedFilters = [...groupFilters, value];
-      } else {
-        updatedFilters = groupFilters.filter(item => item !== value);
-      }
-
-      if (updatedFilters.length === 0) {
-        const newFilters = { ...prevFilters };
-        delete newFilters[groupName];
-        return newFilters;
-      } else {
-        return { ...prevFilters, [groupName]: updatedFilters };
-      }
-    });
-  };
-
-  const applyFilters = () => {
-    if (onFilterChange) {
-      onFilterChange(filters);
-    }
-    setOpen(false);
-  };
+}) => {
+  const [open, setOpen] = React.useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className={`h-8 ${triggerClassName}`} >
-          {icon}
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn('justify-between', className)}
+        >
+          {icon && <span className="mr-1">{icon}</span>}
           {triggerText}
-          <ChevronDown className="ml-2 h-4 w-4" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 space-y-4 p-0" align="end">
-        {groups && groups.map((group, index) => (
-          <FilterGroup key={index}>
-            <div className="font-medium px-4 pb-2">{group.name}</div>
-            <div className="space-y-1 px-4">
-              {group.options.map((option, optionIndex) => (
-                <div key={optionIndex} className="space-x-2">
-                  <Checkbox
-                    id={option.value}
-                    onCheckedChange={(checked) => handleFilterChange(group.name, option.value, checked === true)}
-                    defaultChecked={filters[group.name]?.includes(option.value)}
-                  />
-                  <Label htmlFor={option.value}>{option.label}</Label>
-                </div>
-              ))}
-            </div>
-          </FilterGroup>
-        ))}
-        {children}
-        <div className="p-4">
-          <Button className="w-full" onClick={applyFilters}>Apply Filters</Button>
+      <PopoverContent className="p-0 min-w-48" align={align} sideOffset={sideOffset}>
+        <div className="p-2 space-y-4 max-h-[300px] overflow-auto">
+          {children}
         </div>
       </PopoverContent>
     </Popover>
   );
+};
+
+export interface FilterItemProps {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  label: string;
+  value: string;
 }
+
+export const FilterItem: React.FC<FilterItemProps> = ({
+  checked,
+  onCheckedChange,
+  label,
+  value,
+}) => {
+  return (
+    <div className="flex items-center space-x-2">
+      <div
+        className={cn(
+          'h-4 w-4 rounded border flex items-center justify-center',
+          checked ? 'bg-primary border-primary' : 'border-input'
+        )}
+        onClick={() => onCheckedChange(!checked)}
+      >
+        {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+      </div>
+      <label
+        htmlFor={`filter-${value}`}
+        className="text-sm cursor-pointer"
+        onClick={() => onCheckedChange(!checked)}
+      >
+        {label}
+      </label>
+    </div>
+  );
+};

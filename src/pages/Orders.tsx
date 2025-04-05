@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -37,6 +38,7 @@ import {
   Phone,
   Map,
   Edit,
+  Eye,
   X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -640,30 +642,28 @@ const Orders = () => {
                   triggerText={filterGroup.name}
                   icon={<FilterIcon className="h-4 w-4" />}
                 >
-                  <FilterGroup>
-                    {filterGroup.options.map((option) => {
-                      const field = filterGroup.name === 'Status' ? 'status' : 'paymentMethod';
-                      const isActive = activeFilters.some(f => f.field === field && f.value === option);
-                      
-                      return (
-                        <div key={option} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={`filter-${filterGroup.name}-${option}`}
-                            checked={isActive}
-                            onChange={(e) => handleFilterChange(filterGroup.name, option, e.target.checked)}
-                            className="rounded text-primary focus:ring-primary"
-                          />
-                          <Label 
-                            htmlFor={`filter-${filterGroup.name}-${option}`}
-                            className="text-sm cursor-pointer"
-                          >
-                            {option}
-                          </Label>
-                        </div>
-                      );
-                    })}
-                  </FilterGroup>
+                  {filterGroup.options.map((option) => {
+                    const field = filterGroup.name === 'Status' ? 'status' : 'paymentMethod';
+                    const isActive = activeFilters.some(f => f.field === field && f.value === option);
+                    
+                    return (
+                      <div key={option} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`filter-${filterGroup.name}-${option}`}
+                          checked={isActive}
+                          onChange={(e) => handleFilterChange(filterGroup.name, option, e.target.checked)}
+                          className="rounded text-primary focus:ring-primary"
+                        />
+                        <Label 
+                          htmlFor={`filter-${filterGroup.name}-${option}`}
+                          className="text-sm cursor-pointer"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    );
+                  })}
                 </FilterDropdown>
               ))}
               
@@ -881,3 +881,5 @@ const Orders = () => {
     </div>
   );
 };
+
+export default Orders;

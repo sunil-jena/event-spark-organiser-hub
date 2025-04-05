@@ -11,13 +11,8 @@ import {
   ChevronDown, 
   Download, 
   FilterIcon, 
-  TrendingUp, 
-  TrendingDown, 
   Printer,
   FileText,
-  BarChart,
-  BarChart2,
-  PieChart,
   ArrowRight,
   ArrowUpRight,
   ArrowDownRight,
@@ -28,9 +23,23 @@ import {
   Plus,
   MoreHorizontal,
   RefreshCw,
+  PackageCheck,
+  Truck,
+  MapPin,
+  User,
+  ShoppingCart,
+  LucideIcon,
+  Package,
+  Receipt,
+  ChevronsUpDown,
+  Copy,
+  Mail,
+  Phone,
+  Map,
+  Edit,
+  Eye,
+  X,
 } from 'lucide-react';
-import { SalesChart } from '@/components/ui/sales-chart';
-import { SalesStatistics } from '@/components/ui/sales-statistics';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -62,30 +71,46 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
-interface Transaction {
-  id: string;
-  date: string;
-  customer: string;
-  amount: number;
-  paymentMethod: string;
-  status: 'completed' | 'pending' | 'failed' | 'refunded';
-  eventName: string;
-}
-
-interface SalesData {
+// Define a unified SalesData interface that works for both components
+export interface SalesData {
   name: string;
+  value: number;
   online?: number;
   offline?: number;
   total?: number;
-  value?: number;
+}
+
+interface Sale {
+  id: string;
+  date: string;
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
+  event: {
+    id: string;
+    name: string;
+    venue: string;
+    date: string;
+  };
+  items: {
+    name: string;
+    quantity: number;
+    price: number;
+  }[];
+  totalAmount: number;
+  paymentMethod: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+  shippingAddress: string;
+  trackingNumber: string;
 }
 
 const Sales = () => {
@@ -94,132 +119,332 @@ const Sales = () => {
   const [dateRange, setDateRange] = useState('7d');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [activeTab, setActiveTab] = useState('overview');
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
-  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
-  const transactions: Transaction[] = [
+  const sales: Sale[] = [
     {
-      id: 'TX-1234',
+      id: 'SL-2345',
       date: '2025-04-01',
-      customer: 'Raj Patel',
-      amount: 2999,
+      customer: {
+        id: 'CUST-1122',
+        name: 'Raj Patel',
+        email: 'raj.patel@example.com',
+        phone: '9876543210',
+        address: '123, Main Street, Mumbai'
+      },
+      event: {
+        id: 'EV-1001',
+        name: 'Summer Music Festival',
+        venue: 'Mumbai Grounds',
+        date: '2025-04-20'
+      },
+      items: [
+        { name: 'VIP Pass', quantity: 1, price: 2999 },
+      ],
+      totalAmount: 2999,
       paymentMethod: 'Credit Card',
-      status: 'completed',
-      eventName: 'Summer Music Festival',
+      status: 'delivered',
+      shippingAddress: '123, Main Street, Mumbai',
+      trackingNumber: 'TN-987654321',
     },
     {
-      id: 'TX-1235',
+      id: 'SL-2346',
       date: '2025-04-01',
-      customer: 'Priya Sharma',
-      amount: 5998,
+      customer: {
+        id: 'CUST-1123',
+        name: 'Priya Sharma',
+        email: 'priya.sharma@example.com',
+        phone: '8765432109',
+        address: '456, Linking Road, Bandra'
+      },
+      event: {
+        id: 'EV-1001',
+        name: 'Summer Music Festival',
+        venue: 'Mumbai Grounds',
+        date: '2025-04-20'
+      },
+      items: [
+        { name: 'Regular Pass', quantity: 2, price: 1499 },
+        { name: 'Food Voucher', quantity: 2, price: 500 },
+      ],
+      totalAmount: 3998,
       paymentMethod: 'UPI',
-      status: 'completed',
-      eventName: 'Summer Music Festival',
+      status: 'shipped',
+      shippingAddress: '456, Linking Road, Bandra',
+      trackingNumber: 'TN-876543210',
     },
     {
-      id: 'TX-1236',
+      id: 'SL-2347',
       date: '2025-04-02',
-      customer: 'Anil Kumar',
-      amount: 1499,
+      customer: {
+        id: 'CUST-1124',
+        name: 'Anil Kumar',
+        email: 'anil.kumar@example.com',
+        phone: '7654321098',
+        address: '789, MG Road, Bangalore'
+      },
+      event: {
+        id: 'EV-1002',
+        name: 'Tech Conference 2025',
+        venue: 'Bangalore Expo',
+        date: '2025-05-10'
+      },
+      items: [
+        { name: 'Full Access Pass', quantity: 1, price: 4499 },
+      ],
+      totalAmount: 4499,
       paymentMethod: 'Debit Card',
-      status: 'completed',
-      eventName: 'Tech Conference 2025',
+      status: 'processing',
+      shippingAddress: '789, MG Road, Bangalore',
+      trackingNumber: 'TN-765432109',
     },
     {
-      id: 'TX-1237',
+      id: 'SL-2348',
       date: '2025-04-02',
-      customer: 'Sunita Reddy',
-      amount: 4497,
+      customer: {
+        id: 'CUST-1125',
+        name: 'Sunita Reddy',
+        email: 'sunita.reddy@example.com',
+        phone: '6543210987',
+        address: '101, Brigade Road, Bangalore'
+      },
+      event: {
+        id: 'EV-1002',
+        name: 'Tech Conference 2025',
+        venue: 'Bangalore Expo',
+        date: '2025-05-10'
+      },
+      items: [
+        { name: 'Basic Pass', quantity: 3, price: 1499 },
+      ],
+      totalAmount: 4497,
       paymentMethod: 'NetBanking',
-      status: 'completed',
-      eventName: 'Tech Conference 2025',
+      status: 'pending',
+      shippingAddress: '101, Brigade Road, Bangalore',
+      trackingNumber: 'TN-654321098',
     },
     {
-      id: 'TX-1238',
+      id: 'SL-2349',
       date: '2025-04-03',
-      customer: 'Vikram Singh',
-      amount: 2499,
+      customer: {
+        id: 'CUST-1126',
+        name: 'Vikram Singh',
+        email: 'vikram.singh@example.com',
+        phone: '5432109876',
+        address: '222, Park Street, Kolkata'
+      },
+      event: {
+        id: 'EV-1003',
+        name: 'Food & Wine Expo',
+        venue: 'Kolkata Grounds',
+        date: '2025-04-25'
+      },
+      items: [
+        { name: 'Entry Ticket', quantity: 1, price: 2499 },
+      ],
+      totalAmount: 2499,
       paymentMethod: 'Credit Card',
+      status: 'cancelled',
+      shippingAddress: '222, Park Street, Kolkata',
+      trackingNumber: 'TN-543210987',
+    },
+    {
+      id: 'SL-2350',
+      date: '2025-04-03',
+      customer: {
+        id: 'CUST-1127',
+        name: 'Neha Verma',
+        email: 'neha.verma@example.com',
+        phone: '4321098765',
+        address: '333, Camac Street, Kolkata'
+      },
+      event: {
+        id: 'EV-1003',
+        name: 'Food & Wine Expo',
+        venue: 'Kolkata Grounds',
+        date: '2025-04-25'
+      },
+      items: [
+        { name: 'Entry Ticket', quantity: 1, price: 1799 },
+      ],
+      totalAmount: 1799,
+      paymentMethod: 'UPI',
       status: 'refunded',
-      eventName: 'Food & Wine Expo',
+      shippingAddress: '333, Camac Street, Kolkata',
+      trackingNumber: 'TN-432109876',
     },
     {
-      id: 'TX-1239',
-      date: '2025-04-03',
-      customer: 'Neha Verma',
-      amount: 1799,
-      paymentMethod: 'UPI',
-      status: 'completed',
-      eventName: 'Food & Wine Expo',
-    },
-    {
-      id: 'TX-1240',
+      id: 'SL-2351',
       date: '2025-04-04',
-      customer: 'Rahul Gupta',
-      amount: 3498,
+      customer: {
+        id: 'CUST-1128',
+        name: 'Rahul Gupta',
+        email: 'rahul.gupta@example.com',
+        phone: '3210987654',
+        address: '444, Central Avenue, Chennai'
+      },
+      event: {
+        id: 'EV-1004',
+        name: 'Comedy Night',
+        venue: 'Chennai Auditorium',
+        date: '2025-05-05'
+      },
+      items: [
+        { name: 'Gold Ticket', quantity: 2, price: 1749 },
+      ],
+      totalAmount: 3498,
       paymentMethod: 'Credit Card',
-      status: 'completed',
-      eventName: 'Comedy Night',
+      status: 'delivered',
+      shippingAddress: '444, Central Avenue, Chennai',
+      trackingNumber: 'TN-321098765',
     },
     {
-      id: 'TX-1241',
+      id: 'SL-2352',
       date: '2025-04-04',
-      customer: 'Anjali Das',
-      amount: 699,
+      customer: {
+        id: 'CUST-1129',
+        name: 'Anjali Das',
+        email: 'anjali.das@example.com',
+        phone: '2109876543',
+        address: '555, Mount Road, Chennai'
+      },
+      event: {
+        id: 'EV-1004',
+        name: 'Comedy Night',
+        venue: 'Chennai Auditorium',
+        date: '2025-05-05'
+      },
+      items: [
+        { name: 'Silver Ticket', quantity: 1, price: 699 },
+      ],
+      totalAmount: 699,
       paymentMethod: 'UPI',
       status: 'pending',
-      eventName: 'Comedy Night',
+      shippingAddress: '555, Mount Road, Chennai',
+      trackingNumber: 'TN-210987654',
     },
     {
-      id: 'TX-1242',
+      id: 'SL-2353',
       date: '2025-04-05',
-      customer: 'Sanjay Joshi',
-      amount: 1499,
+      customer: {
+        id: 'CUST-1130',
+        name: 'Sanjay Joshi',
+        email: 'sanjay.joshi@example.com',
+        phone: '1098765432',
+        address: '666, Anna Salai, Chennai'
+      },
+      event: {
+        id: 'EV-1004',
+        name: 'Comedy Night',
+        venue: 'Chennai Auditorium',
+        date: '2025-05-05'
+      },
+      items: [
+        { name: 'Bronze Ticket', quantity: 1, price: 1499 },
+      ],
+      totalAmount: 1499,
       paymentMethod: 'Credit Card',
-      status: 'failed',
-      eventName: 'Comedy Night',
+      status: 'cancelled',
+      shippingAddress: '666, Anna Salai, Chennai',
+      trackingNumber: 'TN-109876543',
     },
     {
-      id: 'TX-1243',
+      id: 'SL-2354',
       date: '2025-04-05',
-      customer: 'Kavita Nair',
-      amount: 998,
+      customer: {
+        id: 'CUST-1131',
+        name: 'Kavita Nair',
+        email: 'kavita.nair@example.com',
+        phone: '9988776655',
+        address: '777, T Nagar, Chennai'
+      },
+      event: {
+        id: 'EV-1005',
+        name: 'Tech Workshop',
+        venue: 'Chennai Tech Park',
+        date: '2025-04-15'
+      },
+      items: [
+        { name: 'Workshop Pass', quantity: 1, price: 998 },
+      ],
+      totalAmount: 998,
       paymentMethod: 'NetBanking',
-      status: 'completed',
-      eventName: 'Tech Workshop',
+      status: 'delivered',
+      shippingAddress: '777, T Nagar, Chennai',
+      trackingNumber: 'TN-998877665',
     },
     {
-      id: 'TX-1244',
+      id: 'SL-2355',
       date: '2025-04-05',
-      customer: 'Mohammed Khan',
-      amount: 1798,
+      customer: {
+        id: 'CUST-1132',
+        name: 'Mohammed Khan',
+        email: 'mohammed.khan@example.com',
+        phone: '8877665544',
+        address: '888, Nungambakkam, Chennai'
+      },
+      event: {
+        id: 'EV-1006',
+        name: 'Art Exhibition',
+        venue: 'Chennai Art Gallery',
+        date: '2025-04-10'
+      },
+      items: [
+        { name: 'Entry Pass', quantity: 2, price: 899 },
+      ],
+      totalAmount: 1798,
       paymentMethod: 'Credit Card',
-      status: 'completed',
-      eventName: 'Art Exhibition',
+      status: 'shipped',
+      shippingAddress: '888, Nungambakkam, Chennai',
+      trackingNumber: 'TN-887766554',
     },
     {
-      id: 'TX-1245',
+      id: 'SL-2356',
       date: '2025-04-05',
-      customer: 'Lakshmi Pillai',
-      amount: 899,
+      customer: {
+        id: 'CUST-1133',
+        name: 'Lakshmi Pillai',
+        email: 'lakshmi.pillai@example.com',
+        phone: '7766554433',
+        address: '999, Adyar, Chennai'
+      },
+      event: {
+        id: 'EV-1006',
+        name: 'Art Exhibition',
+        venue: 'Chennai Art Gallery',
+        date: '2025-04-10'
+      },
+      items: [
+        { name: 'Entry Pass', quantity: 1, price: 899 },
+      ],
+      totalAmount: 899,
       paymentMethod: 'UPI',
-      status: 'pending',
-      eventName: 'Art Exhibition',
+      status: 'processing',
+      shippingAddress: '999, Adyar, Chennai',
+      trackingNumber: 'TN-776655443',
     },
   ];
 
-  const filteredTransactions = transactions.filter(transaction => {
+  // Helper function to safely check if a value includes a search string
+  const safeIncludes = (value: string | number | boolean | string[], search: string): boolean => {
+    if (typeof value === 'string') {
+      return value.toLowerCase().includes(search.toLowerCase());
+    } else if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
+      return value.some(item => item.toLowerCase().includes(search.toLowerCase()));
+    }
+    return String(value).includes(search);
+  };
+
+  const filteredSales = sales.filter(sale => {
     const matchesSearch = 
-      (typeof transaction.customer === 'string' && 
-        transaction.customer.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (typeof transaction.id === 'string' && 
-        transaction.id.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (typeof transaction.eventName === 'string' && 
-        transaction.eventName.toLowerCase().includes(searchQuery.toLowerCase()));
+      safeIncludes(sale.id, searchQuery) ||
+      safeIncludes(sale.customer.name, searchQuery) ||
+      safeIncludes(sale.event.name, searchQuery);
     
     const matchesFilters = activeFilters.every(filter => {
-      const value = transaction[filter.field as keyof Transaction];
+      const value = sale[filter.field as keyof Sale];
       
       if (typeof value === 'string') {
         if (filter.operator === 'equals') {
@@ -244,85 +469,38 @@ const Sales = () => {
     return matchesSearch && matchesFilters;
   });
 
-  const totalTransactions = filteredTransactions.length;
-  const totalPages = Math.ceil(totalTransactions / itemsPerPage);
+  const totalSales = filteredSales.length;
+  const totalPages = Math.ceil(totalSales / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
-
-  const totalRevenue = transactions.reduce((sum, transaction) => {
-    if (transaction.status !== 'refunded' && transaction.status !== 'failed') {
-      return sum + transaction.amount;
-    }
-    return sum;
-  }, 0);
-  
-  const totalCompletedTransactions = transactions.filter(t => t.status === 'completed').length;
-  const averageOrderValue = totalCompletedTransactions > 0 
-    ? Math.round(totalRevenue / totalCompletedTransactions) 
-    : 0;
-
-  const totalRefunded = transactions
-    .filter(t => t.status === 'refunded')
-    .reduce((sum, t) => sum + t.amount, 0);
+  const paginatedSales = filteredSales.slice(startIndex, startIndex + itemsPerPage);
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'completed':
-        return <StatusBadge status="success" label="Completed" />;
       case 'pending':
         return <StatusBadge status="warning" label="Pending" />;
-      case 'failed':
-        return <StatusBadge status="error" label="Failed" />;
+      case 'processing':
+        return <StatusBadge status="info" label="Processing" />;
+      case 'shipped':
+        return <StatusBadge status="info" label="Shipped" />;
+      case 'delivered':
+        return <StatusBadge status="success" label="Delivered" />;
+      case 'cancelled':
+        return <StatusBadge status="error" label="Cancelled" />;
       case 'refunded':
-        return <StatusBadge status="info" label="Refunded" />;
+        return <StatusBadge status="error" label="Refunded" />;
       default:
-        return <StatusBadge status="info" label={status} />;
+        return <StatusBadge status="default" label={status} />;
     }
   };
-
-  const dailySales: SalesData[] = [
-    { name: 'Apr 1', online: 5000, offline: 3997, total: 8997 },
-    { name: 'Apr 2', online: 4000, offline: 1996, total: 5996 },
-    { name: 'Apr 3', online: 3000, offline: 1298, total: 4298 },
-    { name: 'Apr 4', online: 3500, offline: 697, total: 4197 },
-    { name: 'Apr 5', online: 3800, offline: 795, total: 4595 },
-  ];
-
-  const paymentMethodsData: SalesData[] = [
-    { name: 'Credit Card', value: 14791 },
-    { name: 'UPI', value: 9993 },
-    { name: 'NetBanking', value: 5495 },
-    { name: 'Debit Card', value: 1499 },
-  ];
-
-  const eventSalesData: SalesData[] = [
-    { name: 'Summer Music Festival', value: 8997 },
-    { name: 'Tech Conference 2025', value: 5996 },
-    { name: 'Food & Wine Expo', value: 4298 },
-    { name: 'Comedy Night', value: 4197 },
-    { name: 'Tech Workshop', value: 998 },
-    { name: 'Art Exhibition', value: 2697 },
-  ];
 
   const filterOptions = [
     {
       name: 'Status',
-      options: ['completed', 'pending', 'failed', 'refunded'],
+      options: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
     },
     {
       name: 'Payment Method',
       options: ['Credit Card', 'Debit Card', 'UPI', 'NetBanking'],
-    },
-    {
-      name: 'Event',
-      options: [
-        'Summer Music Festival', 
-        'Tech Conference 2025', 
-        'Food & Wine Expo',
-        'Comedy Night',
-        'Tech Workshop',
-        'Art Exhibition'
-      ],
     },
   ];
 
@@ -330,13 +508,13 @@ const Sales = () => {
     setActiveFilters(prev => {
       if (isSelected) {
         return [...prev, {
-          field: filterName === 'Event' ? 'eventName' : filterName === 'Status' ? 'status' : 'paymentMethod',
+          field: filterName === 'Status' ? 'status' : 'paymentMethod',
           operator: 'equals',
           value: option
         }];
       } else {
         return prev.filter(filter => 
-          !(filter.field === (filterName === 'Event' ? 'eventName' : filterName === 'Status' ? 'status' : 'paymentMethod') && 
+          !(filter.field === (filterName === 'Status' ? 'status' : 'paymentMethod') && 
           filter.value === option)
         );
       }
@@ -351,59 +529,74 @@ const Sales = () => {
     setCurrentPage(1);
   };
 
-  const importModalFields: FormField[] = [
-    {
-      id: 'file',
-      label: 'Upload File',
-      type: 'file',
-      accept: '.csv, .xlsx',
-      required: true,
-    },
-    {
-      id: 'dateFormat',
-      label: 'Date Format',
-      type: 'select',
-      options: [
-        { value: 'dd/mm/yyyy', label: 'DD/MM/YYYY' },
-        { value: 'mm/dd/yyyy', label: 'MM/DD/YYYY' },
-        { value: 'yyyy-mm-dd', label: 'YYYY-MM-DD' },
-      ],
-      defaultValue: 'dd/mm/yyyy',
-    },
-    {
-      id: 'currency',
-      label: 'Currency',
-      type: 'select',
-      options: [
-        { value: 'INR', label: 'Indian Rupee (₹)' },
-        { value: 'USD', label: 'US Dollar ($)' },
-        { value: 'EUR', label: 'Euro (€)' },
-      ],
-      defaultValue: 'INR',
-    },
-    {
-      id: 'skipHeaders',
-      label: 'Skip Header Row',
-      type: 'switch',
-      defaultValue: true,
-    },
-  ];
+  const handleOpenDetailsModal = (sale: Sale) => {
+    setSelectedSale(sale);
+    setDetailsModalOpen(true);
+  };
 
-  const handleImportSubmit = async (data: Record<string, any>): Promise<void> => {
+  const handleSubmitDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     toast({
-      title: "Import successful",
-      description: `Imported sales data with settings: ${data.dateFormat}, ${data.currency}`,
+      title: "Sale updated",
+      description: `Sale ${selectedSale?.id} has been updated successfully`,
     });
   };
+
+  const saleDetailFields: FormField[] = [
+    {
+      id: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'pending', label: 'Pending' },
+        { value: 'processing', label: 'Processing' },
+        { value: 'shipped', label: 'Shipped' },
+        { value: 'delivered', label: 'Delivered' },
+        { value: 'cancelled', label: 'Cancelled' },
+        { value: 'refunded', label: 'Refunded' },
+      ],
+      defaultValue: selectedSale?.status || 'pending',
+    },
+    {
+      id: 'trackingNumber',
+      label: 'Tracking Number',
+      type: 'text',
+      placeholder: 'Enter tracking number',
+      defaultValue: selectedSale?.trackingNumber || '',
+    },
+    {
+      id: 'shippingAddress',
+      label: 'Shipping Address',
+      type: 'textarea',
+      placeholder: 'Enter shipping address',
+      defaultValue: selectedSale?.shippingAddress || '',
+    },
+  ];
+
+  // Then ensure that all SalesData arrays match this interface structure
+  const salesData: SalesData[] = [
+    { name: 'Jan', value: 4000, online: 2500, offline: 1500, total: 4000 },
+    { name: 'Feb', value: 3000, online: 1800, offline: 1200, total: 3000 },
+    { name: 'Mar', value: 5000, online: 3200, offline: 1800, total: 5000 },
+    { name: 'Apr', value: 6000, online: 3800, offline: 2200, total: 6000 },
+    { name: 'May', value: 4500, online: 2700, offline: 1800, total: 4500 },
+    { name: 'Jun', value: 5500, online: 3500, offline: 2000, total: 5500 },
+    { name: 'Jul', value: 7000, online: 4500, offline: 2500, total: 7000 },
+    { name: 'Aug', value: 6500, online: 4000, offline: 2500, total: 6500 },
+    { name: 'Sep', value: 5000, online: 3000, offline: 2000, total: 5000 },
+    { name: 'Oct', value: 5500, online: 3300, offline: 2200, total: 5500 },
+    { name: 'Nov', value: 4000, online: 2400, offline: 1600, total: 4000 },
+    { name: 'Dec', value: 6000, online: 3600, offline: 2400, total: 6000 },
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Sales & Revenue</h1>
-          <p className="text-muted-foreground">Track your event sales and revenue</p>
+          <h1 className="text-2xl font-bold">Sales</h1>
+          <p className="text-muted-foreground">Track and manage customer sales</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Select defaultValue={dateRange} onValueChange={setDateRange}>
@@ -443,436 +636,212 @@ const Sales = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button onClick={() => setImportModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Import
-          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <h2 className="text-3xl font-bold">₹{totalRevenue.toLocaleString()}</h2>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-primary" />
-              </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Recent Sales</CardTitle>
+          <CardDescription>
+            Showing {filteredSales.length} sales for the selected period
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div className="flex-grow w-full md:w-auto">
+              <AdvancedSearch 
+                onSearch={handleSearch} 
+                placeholder="Search sales..." 
+                fields={[
+                  { name: 'id', label: 'Sale ID' },
+                  { name: 'customer.name', label: 'Customer Name' },
+                  { name: 'event.name', label: 'Event Name' },
+                ]}
+              />
             </div>
-            <div className="mt-4 flex items-center text-sm">
-              <Badge variant="outline" className="flex items-center">
-                <ArrowUpRight className="h-3 w-3 mr-1 text-green-500" />
-                <span className="text-green-500">12.5%</span>
-              </Badge>
-              <span className="ml-2 text-muted-foreground">vs. last period</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Transactions</p>
-                <h2 className="text-3xl font-bold">{totalCompletedTransactions}</h2>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <BarChart className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <Badge variant="outline" className="flex items-center">
-                <ArrowUpRight className="h-3 w-3 mr-1 text-green-500" />
-                <span className="text-green-500">8.2%</span>
-              </Badge>
-              <span className="ml-2 text-muted-foreground">vs. last period</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Avg. Order Value</p>
-                <h2 className="text-3xl font-bold">₹{averageOrderValue.toLocaleString()}</h2>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center">
-                <Users className="h-6 w-6 text-amber-600" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <Badge variant="outline" className="flex items-center">
-                <ArrowUpRight className="h-3 w-3 mr-1 text-green-500" />
-                <span className="text-green-500">3.1%</span>
-              </Badge>
-              <span className="ml-2 text-muted-foreground">vs. last period</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Refunded</p>
-                <h2 className="text-3xl font-bold">₹{totalRefunded.toLocaleString()}</h2>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-red-600" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <Badge variant="outline" className="flex items-center">
-                <ArrowDownRight className="h-3 w-3 mr-1 text-red-500" />
-                <span className="text-red-500">2.4%</span>
-              </Badge>
-              <span className="ml-2 text-muted-foreground">vs. last period</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Revenue Over Time</CardTitle>
-                <CardDescription>Daily sales for the selected period</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <SalesChart data={dailySales} title="Sales Data" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Methods</CardTitle>
-                <CardDescription>Revenue by payment method</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <SalesStatistics data={paymentMethodsData} type="pie" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex justify-between">
-                  <span>Top Selling Events</span>
-                  <Button variant="ghost" size="sm" onClick={() => setActiveTab('reports')}>
-                    See details <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Event Name</TableHead>
-                      <TableHead>Revenue</TableHead>
-                      <TableHead className="text-right">Tickets Sold</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">Summer Music Festival</TableCell>
-                      <TableCell>₹8,997</TableCell>
-                      <TableCell className="text-right">3</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Tech Conference 2025</TableCell>
-                      <TableCell>₹5,996</TableCell>
-                      <TableCell className="text-right">4</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Food & Wine Expo</TableCell>
-                      <TableCell>₹4,298</TableCell>
-                      <TableCell className="text-right">3</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Comedy Night</TableCell>
-                      <TableCell>₹4,197</TableCell>
-                      <TableCell className="text-right">3</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Tech Workshop</TableCell>
-                      <TableCell>₹998</TableCell>
-                      <TableCell className="text-right">3</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Art Exhibition</TableCell>
-                      <TableCell>₹2,697</TableCell>
-                      <TableCell className="text-right">3</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Event Performance</CardTitle>
-                <CardDescription>Sales by event</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <SalesStatistics data={eventSalesData} type="bar" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="transactions" className="space-y-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Recent Transactions</CardTitle>
-              <CardDescription>
-                Showing {filteredTransactions.length} transactions for the selected period
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="flex-grow w-full md:w-auto">
-                  <AdvancedSearch 
-                    onSearch={handleSearch} 
-                    placeholder="Search transactions..." 
-                  />
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {filterOptions.map((filterGroup) => (
-                    <FilterDropdown 
-                      key={filterGroup.name}
-                      triggerText={filterGroup.name}
-                      icon={<FilterIcon className="h-4 w-4" />}
-                    >
-                      <FilterGroup>
-                        {filterGroup.options.map((option) => {
-                          const field = filterGroup.name === 'Event' ? 'eventName' : 
-                                        filterGroup.name === 'Status' ? 'status' : 'paymentMethod';
-                          const isActive = activeFilters.some(f => f.field === field && f.value === option);
-                          
-                          return (
-                            <div key={option} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`filter-${filterGroup.name}-${option}`}
-                                checked={isActive}
-                                onChange={(e) => handleFilterChange(filterGroup.name, option, e.target.checked)}
-                                className="rounded text-primary focus:ring-primary"
-                              />
-                              <label 
-                                htmlFor={`filter-${filterGroup.name}-${option}`}
-                                className="text-sm cursor-pointer"
-                              >
-                                {option}
-                              </label>
-                            </div>
-                          );
-                        })}
-                      </FilterGroup>
-                    </FilterDropdown>
-                  ))}
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => {
-                      setActiveFilters([]);
-                      setSearchQuery('');
-                    }}
-                    disabled={activeFilters.length === 0 && searchQuery === ''}
-                    title="Clear filters"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+            <div className="flex gap-2 flex-wrap">
+              {filterOptions.map((filterGroup) => (
+                <FilterDropdown 
+                  key={filterGroup.name}
+                  triggerText={filterGroup.name}
+                  icon={<FilterIcon className="h-4 w-4" />}
+                >
+                  <FilterGroup>
+                    {filterGroup.options.map((option) => {
+                      const field = filterGroup.name === 'Status' ? 'status' : 'paymentMethod';
+                      const isActive = activeFilters.some(f => f.field === field && f.value === option);
+                      
+                      return (
+                        <div key={option} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`filter-${filterGroup.name}-${option}`}
+                            checked={isActive}
+                            onChange={(e) => handleFilterChange(filterGroup.name, option, e.target.checked)}
+                            className="rounded text-primary focus:ring-primary"
+                          />
+                          <Label 
+                            htmlFor={`filter-${filterGroup.name}-${option}`}
+                            className="text-sm cursor-pointer"
+                          >
+                            {option}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </FilterGroup>
+                </FilterDropdown>
+              ))}
               
-              <div className="border rounded-md">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Transaction ID</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Event</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Payment Method</TableHead>
-                      <TableHead>Status</TableHead>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => {
+                  setActiveFilters([]);
+                  setSearchQuery('');
+                }}
+                disabled={activeFilters.length === 0 && searchQuery === ''}
+                title="Clear filters"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sale ID</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Total Amount</TableHead>
+                  <TableHead>Payment Method</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedSales.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                      No sales found. Try a different search or filter.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedSales.map((sale) => (
+                    <TableRow key={sale.id} className="table-row-hover">
+                      <TableCell className="font-medium">{sale.id}</TableCell>
+                      <TableCell>{new Date(sale.date).toLocaleDateString()}</TableCell>
+                      <TableCell>{sale.customer.name}</TableCell>
+                      <TableCell>{sale.event.name}</TableCell>
+                      <TableCell>₹{sale.totalAmount.toLocaleString()}</TableCell>
+                      <TableCell>{sale.paymentMethod}</TableCell>
+                      <TableCell>{getStatusBadge(sale.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenDetailsModal(sale)}>
+                          View Details
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedTransactions.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                          No transactions found. Try a different search or filter.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      paginatedTransactions.map((transaction) => (
-                        <TableRow key={transaction.id} className="table-row-hover">
-                          <TableCell className="font-medium">{transaction.id}</TableCell>
-                          <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                          <TableCell>{transaction.customer}</TableCell>
-                          <TableCell>{transaction.eventName}</TableCell>
-                          <TableCell>₹{transaction.amount.toLocaleString()}</TableCell>
-                          <TableCell>{transaction.paymentMethod}</TableCell>
-                          <TableCell>{getStatusBadge(transaction.status)}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-              
-              <div className="mt-4">
-                <DataPagination
-                  currentPage={currentPage}
-                  totalItems={filteredTransactions.length}
-                  pageSize={itemsPerPage}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setItemsPerPage}
-                  showingText="transactions"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="reports" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sales Reports</CardTitle>
-              <CardDescription>
-                Generate and view detailed sales reports
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Card className="hover-lift cursor-pointer" onClick={() => toast({ title: "Generating Event Sales Report" })}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold">Event Sales Report</h3>
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <BarChart className="h-5 w-5 text-primary" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Sales breakdown by individual events and categories
-                    </p>
-                    <Button variant="link" className="p-0 h-auto mt-4">
-                      Generate Report <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-                <Card className="hover-lift cursor-pointer" onClick={() => toast({ title: "Generating Payment Method Report" })}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold">Payment Methods</h3>
-                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <PieChart className="h-5 w-5 text-blue-600" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Analysis of payment methods used by customers
-                    </p>
-                    <Button variant="link" className="p-0 h-auto mt-4">
-                      Generate Report <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-                <Card className="hover-lift cursor-pointer" onClick={() => toast({ title: "Generating Revenue Trends Report" })}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold">Revenue Trends</h3>
-                      <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                        <TrendingUp className="h-5 w-5 text-amber-600" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Daily, weekly, and monthly revenue trends
-                    </p>
-                    <Button variant="link" className="p-0 h-auto mt-4">
-                      Generate Report <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-                <Card className="hover-lift cursor-pointer" onClick={() => toast({ title: "Generating Discount Analysis Report" })}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold">Discount Analysis</h3>
-                      <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <BarChart2 className="h-5 w-5 text-green-600" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Impact of discounts and promotions on sales
-                    </p>
-                    <Button variant="link" className="p-0 h-auto mt-4">
-                      Generate Report <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-                <Card className="hover-lift cursor-pointer" onClick={() => toast({ title: "Generating Tax Report" })}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold">Tax Report</h3>
-                      <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-purple-600" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Tax breakdown for accounting and compliance
-                    </p>
-                    <Button variant="link" className="p-0 h-auto mt-4">
-                      Generate Report <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-                <Card className="hover-lift cursor-pointer" onClick={() => toast({ title: "Generating Custom Report" })}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold">Custom Report</h3>
-                      <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                        <CalendarIcon className="h-5 w-5 text-red-600" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Create a custom sales report with specific parameters
-                    </p>
-                    <Button variant="link" className="p-0 h-auto mt-4">
-                      Generate Report <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          
+          <div className="mt-4">
+            <DataPagination
+              currentPage={currentPage}
+              totalItems={filteredSales.length}
+              pageSize={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setItemsPerPage}
+              showingText="sales"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <CustomModalForm
-        title="Import Sales Data"
-        description="Upload a file with your sales data to import"
-        fields={importModalFields}
-        onSubmit={handleImportSubmit}
-        submitText="Import Data"
-        cancelText="Cancel"
-        isOpen={importModalOpen}
-        onOpenChange={setImportModalOpen}
+        title="Sale Details"
+        description="View complete sale information"
+        fields={saleDetailFields}
+        onSubmit={handleSubmitDetails}
+        submitText="Update Sale"
+        cancelText="Close"
+        isOpen={detailsModalOpen}
+        onOpenChange={setDetailsModalOpen}
         width="md"
-      />
-    </div>
-  );
-};
+      >
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-lg font-semibold">Customer Information</h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedSale?.customer.name}</span>
+                  <Button variant="ghost" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedSale?.customer.email}</span>
+                  <Button variant="ghost" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedSale?.customer.phone}</span>
+                  <Button variant="ghost" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedSale?.customer.address}</span>
+                  <Button variant="ghost" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
 
-export default Sales;
+            <div>
+              <h3 className="text-lg font-semibold">Event Information</h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedSale?.event.name}</span>
+                  <Button variant="ghost" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Map className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedSale?.event.venue}</span>
+                  <Button variant="ghost" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                  <span>{new Date(selectedSale?.event.date || '').toLocaleDateString()}</span>
+                  <Button variant="ghost" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold">Sale Items</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item Name</TableHead>

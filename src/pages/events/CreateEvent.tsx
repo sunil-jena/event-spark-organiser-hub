@@ -42,7 +42,7 @@ import {
   Upload, 
   Eye,
   X,
-  Mic,
+  Mic2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
