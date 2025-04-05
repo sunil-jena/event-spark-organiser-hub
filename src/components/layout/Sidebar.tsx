@@ -137,6 +137,7 @@ interface SidebarProps {
   toggleMinimize: () => void;
 }
 
+
 const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate()
@@ -195,10 +196,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
       {isMobile && (
         <Button
           onClick={onClose}
-          className="absolute top-4 right-4 bg-transparent hover:bg-white/10"
-        >
-          ✕
-        </Button>
+        />
       )}
     </div>
   );
