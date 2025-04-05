@@ -11,62 +11,30 @@ interface HeaderProps {
   onMenuClick: () => void;
   minimized?: boolean;
   toggleMinimize?: () => void;
-  toggleSearch?: () => void;
-  toggleNotifications?: () => void;
-  toggleDatePicker?: () => void;
-  isSearchOpen?: boolean;
-  isNotificationsOpen?: boolean;
-  isDatePickerOpen?: boolean;
 }
 
-const Header = ({ 
-  onMenuClick, 
-  minimized, 
-  toggleMinimize,
-  toggleSearch: externalToggleSearch,
-  toggleNotifications: externalToggleNotifications,
-  toggleDatePicker: externalToggleDatePicker,
-  isSearchOpen: externalSearchOpen,
-  isNotificationsOpen: externalNotificationsOpen,
-  isDatePickerOpen: externalDatePickerOpen
-}: HeaderProps) => {
+const Header = ({ onMenuClick, minimized, toggleMinimize }: HeaderProps) => {
   const isMobile = useIsMobile();
-  const [internalSearchOpen, setInternalSearchOpen] = useState(false);
-  const [internalCalendarOpen, setInternalCalendarOpen] = useState(false);
-  const [internalNotificationsOpen, setInternalNotificationsOpen] = useState(false);
-
-  const searchOpen = externalSearchOpen !== undefined ? externalSearchOpen : internalSearchOpen;
-  const calendarOpen = externalDatePickerOpen !== undefined ? externalDatePickerOpen : internalCalendarOpen;
-  const notificationsOpen = externalNotificationsOpen !== undefined ? externalNotificationsOpen : internalNotificationsOpen;
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const toggleSearch = () => {
-    if (externalToggleSearch) {
-      externalToggleSearch();
-    } else {
-      setInternalSearchOpen(!internalSearchOpen);
-      if (internalCalendarOpen) setInternalCalendarOpen(false);
-      if (internalNotificationsOpen) setInternalNotificationsOpen(false);
-    }
+    setSearchOpen(!searchOpen);
+    if (calendarOpen) setCalendarOpen(false);
+    if (notificationsOpen) setNotificationsOpen(false);
   };
 
   const toggleCalendar = () => {
-    if (externalToggleDatePicker) {
-      externalToggleDatePicker();
-    } else {
-      setInternalCalendarOpen(!internalCalendarOpen);
-      if (internalSearchOpen) setInternalSearchOpen(false);
-      if (internalNotificationsOpen) setInternalNotificationsOpen(false);
-    }
+    setCalendarOpen(!calendarOpen);
+    if (searchOpen) setSearchOpen(false);
+    if (notificationsOpen) setNotificationsOpen(false);
   };
 
   const toggleNotifications = () => {
-    if (externalToggleNotifications) {
-      externalToggleNotifications();
-    } else {
-      setInternalNotificationsOpen(!internalNotificationsOpen);
-      if (internalSearchOpen) setInternalSearchOpen(false);
-      if (internalCalendarOpen) setInternalCalendarOpen(false);
-    }
+    setNotificationsOpen(!notificationsOpen);
+    if (searchOpen) setSearchOpen(false);
+    if (calendarOpen) setCalendarOpen(false);
   };
 
   return (
@@ -90,6 +58,7 @@ const Header = ({
             <Menu className="h-6 w-6" />
           </Button>
         )}
+        {/* <h1 className="text-xl font-semibold hidden md:block">Event Organizer Hub</h1> */}
       </div>
 
       <AnimatePresence>
