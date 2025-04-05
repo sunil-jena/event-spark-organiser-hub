@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, ChartBar, Home, Settings, User } from 'lucide-react';
+import { BarChart3, CalendarDays, Home, Settings, Users, Ticket, TrendingUp, PieChart, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -20,17 +20,32 @@ const navItems: NavItem[] = [
   {
     title: 'Events',
     href: '/events',
-    icon: Calendar,
+    icon: CalendarDays,
   },
   {
     title: 'Analytics',
     href: '/analytics',
-    icon: ChartBar,
+    icon: BarChart3,
   },
   {
-    title: 'Profile',
-    href: '/profile',
-    icon: User,
+    title: 'Orders',
+    href: '/orders',
+    icon: Ticket,
+  },
+  {
+    title: 'Customers',
+    href: '/customers',
+    icon: Users,
+  },
+  {
+    title: 'Reports',
+    href: '/reports',
+    icon: PieChart,
+  },
+  {
+    title: 'Sales',
+    href: '/sales',
+    icon: TrendingUp,
   },
   {
     title: 'Settings',
@@ -59,7 +74,7 @@ const Sidebar = ({ isMobile, isOpen, onClose }: SidebarProps) => {
     <div className={sidebarClasses}>
       <div className="p-4 border-b border-primary-light/20">
         <div className="flex items-center space-x-2">
-          <span className="bg-primary-light text-primary font-bold rounded-md p-1">ES</span>
+          <span className="bg-primary-light text-white font-bold rounded-md p-1">ES</span>
           <h1 className="text-xl font-semibold">EventSpark</h1>
         </div>
       </div>
@@ -88,9 +103,10 @@ const Sidebar = ({ isMobile, isOpen, onClose }: SidebarProps) => {
       <div className="p-4 border-t border-primary-light/20">
         <Button
           variant="outline"
-          className="w-full bg-transparent border-white/20 hover:bg-white/10"
+          className="w-full bg-transparent border-white/20 hover:bg-white/10 flex items-center justify-center gap-2"
         >
-          Logout
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
         </Button>
       </div>
       {isMobile && (
