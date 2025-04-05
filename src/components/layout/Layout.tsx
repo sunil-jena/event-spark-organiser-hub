@@ -1,14 +1,15 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { motion } from 'framer-motion';
 
 const Layout = () => {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [minimized, setMinimized] = useState(true);
+  const [minimized, setMinimized] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -65,8 +66,14 @@ const Layout = () => {
     return () => window.removeEventListener('keydown', handleEscapeKey);
   }, [isMobile]);
 
+  // Calculate main content width based on sidebar state
+  const mainContentStyle = {
+    width: isMobile ? '100%' : minimized ? 'calc(100% - 80px)' : 'calc(100% - 280px)',
+    transition: 'margin-left 0.3s ease, width 0.3s ease',
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 ">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <Sidebar
         isMobile={isMobile}
         isOpen={sidebarOpen}
@@ -75,7 +82,10 @@ const Layout = () => {
         toggleMinimize={toggleMinimize}
       />
 
-      <div className="flex flex-col flex-1 overflow-hidden h-screen">
+      <div
+        className="flex flex-col flex-1 overflow-hidden h-screen"
+        style={!isMobile ? mainContentStyle : undefined}
+      >
         <Header
           onMenuClick={toggleSidebar}
           minimized={minimized}
@@ -88,9 +98,14 @@ const Layout = () => {
           isDatePickerOpen={datePickerOpen}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-purple-50  bg-main-background">
+        <motion.main
+          className="flex-1 overflow-y-auto p-4 md:p-6 bg-purple-50 bg-main-background"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <Outlet />
-        </main>
+        </motion.main>
       </div>
     </div>
   );

@@ -1,21 +1,114 @@
-
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarDays, Home, Settings, Users, Ticket, TrendingUp, PieChart, LogOut, ChevronLeft, ChevronRight, MessageSquare, HelpCircle, LayoutDashboard, Calendar, Tag, Clock, ShoppingCart, BarChart, CreditCard, FileText, LucideLayoutDashboard } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  LayoutDashboard,
+  Calendar,
+  Users,
+  BarChart3,
+  Settings,
+  LogOut,
+  ChevronRight,
+  ChevronLeft,
+  Ticket,
+  ShoppingCart,
+  CreditCard,
+  BarChart,
+  BarChart2,
+  FileText,
+  HelpCircle,
+  Star,
+  MessageSquare,
+  Music,
+  Mic,
+  Monitor,
+  Briefcase,
+  Film,
+  Award,
+  Tag,
+  Clock
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { NavItem, NestedNavigation } from './NestedNavigation';
+import { NestedNavigation, NavItem } from './NestedNavigation';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+
+interface SidebarProps {
+  isMobile: boolean;
+  isOpen: boolean;
+  onClose: () => void;
+  minimized: boolean;
+  toggleMinimize: () => void;
+}
 
 const mainNavItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/',
-    icon: <Home className="h-5 w-5" />,
+    icon: <LayoutDashboard className="h-5 w-5" />,
   },
   {
     title: 'Events',
-    href: '/events',
-    icon: <CalendarDays className="h-5 w-5" />,
+    icon: <Calendar className="h-5 w-5" />,
+    children: [
+      {
+        title: 'All Events',
+        href: '/events',
+      },
+      {
+        title: 'Event Details',
+        href: '/event-details',
+      },
+      {
+        title: 'Create Event',
+        href: '/events/create',
+      },
+      {
+        title: 'Categories',
+        href: '/events/categories',
+        children: [
+          {
+            title: 'Music & Concerts',
+            href: '/events/categories/music',
+            icon: <Music className="h-4 w-4" />,
+          },
+          {
+            title: 'Workshops',
+            href: '/events/categories/workshops',
+            icon: <Briefcase className="h-4 w-4" />,
+          },
+          {
+            title: 'Business',
+            href: '/events/categories/business',
+            icon: <Monitor className="h-4 w-4" />,
+          },
+          {
+            title: 'Dance',
+            href: '/events/categories/dance',
+            icon: <Star className="h-4 w-4" />,
+          },
+          {
+            title: 'Comedy Shows',
+            href: '/events/categories/comedy',
+            icon: <Mic className="h-4 w-4" />,
+          },
+          {
+            title: 'Film Screenings',
+            href: '/events/categories/film',
+            icon: <Film className="h-4 w-4" />,
+          },
+          {
+            title: 'Award Ceremonies',
+            href: '/events/categories/awards',
+            icon: <Award className="h-4 w-4" />,
+          }
+        ]
+      },
+      {
+        title: 'Venues',
+        href: '/events/venues',
+      }
+    ]
   },
   {
     title: 'Tickets',
@@ -32,7 +125,24 @@ const mainNavItems: NavItem[] = [
       {
         title: 'Discounts',
         href: '/tickets/discounts',
-        label: 'New'
+        label: 'New',
+        children: [
+          {
+            title: 'Promo Codes',
+            href: '/tickets/discounts/promo-codes',
+            icon: <Tag className="h-4 w-4" />,
+          },
+          {
+            title: 'Early Bird',
+            href: '/tickets/discounts/early-bird',
+            icon: <Clock className="h-4 w-4" />,
+          },
+          {
+            title: 'Group Discounts',
+            href: '/tickets/discounts/group',
+            icon: <Users className="h-4 w-4" />,
+          },
+        ]
       }
     ]
   },
@@ -112,15 +222,6 @@ const secondaryNavItems: NavItem[] = [
   }
 ];
 
-interface SidebarProps {
-  isMobile: boolean;
-  isOpen: boolean;
-  onClose: () => void;
-  minimized: boolean;
-  toggleMinimize: () => void;
-}
-
-
 const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate()
@@ -129,6 +230,8 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
     'flex flex-col h-screen bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',
     isMobile ? (isOpen ? 'fixed inset-0 z-50' : 'w-0') : minimized ? 'w-16' : 'w-64'
   );
+
+  if (isMobile && !isOpen) return null;
 
   return (
     <div className={sidebarClasses}>
@@ -147,7 +250,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
 
       </div>
       {/* Nav sections */}
-      <div className="flex-1  py-4 px-3 overflow-hidden">
+      <div className="flex-1  py-4 px-3 ">
         <nav className="space-y-6">
           <div>
             {!minimized && <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Main</h2>}
@@ -177,7 +280,10 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
       {isMobile && (
         <Button
           onClick={onClose}
-        />
+          className="absolute top-4 right-4 bg-transparent hover:bg-white/10"
+        >
+          ✕
+        </Button>
       )}
     </div>
   );
