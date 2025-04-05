@@ -98,26 +98,6 @@
   background: #a78bfa;
 }
 
-/* Custom scrollbar for sidebar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
 /* Card hover effects */
 .hover-lift {
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
@@ -216,6 +196,7 @@
   background-color: rgba(139, 92, 246, 0.05);
   transform: scale(1.005);
 }
+<<<<<<< HEAD
 
 /* Form field animation */
 .form-field-focus {
@@ -261,3 +242,5 @@
   transform: rotateY(180deg);
 }
 >>>>>>> 5b77ec9f659651e404473c3c9aba8d6b9e2a6a3a
+=======
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98

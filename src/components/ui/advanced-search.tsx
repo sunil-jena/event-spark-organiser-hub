@@ -90,7 +90,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const addFilter = (newFilter: Filter) => {
     // Check if filter already exists and replace it
     const exists = activeFilters.findIndex(f => f.field === newFilter.field);
-
     if (exists >= 0) {
       const updatedFilters = [...activeFilters];
       updatedFilters[exists] = newFilter;
@@ -98,7 +97,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     } else {
       setActiveFilters([...activeFilters, newFilter]);
     }
-
     setIsFilterOpen(false);
   };
 
@@ -130,7 +128,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             onKeyDown={handleKeyDown}
           />
         </div>
-
         <div className="flex gap-2">
           {showFilterButton && (
             <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
@@ -184,7 +181,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
-
                         {filter.type === 'multiselect' && filter.options && (
                           <Collapsible>
                             <CollapsibleTrigger asChild>
@@ -221,7 +217,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                                         } else {
                                           newValues = newValues.filter(v => v !== option.value);
                                         }
-
                                         if (newValues.length > 0) {
                                           addFilter({
                                             field: filter.id,
@@ -246,7 +241,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                             </CollapsibleContent>
                           </Collapsible>
                         )}
-
                         {filter.type === 'status' && (
                           <Collapsible>
                             <CollapsibleTrigger asChild>

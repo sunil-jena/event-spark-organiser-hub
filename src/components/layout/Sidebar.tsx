@@ -32,24 +32,7 @@ const mainNavItems: NavItem[] = [
       {
         title: 'Discounts',
         href: '/tickets/discounts',
-        label: 'New',
-        children: [
-          {
-            title: 'Promo Codes',
-            href: '/tickets/discounts/promo-codes',
-            icon: <Tag className="h-4 w-4" />,
-          },
-          {
-            title: 'Early Bird',
-            href: '/tickets/discounts/early-bird',
-            icon: <Clock className="h-4 w-4" />,
-          },
-          {
-            title: 'Group Discounts',
-            href: '/tickets/discounts/group',
-            icon: <Users className="h-4 w-4" />,
-          },
-        ]
+        label: 'New'
       }
     ]
   },
@@ -146,8 +129,6 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
     'flex flex-col h-screen bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',
     isMobile ? (isOpen ? 'fixed inset-0 z-50' : 'w-0') : minimized ? 'w-16' : 'w-64'
   );
-
-  if (isMobile && !isOpen) return null;
 
   return (
     <div className={sidebarClasses}>

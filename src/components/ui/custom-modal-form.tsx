@@ -243,7 +243,6 @@ export const CustomModalForm: React.FC<CustomModalFormProps> = ({
             {error && <p className="text-xs text-red-500">{error}</p>}
           </div>
         );
-
       case 'select':
         return (
           <div className="space-y-2">
@@ -271,7 +270,6 @@ export const CustomModalForm: React.FC<CustomModalFormProps> = ({
             {error && <p className="text-xs text-red-500">{error}</p>}
           </div>
         );
-
       case 'switch':
         return (
           <div className="flex items-center justify-between">
@@ -290,7 +288,6 @@ export const CustomModalForm: React.FC<CustomModalFormProps> = ({
             />
           </div>
         );
-
       case 'file':
         return (
           <div className="space-y-2">
@@ -313,7 +310,6 @@ export const CustomModalForm: React.FC<CustomModalFormProps> = ({
             {error && <p className="text-xs text-red-500">{error}</p>}
           </div>
         );
-
       default:
         return (
           <div className="space-y-2">
@@ -343,7 +339,6 @@ export const CustomModalForm: React.FC<CustomModalFormProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-
       <DialogContent className={`${getDialogWidth()} p-0 overflow-hidden`}>
         <div className="flex flex-col max-h-[85vh]">
           <DialogHeader className="p-6 pb-0">
@@ -357,10 +352,9 @@ export const CustomModalForm: React.FC<CustomModalFormProps> = ({
               >
                 <X className="h-4 w-4" />
               </Button>
-            </div>
+            </div >
             {description && <DialogDescription className="mt-1.5">{description}</DialogDescription>}
-          </DialogHeader>
-
+          </DialogHeader >
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -391,11 +385,11 @@ export const CustomModalForm: React.FC<CustomModalFormProps> = ({
                 >
                   {isSubmitting || loading ? "Processing..." : submitText}
                 </Button>
-              </div>
-            </DialogFooter>
-          </form>
-        </div>
-      </DialogContent>
-    </Dialog>
+              </div >
+            </DialogFooter >
+          </form >
+        </div >
+      </DialogContent >
+    </Dialog >
   );
 };

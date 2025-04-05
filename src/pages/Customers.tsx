@@ -1,45 +1,53 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { 
+  Search, 
+  Plus, 
+  Mail, 
+  MoreHorizontal, 
+  Filter, 
+  Download,
+  UserPlus,
+  Upload,
+  Tag,
+  MessageSquare,
+  Phone,
+  ExternalLink,
+  FileText,
+  MoreVertical,
+  Edit,
+  Trash2
+} from 'lucide-react';
 import { 
   Card, 
   CardContent, 
-  CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle, 
+  CardDescription,
+  CardFooter
 } from '@/components/ui/card';
 import { 
-  Calendar, 
-  ChevronDown, 
-  Download, 
-  FilterIcon, 
-  Printer,
-  FileText,
-  ArrowRight,
-  ArrowUpRight,
-  ArrowDownRight,
-  DollarSign,
-  Users,
-  Calendar as CalendarIcon,
-  Search,
-  Plus,
-  MoreHorizontal,
-  RefreshCw,
-  PackageCheck,
-  Truck,
-  MapPin,
-  User,
-  ShoppingCart,
-  LucideIcon,
-  Package,
-  Receipt,
-  ChevronsUpDown,
-  Copy,
-  Mail,
-  Phone,
-  Map,
-  Edit,
-  X,
-} from 'lucide-react';
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { motion } from 'framer-motion';
+import { DataPagination } from '@/components/ui/data-pagination';
+import { AdvancedSearch, Filter as SearchFilter } from '@/components/ui/advanced-search';
+import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
+import { useToast } from '@/hooks/use-toast';
+import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,710 +55,1643 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { motion } from 'framer-motion';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { DataPagination } from '@/components/ui/data-pagination';
-import { AdvancedSearch, Filter } from '@/components/ui/advanced-search';
-import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
-import { useToast } from '@/hooks/use-toast';
-import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dropdown-menu";
 
+// Generate city names
+const cities = [
+  'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 
+  'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow',
+  'Kanpur', 'Nagpur', 'Indore', 'Thane', 'Bhopal', 'Visakhapatnam',
+  'Patna', 'Surat', 'Agra', 'Coimbatore'
+];
+
+// Generate a larger dataset for customers
+const generateCustomersData = (count: number): Customer[] => {
+  const firstNames = [
+    'Rahul', 'Priya', 'Vikram', 'Ananya', 'Deepak', 'Kavita', 'Arjun', 'Neha',
+    'Ravi', 'Sneha', 'Amit', 'Pooja', 'Rajesh', 'Shweta', 'Sunil', 'Meera',
+    'Ajay', 'Divya', 'Vijay', 'Nisha', 'Sanjay', 'Aarti', 'Ramesh', 'Anjali',
+    'Sanjay', 'Shreya', 'Raj', 'Nidhi', 'Kishore', 'Kavita'
+  ];
+  
+  const lastNames = [
+    'Sharma', 'Patel', 'Singh', 'Reddy', 'Gupta', 'Joshi', 'Kumar', 'Mishra',
+    'Shah', 'Verma', 'Agarwal', 'Das', 'Malhotra', 'Bose', 'Iyer', 'Banerjee',
+    'Pillai', 'Rao', 'Mehra', 'Chowdhury', 'Jain', 'Nair', 'Thakur', 'Bhatia',
+    'Menon', 'Kapoor', 'Goyal', 'Jha', 'Khanna', 'Chatterjee'
+  ];
+  
+  const getRandomInt = (min: number, max: number) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+  
+  // Generate random phone number
+  const generatePhoneNumber = () => {
+    return `+91 ${getRandomInt(70000, 99999)} ${getRandomInt(10000, 99999)}`;
+  };
+  
+  const generateEmail = (firstName: string, lastName: string) => {
+    const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'company.com'];
+    const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+    return `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${randomDomain}`;
+  };
+  
+  const customers: Customer[] = [];
+  
+  for (let i = 1; i <= count; i++) {
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const city = cities[Math.floor(Math.random() * cities.length)];
+    const orders = Math.floor(Math.random() * 20) + 1;
+    const avgOrderValue = Math.floor(Math.random() * 5000) + 1000;
+    const totalSpent = orders * avgOrderValue;
+    
+    // Generate a random date within the last 90 days
+    const currentDate = new Date();
+    const pastDate = new Date();
+    pastDate.setDate(currentDate.getDate() - Math.floor(Math.random() * 90));
+    
+    // Generate random tags
+    const allTags = ['VIP', 'Regular', 'New', 'Promoter', 'Corporate', 'Student', 'Senior'];
+    const tagCount = Math.floor(Math.random() * 3); // 0 to 2 tags
+    const tags: string[] = [];
+    
+    for (let j = 0; j < tagCount; j++) {
+      const randomTag = allTags[Math.floor(Math.random() * allTags.length)];
+      if (!tags.includes(randomTag)) {
+        tags.push(randomTag);
+      }
+    }
+    
+    // Determine customer status
+    let status: 'active' | 'inactive' | 'new';
+    const statusRandom = Math.random();
+    
+    if (statusRandom < 0.7) {
+      status = 'active';
+    } else if (statusRandom < 0.9) {
+      status = 'new';
+    } else {
+      status = 'inactive';
+    }
+    
+    customers.push({
+      id: i.toString(),
+      name: `${firstName} ${lastName}`,
+      email: generateEmail(firstName, lastName),
+      phone: generatePhoneNumber(),
+      city: city,
+      orders: orders,
+      totalSpent: totalSpent,
+      lastPurchase: pastDate.toISOString().split('T')[0],
+      avatar: Math.random() > 0.7 ? `https://i.pravatar.cc/150?img=${i + 20}` : undefined,
+      tags: tags,
+      status: status
+    });
+  }
+  
+  return customers;
+};
+
+// Customer type definition
 interface Customer {
   id: string;
   name: string;
   email: string;
   phone: string;
-  address: string;
-  joinDate: string;
-  lastActive: string;
+  city: string;
+  orders: number;
   totalSpent: number;
-  ordersCount: number;
-  status: 'active' | 'inactive' | 'new';
+  lastPurchase: string;
+  avatar?: string;
   tags: string[];
+  status: 'active' | 'inactive' | 'new';
+}
+
+// Tags interface
+interface Tag {
+  id: string;
+  label: string;
+  colorClass: string;
 }
 
 const Customers = () => {
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dateRange, setDateRange] = useState('7d');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const allCustomers = generateCustomersData(150);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [displayedCustomers, setDisplayedCustomers] = useState<Customer[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-
-  const customers: Customer[] = [
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isAddTagModalOpen, setIsAddTagModalOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  // Search and filter state
+  const [activeFilters, setActiveFilters] = useState<SearchFilter[]>([]);
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string | string[]>>({});
+  
+  // Tags data
+  const [tags] = useState<Tag[]>([
+    { id: 'vip', label: 'VIP', colorClass: 'bg-purple-500' },
+    { id: 'regular', label: 'Regular', colorClass: 'bg-blue-500' },
+    { id: 'new', label: 'New', colorClass: 'bg-green-500' },
+    { id: 'promoter', label: 'Promoter', colorClass: 'bg-orange-500' },
+    { id: 'corporate', label: 'Corporate', colorClass: 'bg-indigo-500' },
+    { id: 'student', label: 'Student', colorClass: 'bg-pink-500' },
+    { id: 'senior', label: 'Senior', colorClass: 'bg-amber-500' }
+  ]);
+  
+  // Filter configuration
+  const searchFilters = [
     {
-      id: 'CUST-1122',
-      name: 'Raj Patel',
-      email: 'raj.patel@example.com',
-      phone: '9876543210',
-      address: '123, Main Street, Mumbai',
-      joinDate: '2023-01-15',
-      lastActive: '2023-04-01',
-      totalSpent: 12500,
-      ordersCount: 5,
-      status: 'active',
-      tags: ['vip', 'regular'],
-    },
-    {
-      id: 'CUST-1123',
-      name: 'Priya Sharma',
-      email: 'priya.sharma@example.com',
-      phone: '8765432109',
-      address: '456, Linking Road, Bandra',
-      joinDate: '2023-02-20',
-      lastActive: '2023-04-02',
-      totalSpent: 8750,
-      ordersCount: 3,
-      status: 'active',
-      tags: ['regular'],
-    },
-    {
-      id: 'CUST-1124',
-      name: 'Anil Kumar',
-      email: 'anil.kumar@example.com',
-      phone: '7654321098',
-      address: '789, MG Road, Bangalore',
-      joinDate: '2023-03-10',
-      lastActive: '2023-03-25',
-      totalSpent: 5000,
-      ordersCount: 2,
-      status: 'inactive',
-      tags: [],
-    },
-    {
-      id: 'CUST-1125',
-      name: 'Sunita Reddy',
-      email: 'sunita.reddy@example.com',
-      phone: '6543210987',
-      address: '101, Brigade Road, Bangalore',
-      joinDate: '2023-03-15',
-      lastActive: '2023-04-03',
-      totalSpent: 15000,
-      ordersCount: 4,
-      status: 'active',
-      tags: ['vip'],
-    },
-    {
-      id: 'CUST-1126',
-      name: 'Vikram Singh',
-      email: 'vikram.singh@example.com',
-      phone: '5432109876',
-      address: '222, Park Street, Kolkata',
-      joinDate: '2023-01-05',
-      lastActive: '2023-02-15',
-      totalSpent: 3500,
-      ordersCount: 1,
-      status: 'inactive',
-      tags: [],
-    },
-    {
-      id: 'CUST-1127',
-      name: 'Neha Verma',
-      email: 'neha.verma@example.com',
-      phone: '4321098765',
-      address: '333, Camac Street, Kolkata',
-      joinDate: '2023-03-25',
-      lastActive: '2023-04-04',
-      totalSpent: 7500,
-      ordersCount: 2,
-      status: 'active',
-      tags: ['regular'],
-    },
-    {
-      id: 'CUST-1128',
-      name: 'Rahul Gupta',
-      email: 'rahul.gupta@example.com',
-      phone: '3210987654',
-      address: '444, Central Avenue, Chennai',
-      joinDate: '2023-04-01',
-      lastActive: '2023-04-05',
-      totalSpent: 2000,
-      ordersCount: 1,
-      status: 'new',
-      tags: [],
-    },
-    {
-      id: 'CUST-1129',
-      name: 'Anjali Das',
-      email: 'anjali.das@example.com',
-      phone: '2109876543',
-      address: '555, Mount Road, Chennai',
-      joinDate: '2023-04-02',
-      lastActive: '2023-04-05',
-      totalSpent: 1500,
-      ordersCount: 1,
-      status: 'new',
-      tags: [],
-    },
-    {
-      id: 'CUST-1130',
-      name: 'Sanjay Joshi',
-      email: 'sanjay.joshi@example.com',
-      phone: '1098765432',
-      address: '666, Anna Salai, Chennai',
-      joinDate: '2023-02-10',
-      lastActive: '2023-03-20',
-      totalSpent: 9000,
-      ordersCount: 3,
-      status: 'active',
-      tags: ['regular'],
-    },
-    {
-      id: 'CUST-1131',
-      name: 'Kavita Nair',
-      email: 'kavita.nair@example.com',
-      phone: '9988776655',
-      address: '777, T Nagar, Chennai',
-      joinDate: '2023-01-20',
-      lastActive: '2023-04-03',
-      totalSpent: 18000,
-      ordersCount: 6,
-      status: 'active',
-      tags: ['vip', 'regular'],
-    },
-    {
-      id: 'CUST-1132',
-      name: 'Mohammed Khan',
-      email: 'mohammed.khan@example.com',
-      phone: '8877665544',
-      address: '888, Nungambakkam, Chennai',
-      joinDate: '2023-03-05',
-      lastActive: '2023-04-04',
-      totalSpent: 6500,
-      ordersCount: 2,
-      status: 'active',
-      tags: ['regular'],
-    },
-    {
-      id: 'CUST-1133',
-      name: 'Lakshmi Pillai',
-      email: 'lakshmi.pillai@example.com',
-      phone: '7766554433',
-      address: '999, Adyar, Chennai',
-      joinDate: '2023-04-03',
-      lastActive: '2023-04-05',
-      totalSpent: 1000,
-      ordersCount: 1,
-      status: 'new',
-      tags: [],
-    },
-  ];
-
-  // Helper function to safely check if a value includes a search string
-  const safeIncludes = (value: string | number | boolean | string[], search: string): boolean => {
-    if (typeof value === 'string') {
-      return value.toLowerCase().includes(search.toLowerCase());
-    } else if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
-      return value.some(item => item.toLowerCase().includes(search.toLowerCase()));
-    }
-    return String(value).includes(search);
-  };
-
-  const matchesDateFilter = (customerDate: string, operator: string, filterValue: string): boolean => {
-    // Convert both dates to Date objects for comparison
-    const dateToCheck = new Date(customerDate);
-    const filterDate = new Date(filterValue);
-    
-    // Check if both dates are valid
-    if (isNaN(dateToCheck.getTime()) || isNaN(filterDate.getTime())) {
-      return false;
-    }
-    
-    // Now compare dates based on operator
-    if (operator === 'equals') {
-      return dateToCheck.toDateString() === filterDate.toDateString();
-    } else if (operator === 'greaterThan' || operator === 'after') {
-      return dateToCheck > filterDate;
-    } else if (operator === 'lessThan' || operator === 'before') {
-      return dateToCheck < filterDate;
-    } else if (operator === 'between') {
-      // For between operator, we expect filterValue to be in format "start,end"
-      const [start, end] = filterValue.split(',').map(d => new Date(d.trim()));
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        return false;
-      }
-      return dateToCheck >= start && dateToCheck <= end;
-    }
-    
-    return false;
-  };
-
-  const filteredCustomers = customers.filter(customer => {
-    const matchesSearch = 
-      safeIncludes(customer.id, searchQuery) ||
-      safeIncludes(customer.name, searchQuery) ||
-      safeIncludes(customer.email, searchQuery) ||
-      safeIncludes(customer.phone, searchQuery);
-    
-    const matchesFilters = activeFilters.every(filter => {
-      const field = filter.field as keyof Customer;
-      const value = customer[field];
-      
-      if (field === 'joinDate' || field === 'lastActive') {
-        return matchesDateFilter(value as string, filter.operator, filter.value);
-      }
-      
-      if (typeof value === 'string') {
-        if (filter.operator === 'equals') {
-          return value === filter.value;
-        } else if (filter.operator === 'contains') {
-          return value.toLowerCase().includes(filter.value.toLowerCase());
-        }
-      } else if (typeof value === 'number') {
-        const numValue = Number(filter.value);
-        if (filter.operator === 'equals') {
-          return value === numValue;
-        } else if (filter.operator === 'greaterThan') {
-          return value > numValue;
-        } else if (filter.operator === 'lessThan') {
-          return value < numValue;
-        }
-      } else if (Array.isArray(value)) {
-        return value.includes(filter.value);
-      }
-      
-      return true;
-    });
-    
-    return matchesSearch && matchesFilters;
-  });
-
-  const totalCustomers = filteredCustomers.length;
-  const totalPages = Math.ceil(totalCustomers / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
-
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'active':
-        return <StatusBadge status="success" label="Active" />;
-      case 'inactive':
-        return <StatusBadge status="warning" label="Inactive" />;
-      case 'new':
-        return <StatusBadge status="info" label="New" />;
-      default:
-        return <StatusBadge status="default" label={status} />;
-    }
-  };
-
-  const filterOptions = [
-    {
+      id: 'status',
       name: 'Status',
-      options: ['active', 'inactive', 'new'],
+      type: 'select' as const,
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Inactive' },
+        { value: 'new', label: 'New' }
+      ]
     },
     {
+      id: 'city',
+      name: 'City',
+      type: 'select' as const,
+      options: Array.from(new Set(allCustomers.map(customer => customer.city))).map(city => ({
+        value: city,
+        label: city
+      }))
+    },
+    {
+      id: 'tags',
       name: 'Tags',
-      options: ['vip', 'regular'],
+      type: 'multiselect' as const,
+      options: tags.map(tag => ({
+        value: tag.id,
+        label: tag.label
+      }))
     },
+    {
+      id: 'orderValue',
+      name: 'Order Value',
+      type: 'select' as const,
+      options: [
+        { value: 'low', label: 'Less than ₹10,000' },
+        { value: 'medium', label: '₹10,000 - ₹50,000' },
+        { value: 'high', label: 'More than ₹50,000' }
+      ]
+    }
   ];
-
-  const handleFilterChange = (filterName: string, option: string, isSelected: boolean) => {
-    setActiveFilters(prev => {
-      if (isSelected) {
-        return [...prev, {
-          field: filterName === 'Status' ? 'status' : 'tags',
-          operator: filterName === 'Status' ? 'equals' : 'contains',
-          value: option
-        }];
-      } else {
-        return prev.filter(filter => 
-          !(filter.field === (filterName === 'Status' ? 'status' : 'tags') && 
-          filter.value === option)
-        );
-      }
-    });
-    
-    setCurrentPage(1);
-  };
-
-  const handleSearch = (query: string, filters: Filter[]) => {
-    setSearchQuery(query);
-    setActiveFilters(filters);
-    setCurrentPage(1);
-  };
-
-  const handleOpenDetailsModal = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setDetailsModalOpen(true);
-  };
-
-  const handleSubmitDetails = async (data: Record<string, any>) => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Customer updated",
-      description: `Customer ${selectedCustomer?.name} has been updated successfully`,
-    });
-    
-    setDetailsModalOpen(false);
-  };
-
-  const customerDetailFields: FormField[] = [
-    {
-      id: 'name',
-      label: 'Name',
-      type: 'text',
-      placeholder: 'Enter customer name',
-      defaultValue: selectedCustomer?.name || '',
-      required: true,
-    },
-    {
-      id: 'email',
-      label: 'Email',
-      type: 'email',
-      placeholder: 'Enter customer email',
-      defaultValue: selectedCustomer?.email || '',
-      required: true,
-    },
-    {
-      id: 'phone',
-      label: 'Phone',
-      type: 'text',
-      placeholder: 'Enter customer phone',
-      defaultValue: selectedCustomer?.phone || '',
-    },
-    {
-      id: 'address',
-      label: 'Address',
-      type: 'textarea',
-      placeholder: 'Enter customer address',
-      defaultValue: selectedCustomer?.address || '',
-    },
+  
+  const filterGroups: FilterGroup[] = [
     {
       id: 'status',
       label: 'Status',
+      options: [
+        { id: 'active', label: 'Active', colorClass: 'bg-green-500' },
+        { id: 'inactive', label: 'Inactive', colorClass: 'bg-gray-500' },
+        { id: 'new', label: 'New', colorClass: 'bg-blue-500' }
+      ]
+    },
+    {
+      id: 'orderCount',
+      label: 'Orders',
+      options: [
+        { id: 'noOrders', label: 'No Orders' },
+        { id: 'fewOrders', label: '1-5 Orders' },
+        { id: 'manyOrders', label: '6+ Orders' }
+      ]
+    },
+    {
+      id: 'lastPurchase',
+      label: 'Last Purchase',
+      options: [
+        { id: 'recent', label: 'Last 30 Days' },
+        { id: 'month', label: '1-3 Months Ago' },
+        { id: 'older', label: 'Older than 3 Months' }
+      ]
+    }
+  ];
+  
+  // Form fields for add customer
+  const addCustomerFields: FormField[] = [
+    {
+      id: 'name',
+      label: 'Full Name',
+      type: 'text',
+      placeholder: 'Enter full name',
+      required: true,
+      width: 'full'
+    },
+    {
+      id: 'email',
+      label: 'Email Address',
+      type: 'email',
+      placeholder: 'Enter email address',
+      required: true,
+      width: 'half'
+    },
+    {
+      id: 'phone',
+      label: 'Phone Number',
+      type: 'text',
+      placeholder: 'Enter phone number',
+      required: true,
+      width: 'half'
+    },
+    {
+      id: 'city',
+      label: 'City',
+      type: 'text',
+      placeholder: 'Enter city',
+      width: 'half'
+    },
+    {
+      id: 'status',
+      label: 'Customer Status',
       type: 'select',
       options: [
         { value: 'active', label: 'Active' },
         { value: 'inactive', label: 'Inactive' },
-        { value: 'new', label: 'New' },
+        { value: 'new', label: 'New' }
       ],
-      defaultValue: selectedCustomer?.status || 'active',
+      defaultValue: 'new',
+      width: 'half'
     },
+    {
+      id: 'notes',
+      label: 'Additional Notes',
+      type: 'textarea',
+      placeholder: 'Enter any additional notes about this customer',
+      width: 'full'
+    },
+    {
+      id: 'sendWelcomeEmail',
+      label: 'Send Welcome Email',
+      type: 'switch',
+      defaultValue: true
+    }
   ];
+  
+  // Form fields for import customers
+  const importCustomersFields: FormField[] = [
+    {
+      id: 'file',
+      label: 'Import File',
+      type: 'file',
+      required: true,
+      accept: '.csv, .xlsx, .xls',
+      helperText: 'Accepted file formats: CSV, Excel (XLSX, XLS)'
+    },
+    {
+      id: 'columnMapping',
+      label: 'Column Mapping',
+      type: 'select',
+      options: [
+        { value: 'auto', label: 'Auto-detect Columns' },
+        { value: 'manual', label: 'Manual Mapping' }
+      ],
+      defaultValue: 'auto'
+    },
+    {
+      id: 'sendWelcomeEmail',
+      label: 'Send Welcome Email to New Customers',
+      type: 'switch',
+      defaultValue: false,
+      helperText: 'Send a welcome email to newly imported customers'
+    },
+    {
+      id: 'skipDuplicates',
+      label: 'Skip Duplicate Entries',
+      type: 'switch',
+      defaultValue: true,
+      helperText: 'Skip customers with duplicate email addresses'
+    }
+  ];
+  
+  // Form fields for export customers
+  const exportCustomersFields: FormField[] = [
+    {
+      id: 'format',
+      label: 'Export Format',
+      type: 'select',
+      options: [
+        { value: 'csv', label: 'CSV' },
+        { value: 'excel', label: 'Excel (XLSX)' },
+        { value: 'pdf', label: 'PDF' }
+      ],
+      defaultValue: 'csv',
+      required: true
+    },
+    {
+      id: 'includeFields',
+      label: 'Fields to Include',
+      type: 'select',
+      options: [
+        { value: 'all', label: 'All Fields' },
+        { value: 'basic', label: 'Basic Info (Name, Email, Phone)' },
+        { value: 'orders', label: 'Order Information' },
+        { value: 'custom', label: 'Custom Selection' }
+      ],
+      defaultValue: 'all'
+    },
+    {
+      id: 'applyFilters',
+      label: 'Apply Current Filters',
+      type: 'switch',
+      defaultValue: true,
+      helperText: 'Export only the currently filtered customers'
+    }
+  ];
+  
+  // Form fields for add tag
+  const addTagFields: FormField[] = [
+    {
+      id: 'tagName',
+      label: 'Tag Name',
+      type: 'text',
+      placeholder: 'Enter tag name',
+      required: true
+    },
+    {
+      id: 'tagColor',
+      label: 'Tag Color',
+      type: 'select',
+      options: [
+        { value: 'purple', label: 'Purple' },
+        { value: 'blue', label: 'Blue' },
+        { value: 'green', label: 'Green' },
+        { value: 'orange', label: 'Orange' },
+        { value: 'red', label: 'Red' },
+        { value: 'pink', label: 'Pink' },
+        { value: 'amber', label: 'Amber' }
+      ],
+      defaultValue: 'purple'
+    },
+    {
+      id: 'applyToSelected',
+      label: 'Apply to Selected Customer',
+      type: 'switch',
+      defaultValue: true,
+      helperText: 'Apply this tag to the currently selected customer'
+    }
+  ];
+  
+  // Form fields for contact customer
+  const contactCustomerFields: FormField[] = [
+    {
+      id: 'contactMethod',
+      label: 'Contact Method',
+      type: 'select',
+      options: [
+        { value: 'email', label: 'Email' },
+        { value: 'sms', label: 'SMS' }
+      ],
+      defaultValue: 'email',
+      required: true
+    },
+    {
+      id: 'subject',
+      label: 'Subject',
+      type: 'text',
+      placeholder: 'Enter message subject',
+      required: true
+    },
+    {
+      id: 'message',
+      label: 'Message',
+      type: 'textarea',
+      placeholder: 'Enter your message',
+      required: true
+    },
+    {
+      id: 'includePromoCode',
+      label: 'Include Promo Code',
+      type: 'switch',
+      defaultValue: false
+    },
+    {
+      id: 'trackEngagement',
+      label: 'Track Engagement',
+      type: 'switch',
+      defaultValue: true,
+      helperText: 'Track opens, clicks, and other engagement metrics'
+    }
+  ];
+  
+  // Format currency function
+  const formatCurrency = (amount: number) => {
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
+
+  // Format date function
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN');
+  };
+  
+  // Get tag color class
+  const getTagColorClass = (tagName: string) => {
+    const tag = tags.find(t => t.label.toLowerCase() === tagName.toLowerCase());
+    return tag ? tag.colorClass : 'bg-gray-500';
+  };
+  
+  // Get status badge
+  const getStatusBadge = (status: 'active' | 'inactive' | 'new') => {
+    switch (status) {
+      case 'active':
+        return <StatusBadge status="success" label="Active" />;
+      case 'inactive':
+        return <StatusBadge status="error" label="Inactive" />;
+      case 'new':
+        return <StatusBadge status="info" label="New" />;
+    }
+  };
+  
+  // Apply filtering
+  useEffect(() => {
+    setIsLoading(true);
+    
+    // Simulate a network delay
+    const timer = setTimeout(() => {
+      let results = [...allCustomers];
+      
+      // Apply search term
+      if (searchTerm) {
+        const query = searchTerm.toLowerCase();
+        results = results.filter(customer => 
+          customer.name.toLowerCase().includes(query) ||
+          customer.email.toLowerCase().includes(query) ||
+          customer.phone.toLowerCase().includes(query) ||
+          customer.city.toLowerCase().includes(query)
+        );
+      }
+      
+      // Apply advanced search filters
+      if (activeFilters.length > 0) {
+        activeFilters.forEach(filter => {
+          if (filter.field === 'status' && filter.value) {
+            results = results.filter(customer => customer.status === filter.value);
+          }
+          
+          if (filter.field === 'city' && filter.value) {
+            results = results.filter(customer => customer.city === filter.value);
+          }
+          
+          if (filter.field === 'tags' && Array.isArray(filter.value) && filter.value.length > 0) {
+            results = results.filter(customer => 
+              customer.tags.some(tag => 
+                filter.value.includes(tag.toLowerCase())
+              )
+            );
+          }
+          
+          if (filter.field === 'orderValue' && filter.value) {
+            switch (filter.value) {
+              case 'low':
+                results = results.filter(customer => customer.totalSpent < 10000);
+                break;
+              case 'medium':
+                results = results.filter(customer => customer.totalSpent >= 10000 && customer.totalSpent <= 50000);
+                break;
+              case 'high':
+                results = results.filter(customer => customer.totalSpent > 50000);
+                break;
+            }
+          }
+        });
+      }
+      
+      // Apply dropdown filters
+      if (Object.keys(selectedFilters).length > 0) {
+        // Status filter
+        if (selectedFilters.status) {
+          results = results.filter(customer => customer.status === selectedFilters.status);
+        }
+        
+        // Order count filter
+        if (selectedFilters.orderCount) {
+          switch (selectedFilters.orderCount) {
+            case 'noOrders':
+              results = results.filter(customer => customer.orders === 0);
+              break;
+            case 'fewOrders':
+              results = results.filter(customer => customer.orders >= 1 && customer.orders <= 5);
+              break;
+            case 'manyOrders':
+              results = results.filter(customer => customer.orders > 5);
+              break;
+          }
+        }
+        
+        // Last purchase filter
+        if (selectedFilters.lastPurchase) {
+          const today = new Date();
+          const thirtyDaysAgo = new Date(today);
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          
+          const threeMonthsAgo = new Date(today);
+          threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+          
+          switch (selectedFilters.lastPurchase) {
+            case 'recent':
+              results = results.filter(customer => {
+                const purchaseDate = new Date(customer.lastPurchase);
+                return purchaseDate >= thirtyDaysAgo;
+              });
+              break;
+            case 'month':
+              results = results.filter(customer => {
+                const purchaseDate = new Date(customer.lastPurchase);
+                return purchaseDate < thirtyDaysAgo && purchaseDate >= threeMonthsAgo;
+              });
+              break;
+            case 'older':
+              results = results.filter(customer => {
+                const purchaseDate = new Date(customer.lastPurchase);
+                return purchaseDate < threeMonthsAgo;
+              });
+              break;
+          }
+        }
+      }
+      
+      // Sort by total spent (highest first)
+      results.sort((a, b) => b.totalSpent - a.totalSpent);
+      
+      setCustomers(results);
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchTerm, activeFilters, selectedFilters, allCustomers]);
+  
+  // Update displayed customers based on pagination
+  useEffect(() => {
+    const startIdx = (currentPage - 1) * pageSize;
+    const endIdx = startIdx + pageSize;
+    setDisplayedCustomers(customers.slice(startIdx, endIdx));
+  }, [customers, currentPage, pageSize]);
+  
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  // Handle search
+  const handleSearch = (query: string, filters: SearchFilter[]) => {
+    setSearchTerm(query);
+    setActiveFilters(filters);
+    setCurrentPage(1);
+  };
+  
+  // Handle filter change
+  const handleFilterChange = (newFilters: Record<string, string | string[]>) => {
+    setSelectedFilters(newFilters);
+    setCurrentPage(1);
+    
+    if (Object.keys(newFilters).length > 0) {
+      const filterDescriptions = Object.entries(newFilters).map(([key, value]) => {
+        const group = filterGroups.find(g => g.id === key);
+        if (!group) return '';
+        
+        const option = group.options.find(o => o.id === value);
+        return option ? `${group.label}: ${option.label}` : '';
+      }).filter(Boolean);
+      
+      if (filterDescriptions.length > 0) {
+        toast({
+          title: "Filters Applied",
+          description: filterDescriptions.join(', ')
+        });
+      }
+    }
+  };
+  
+  // Open customer detail
+  const openCustomerDetail = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsModalOpen(true);
+    setActiveTab('overview');
+  };
+  
+  // Handle delete customer
+  const handleDeleteCustomer = (customer: Customer | null) => {
+    if (!customer) return;
+    
+    setIsDeleteModalOpen(false);
+    
+    // Simulate delete operation
+    setTimeout(() => {
+      toast({
+        title: "Customer Deleted",
+        description: `${customer.name} has been deleted successfully.`,
+      });
+      
+      setIsModalOpen(false);
+    }, 500);
+  };
+  
+  // Handle add customer
+  const handleAddCustomer = (data: Record<string, any>) => {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        toast({
+          title: "Customer Added",
+          description: `${data.name} has been added successfully.`,
+        });
+        
+        if (data.sendWelcomeEmail) {
+          toast({
+            title: "Welcome Email Sent",
+            description: `A welcome email has been sent to ${data.email}.`,
+          });
+        }
+        
+        resolve();
+      }, 1000);
+    });
+  };
+  
+  // Handle import customers
+  const handleImportCustomers = (data: Record<string, any>) => {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        toast({
+          title: "Customers Imported",
+          description: "Customer data has been imported successfully.",
+        });
+        
+        resolve();
+      }, 1500);
+    });
+  };
+  
+  // Handle export customers
+  const handleExportCustomers = (data: Record<string, any>) => {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        toast({
+          title: "Customers Exported",
+          description: `Customer data has been exported as ${data.format.toUpperCase()}.`,
+        });
+        
+        resolve();
+      }, 1000);
+    });
+  };
+  
+  // Handle add tag
+  const handleAddTag = (data: Record<string, any>) => {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        toast({
+          title: "Tag Created",
+          description: `The tag "${data.tagName}" has been created.`,
+        });
+        
+        if (data.applyToSelected && selectedCustomer) {
+          toast({
+            title: "Tag Applied",
+            description: `The tag has been applied to ${selectedCustomer.name}.`,
+          });
+        }
+        
+        resolve();
+      }, 800);
+    });
+  };
+  
+  // Handle contact customer
+  const handleContactCustomer = (data: Record<string, any>) => {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        if (!selectedCustomer) {
+          resolve();
+          return;
+        }
+        
+        const contactMethod = data.contactMethod === 'email' ? 'Email' : 'SMS';
+        
+        toast({
+          title: `${contactMethod} Sent`,
+          description: `Your message has been sent to ${selectedCustomer.name}.`,
+        });
+        
+        if (data.includePromoCode) {
+          toast({
+            title: "Promo Code Included",
+            description: "A promotion code was included in the message.",
+          });
+        }
+        
+        resolve();
+      }, 1200);
+    });
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+      <div className="flex justify-between items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <h1 className="text-2xl font-bold">Customers</h1>
-          <p className="text-muted-foreground">Manage your customer database</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Select defaultValue={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[160px]">
-              <Calendar className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Select range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="yesterday">Yesterday</SelectItem>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="year">This year</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Customer
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => toast({ title: "Exporting PDF" })}>
-                <FileText className="mr-2 h-4 w-4" /> Export as PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast({ title: "Exporting CSV" })}>
-                <FileText className="mr-2 h-4 w-4" /> Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast({ title: "Exporting Excel" })}>
-                <FileText className="mr-2 h-4 w-4" /> Export as Excel
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => toast({ title: "Print initiated" })}>
-                <Printer className="mr-2 h-4 w-4" /> Print Customer List
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <p className="text-muted-foreground">Manage and view your customer details</p>
+        </motion.div>
+        <div className="flex gap-2">
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-1"
+              onClick={() => setIsExportModalOpen(true)}
+            >
+              <Download size={16} />
+              Export
+            </Button>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+          >
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-1"
+              onClick={() => setIsImportModalOpen(true)}
+            >
+              <Upload size={16} />
+              Import
+            </Button>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <Button 
+              className="flex items-center gap-1"
+              onClick={() => setIsAddCustomerModalOpen(true)}
+            >
+              <UserPlus size={16} />
+              Add Customer
+            </Button>
+          </motion.div>
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Customer Database</CardTitle>
-          <CardDescription>
-            Showing {filteredCustomers.length} customers for the selected period
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div className="flex-grow w-full md:w-auto">
-              <AdvancedSearch 
-                onSearch={handleSearch} 
-                placeholder="Search customers..." 
-                fields={[
-                  { name: 'id', label: 'Customer ID' },
-                  { name: 'name', label: 'Name' },
-                  { name: 'email', label: 'Email' },
-                  { name: 'phone', label: 'Phone' },
-                  { name: 'status', label: 'Status' },
-                  { name: 'joinDate', label: 'Join Date' },
-                  { name: 'lastActive', label: 'Last Active' },
-                  { name: 'totalSpent', label: 'Total Spent' },
-                  { name: 'ordersCount', label: 'Orders Count' },
-                ]}
-              />
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {filterOptions.map((filterGroup) => (
-                <FilterDropdown 
-                  key={filterGroup.name}
-                  triggerText={filterGroup.name}
-                  icon={<FilterIcon className="h-4 w-4" />}
-                >
-                  <FilterGroup>
-                    {filterGroup.options.map((option) => {
-                      const field = filterGroup.name === 'Status' ? 'status' : 'tags';
-                      const isActive = activeFilters.some(f => f.field === field && f.value === option);
-                      
-                      return (
-                        <div key={option} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={`filter-${filterGroup.name}-${option}`}
-                            checked={isActive}
-                            onChange={(e) => handleFilterChange(filterGroup.name, option, e.target.checked)}
-                            className="rounded text-primary focus:ring-primary"
-                          />
-                          <Label 
-                            htmlFor={`filter-${filterGroup.name}-${option}`}
-                            className="text-sm cursor-pointer"
-                          >
-                            {option}
-                          </Label>
-                        </div>
-                      );
-                    })}
-                  </FilterGroup>
-                </FilterDropdown>
-              ))}
-              
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => {
-                  setActiveFilters([]);
-                  setSearchQuery('');
-                }}
-                disabled={activeFilters.length === 0 && searchQuery === ''}
-                title="Clear filters"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-4">
+          <AdvancedSearch
+            placeholder="Search customers by name, email, phone or city..."
+            filters={searchFilters}
+            onSearch={handleSearch}
+            showFilterButton={true}
+          />
           
-          <div className="border rounded-md">
+          <div className="flex flex-wrap gap-2">
+            <FilterDropdown
+              groups={filterGroups}
+              onFilterChange={handleFilterChange}
+              triggerClassName="text-sm"
+            />
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2 text-sm"
+              onClick={() => handleFilterChange({ status: 'active' })}
+            >
+              <Badge className="h-2 w-2 rounded-full bg-green-500" />
+              Active
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2 text-sm"
+              onClick={() => handleFilterChange({ status: 'new' })}
+            >
+              <Badge className="h-2 w-2 rounded-full bg-blue-500" />
+              New
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2 text-sm"
+              onClick={() => {
+                handleFilterChange({ lastPurchase: 'recent' });
+              }}
+            >
+              Recent Customers
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="text-sm"
+              onClick={() => {
+                setSelectedFilters({});
+                setActiveFilters([]);
+                setSearchTerm('');
+                toast({
+                  title: "Filters Cleared",
+                  description: "Showing all customers"
+                });
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+        
+        <Card>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Join Date</TableHead>
-                  <TableHead>Total Spent</TableHead>
-                  <TableHead>Orders</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Location</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Orders</TableHead>
+                  <TableHead>Total Spent</TableHead>
+                  <TableHead>Last Purchase</TableHead>
+                  <TableHead>Tags</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedCustomers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                      No customers found. Try a different search or filter.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedCustomers.map((customer) => (
-                    <TableRow key={customer.id} className="table-row-hover">
-                      <TableCell className="font-medium">{customer.id}</TableCell>
-                      <TableCell>{customer.name}</TableCell>
-                      <TableCell>{customer.email}</TableCell>
-                      <TableCell>{new Date(customer.joinDate).toLocaleDateString()}</TableCell>
-                      <TableCell>₹{customer.totalSpent.toLocaleString()}</TableCell>
-                      <TableCell>{customer.ordersCount}</TableCell>
-                      <TableCell>{getStatusBadge(customer.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenDetailsModal(customer)}>
-                              <User className="mr-2 h-4 w-4" /> View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" /> Edit Customer
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Mail className="mr-2 h-4 w-4" /> Send Email
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
-                              <X className="mr-2 h-4 w-4" /> Delete Customer
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                {isLoading ? (
+                  Array(5).fill(0).map((_, idx) => (
+                    <TableRow key={`skeleton-${idx}`}>
+                      <TableCell colSpan={9} className="h-16">
+                        <div className="w-full h-full bg-gray-100 animate-pulse rounded"></div>
                       </TableCell>
                     </TableRow>
                   ))
+                ) : displayedCustomers.length > 0 ? (
+                  displayedCustomers.map((customer) => (
+                    <TableRow 
+                      key={customer.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => openCustomerDetail(customer)}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            {customer.avatar ? (
+                              <AvatarImage src={customer.avatar} />
+                            ) : (
+                              <AvatarFallback>
+                                {customer.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{customer.name}</p>
+                            <p className="text-xs text-muted-foreground">ID: #{customer.id}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-sm">{customer.email}</p>
+                          <p className="text-xs text-muted-foreground">{customer.phone}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{customer.city}</TableCell>
+                      <TableCell>{getStatusBadge(customer.status)}</TableCell>
+                      <TableCell>{customer.orders}</TableCell>
+                      <TableCell>{formatCurrency(customer.totalSpent)}</TableCell>
+                      <TableCell>{formatDate(customer.lastPurchase)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {customer.tags.length > 0 ? (
+                            customer.tags.map((tag, idx) => (
+                              <Badge
+                                key={idx}
+                                className={`text-white ${getTagColorClass(tag)}`}
+                              >
+                                {tag}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-xs text-muted-foreground">No tags</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-8 w-8 p-0" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedCustomer(customer);
+                              setIsContactModalOpen(true);
+                            }}
+                          >
+                            <span className="sr-only">Contact</span>
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-8 w-8 p-0" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedCustomer(customer);
+                              setIsAddTagModalOpen(true);
+                            }}
+                          >
+                            <span className="sr-only">Add tag</span>
+                            <Tag className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <span className="sr-only">More options</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openCustomerDetail(customer);
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCustomer(customer);
+                                  setIsContactModalOpen(true);
+                                }}
+                              >
+                                <Mail className="h-4 w-4 mr-2" />
+                                Contact
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toast({
+                                    title: "Edit Customer",
+                                    description: `Editing ${customer.name}`,
+                                  });
+                                }}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCustomer(customer);
+                                  setIsDeleteModalOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                      No customers found. Try adjusting your filters or create a new customer.
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
-          </div>
-          
-          <div className="mt-4">
+          </CardContent>
+          <CardFooter className="border-t p-4">
             <DataPagination
+              totalItems={customers.length}
               currentPage={currentPage}
-              totalItems={filteredCustomers.length}
-              pageSize={itemsPerPage}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setItemsPerPage}
-              showingText="customers"
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={setPageSize}
+              showPageSizeSelector={true}
             />
-          </div>
-        </CardContent>
-      </Card>
+          </CardFooter>
+        </Card>
+      </div>
 
+      {/* Customer Details Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl p-0">
+          {selectedCustomer && (
+            <div className="flex flex-col h-full">
+              <DialogHeader className="p-6 pb-2">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      {selectedCustomer.avatar ? (
+                        <AvatarImage src={selectedCustomer.avatar} />
+                      ) : (
+                        <AvatarFallback className="text-xl">
+                          {selectedCustomer.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div>
+                      <DialogTitle className="text-xl">
+                        {selectedCustomer.name}
+                        <div className="inline-flex ml-2">
+                          {getStatusBadge(selectedCustomer.status)}
+                        </div>
+                      </DialogTitle>
+                      <DialogDescription className="flex items-center mt-1">
+                        <span>Customer ID: #{selectedCustomer.id}</span>
+                        <span className="mx-2">•</span>
+                        <span>{selectedCustomer.city}</span>
+                      </DialogDescription>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() => {
+                        setIsContactModalOpen(true);
+                      }}
+                    >
+                      <Mail className="h-4 w-4" />
+                      Contact
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          toast({
+                            title: "Edit Customer",
+                            description: `Editing ${selectedCustomer.name}`,
+                          });
+                        }}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Customer
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setIsAddTagModalOpen(true)}>
+                          <Tag className="h-4 w-4 mr-2" />
+                          Add Tag
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600" onClick={() => setIsDeleteModalOpen(true)}>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Customer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+                <div className="px-6">
+                  <TabsList className="w-full grid grid-cols-3">
+                    <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
+                    <TabsTrigger value="orders" className="text-sm">Orders</TabsTrigger>
+                    <TabsTrigger value="activity" className="text-sm">Activity</TabsTrigger>
+                  </TabsList>
+                </div>
+                
+                <div className="flex-1 overflow-auto">
+                  <TabsContent value="overview" className="p-6 pt-4 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base">Contact Information</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-[120px_1fr] gap-2">
+                                <span className="text-muted-foreground">Email:</span>
+                                <span>{selectedCustomer.email}</span>
+                                <span className="text-muted-foreground">Phone:</span>
+                                <span>{selectedCustomer.phone}</span>
+                                <span className="text-muted-foreground">City:</span>
+                                <span>{selectedCustomer.city}</span>
+                              </div>
+                              <div className="flex gap-2 mt-2">
+                                <Button size="sm" variant="outline" className="flex items-center gap-1" onClick={() => {
+                                  setIsContactModalOpen(true);
+                                }}>
+                                  <Mail className="h-3.5 w-3.5" />
+                                  Send Email
+                                </Button>
+                                <Button size="sm" variant="outline" className="flex items-center gap-1" onClick={() => {
+                                  toast({
+                                    title: "SMS Sent",
+                                    description: `SMS sent to ${selectedCustomer.phone}`,
+                                  });
+                                }}>
+                                  <Phone className="h-3.5 w-3.5" />
+                                  Send SMS
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="flex justify-between items-center text-base">
+                              <span>Tags</span>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-7 px-2"
+                                onClick={() => setIsAddTagModalOpen(true)}
+                              >
+                                <Plus className="h-3.5 w-3.5 mr-1" />
+                                Add Tag
+                              </Button>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {selectedCustomer.tags.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {selectedCustomer.tags.map((tag, idx) => (
+                                  <Badge
+                                    key={idx}
+                                    className={`text-white ${getTagColorClass(tag)}`}
+                                  >
+                                    {tag}
+                                    <button
+                                      className="ml-1 hover:bg-white/20 rounded-full p-0.5"
+                                      onClick={() => {
+                                        toast({
+                                          title: "Tag Removed",
+                                          description: `The tag "${tag}" has been removed.`,
+                                        });
+                                      }}
+                                    >
+                                      <X className="h-3 w-3" />
+                                      <span className="sr-only">Remove</span>
+                                    </button>
+                                  </Badge>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-muted-foreground text-sm">No tags have been added yet.</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="flex justify-between items-center text-base">
+                              <span>Notes</span>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-7 px-2"
+                                onClick={() => {
+                                  toast({
+                                    title: "Add Note",
+                                    description: "Adding a new note",
+                                  });
+                                }}
+                              >
+                                <Plus className="h-3.5 w-3.5 mr-1" />
+                                Add Note
+                              </Button>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-muted-foreground text-sm">No notes have been added yet.</p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base">Purchase Statistics</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-2 gap-4">
+                              <Card>
+                                <CardContent className="p-4">
+                                  <p className="text-muted-foreground text-sm">Total Orders</p>
+                                  <p className="text-2xl font-bold">{selectedCustomer.orders}</p>
+                                </CardContent>
+                              </Card>
+                              <Card>
+                                <CardContent className="p-4">
+                                  <p className="text-muted-foreground text-sm">Total Spent</p>
+                                  <p className="text-2xl font-bold">{formatCurrency(selectedCustomer.totalSpent)}</p>
+                                </CardContent>
+                              </Card>
+                            </div>
+                            <div className="mt-4">
+                              <p className="text-sm text-muted-foreground">Last purchase on {formatDate(selectedCustomer.lastPurchase)}</p>
+                              <p className="text-sm text-muted-foreground mt-1">Average order value: {formatCurrency(selectedCustomer.totalSpent / selectedCustomer.orders)}</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base">Recent Events Attended</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              {selectedCustomer.orders > 0 ? (
+                                <>
+                                  <div className="flex justify-between items-center">
+                                    <span>Summer Music Festival</span>
+                                    <Badge variant="outline">2 Tickets</Badge>
+                                  </div>
+                                  {selectedCustomer.orders > 2 && (
+                                    <div className="flex justify-between items-center">
+                                      <span>Tech Conference 2025</span>
+                                      <Badge variant="outline">1 Ticket</Badge>
+                                    </div>
+                                  )}
+                                  {selectedCustomer.orders > 5 && (
+                                    <div className="flex justify-between items-center">
+                                      <span>Business Leadership Summit</span>
+                                      <Badge variant="outline">3 Tickets</Badge>
+                                    </div>
+                                  )}
+                                  <Button 
+                                    variant="link" 
+                                    className="p-0 h-auto"
+                                    onClick={() => setActiveTab('orders')}
+                                  >
+                                    View all orders
+                                  </Button>
+                                </>
+                              ) : (
+                                <p className="text-muted-foreground text-sm">This customer hasn't attended any events yet.</p>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="flex justify-between items-center text-base">
+                              <span>Communication Preferences</span>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-7 px-2"
+                                onClick={() => {
+                                  toast({
+                                    title: "Edit Preferences",
+                                    description: "Editing communication preferences",
+                                  });
+                                }}
+                              >
+                                <Edit className="h-3.5 w-3.5 mr-1" />
+                                Edit
+                              </Button>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Email Marketing:</span>
+                                <span className="text-green-600 font-medium">Subscribed</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">SMS Notifications:</span>
+                                <span className="text-green-600 font-medium">Subscribed</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Event Reminders:</span>
+                                <span className="text-green-600 font-medium">Subscribed</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="orders" className="p-6 pt-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Order History</CardTitle>
+                        <CardDescription>View all orders placed by this customer</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {selectedCustomer.orders > 0 ? (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Order ID</TableHead>
+                                <TableHead>Event</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Tickets</TableHead>
+                                <TableHead>Amount</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {Array.from({ length: Math.min(selectedCustomer.orders, 5) }).map((_, index) => {
+                                const orderDate = new Date(selectedCustomer.lastPurchase);
+                                orderDate.setDate(orderDate.getDate() - (index * 15)); // Spread out the dates
+                                
+                                const events = ['Summer Music Festival', 'Tech Conference 2025', 'Food & Wine Expo', 'Business Leadership Summit', 'Comedy Night Special'];
+                                const event = events[index % events.length];
+                                
+                                const tickets = Math.floor(Math.random() * 3) + 1;
+                                const amount = Math.floor(Math.random() * 5000) + 1000;
+                                const statuses = ['completed', 'completed', 'completed', 'pending', 'cancelled'];
+                                const status = statuses[index % statuses.length] as 'completed' | 'pending' | 'cancelled';
+                                
+                                return (
+                                  <TableRow key={index}>
+                                    <TableCell>#{1000 + index}</TableCell>
+                                    <TableCell>{event}</TableCell>
+                                    <TableCell>{orderDate.toLocaleDateString('en-IN')}</TableCell>
+                                    <TableCell>{tickets}</TableCell>
+                                    <TableCell>{formatCurrency(amount)}</TableCell>
+                                    <TableCell>
+                                      {status === 'completed' && <StatusBadge status="success" label="Completed" />}
+                                      {status === 'pending' && <StatusBadge status="pending" label="Pending" />}
+                                      {status === 'cancelled' && <StatusBadge status="error" label="Cancelled" />}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        className="h-8 p-0"
+                                        onClick={() => {
+                                          toast({
+                                            title: "View Order",
+                                            description: `Viewing order #${1000 + index}`,
+                                          });
+                                        }}
+                                      >
+                                        <ExternalLink className="h-4 w-4" />
+                                        <span className="sr-only">View</span>
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        ) : (
+                          <div className="text-center py-6">
+                            <p className="text-muted-foreground">This customer hasn't placed any orders yet.</p>
+                            <Button 
+                              className="mt-4"
+                              onClick={() => {
+                                toast({
+                                  title: "Manual Order",
+                                  description: "Creating a manual order for this customer",
+                                });
+                              }}
+                            >
+                              Create Manual Order
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                      {selectedCustomer.orders > 5 && (
+                        <CardFooter className="flex justify-center border-t p-4">
+                          <Button variant="outline" onClick={() => {
+                            toast({
+                              title: "All Orders",
+                              description: "Viewing all orders for this customer",
+                            });
+                          }}>
+                            View All Orders
+                          </Button>
+                        </CardFooter>
+                      )}
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="activity" className="p-6 pt-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Activity Log</CardTitle>
+                        <CardDescription>Recent activity and interactions</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="border-l-2 border-muted pl-4 pb-1">
+                            <p className="text-sm font-medium">Placed an order</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(selectedCustomer.lastPurchase)} at 2:30 PM</p>
+                            <p className="text-sm mt-1">Purchased 2 tickets for Summer Music Festival</p>
+                          </div>
+                          
+                          <div className="border-l-2 border-muted pl-4 pb-1">
+                            <p className="text-sm font-medium">Email sent</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(selectedCustomer.lastPurchase)} at 2:31 PM</p>
+                            <p className="text-sm mt-1">Order confirmation email sent</p>
+                          </div>
+                          
+                          <div className="border-l-2 border-muted pl-4 pb-1">
+                            <p className="text-sm font-medium">Viewed event page</p>
+                            <p className="text-xs text-muted-foreground">{new Date(new Date(selectedCustomer.lastPurchase).getTime() - 3600000).toLocaleDateString('en-IN')} at 1:45 PM</p>
+                            <p className="text-sm mt-1">Viewed Tech Conference 2025</p>
+                          </div>
+                          
+                          <div className="border-l-2 border-muted pl-4 pb-1">
+                            <p className="text-sm font-medium">Email opened</p>
+                            <p className="text-xs text-muted-foreground">{new Date(new Date(selectedCustomer.lastPurchase).getTime() - 86400000).toLocaleDateString('en-IN')} at 10:12 AM</p>
+                            <p className="text-sm mt-1">Opened promotional email "Upcoming Events"</p>
+                          </div>
+                          
+                          <div className="border-l-2 border-muted pl-4 pb-1">
+                            <p className="text-sm font-medium">Account created</p>
+                            <p className="text-xs text-muted-foreground">{new Date(new Date(selectedCustomer.lastPurchase).getTime() - 7776000000).toLocaleDateString('en-IN')} at 5:20 PM</p>
+                            <p className="text-sm mt-1">Created customer account</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex justify-center border-t p-4">
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            toast({
+                              title: "Full Activity Log",
+                              description: "Viewing complete activity history",
+                            });
+                          }}
+                        >
+                          View Full Activity Log
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </TabsContent>
+                </div>
+              </Tabs>
+              
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 p-6 pt-3 border-t">
+                <Button 
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Close
+                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline"
+                    className="flex items-center gap-1"
+                    onClick={() => {
+                      toast({
+                        title: "Edit Customer",
+                        description: `Editing ${selectedCustomer.name}`,
+                      });
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit Customer
+                  </Button>
+                  <Button 
+                    className="flex items-center gap-1"
+                    onClick={() => {
+                      setIsContactModalOpen(true);
+                    }}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Contact Customer
+                  </Button>
+                </div>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Customer</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this customer? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => handleDeleteCustomer(selectedCustomer)}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Customer Modal */}
       <CustomModalForm
-        title="Customer Details"
-        description="View and edit customer information"
-        fields={customerDetailFields}
-        onSubmit={handleSubmitDetails}
-        submitText="Update Customer"
-        cancelText="Close"
-        isOpen={detailsModalOpen}
-        onOpenChange={setDetailsModalOpen}
+        title="Add New Customer"
+        description="Enter customer details to create a new account"
+        fields={addCustomerFields}
+        onSubmit={handleAddCustomer}
+        submitText="Add Customer"
+        cancelText="Cancel"
+        open={isAddCustomerModalOpen}
+        onOpenChange={setIsAddCustomerModalOpen}
         width="lg"
-      >
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Customer Information</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedCustomer?.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedCustomer?.email}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedCustomer?.phone}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedCustomer?.address}</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold">Account Information</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  <span>Joined: {new Date(selectedCustomer?.joinDate || '').toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  <span>Last Active: {new Date(selectedCustomer?.lastActive || '').toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span>Total Spent: ₹{selectedCustomer?.totalSpent.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                  <span>Orders: {selectedCustomer?.ordersCount}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold">Tags</h3>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {selectedCustomer?.tags.length === 0 ? (
-                <span className="text-muted-foreground">No tags</span>
-              ) : (
-                selectedCustomer?.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold">Recent Orders</h3>
-            <div className="border rounded-md mt-2">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order ID</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-4 text-gray-500">
-                      No recent orders to display
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </div>
-      </CustomModalForm>
+      />
+      
+      {/* Import Customers Modal */}
+      <CustomModalForm
+        title="Import Customers"
+        description="Upload a file to import multiple customers"
+        fields={importCustomersFields}
+        onSubmit={handleImportCustomers}
+        submitText="Import Customers"
+        cancelText="Cancel"
+        open={isImportModalOpen}
+        onOpenChange={setIsImportModalOpen}
+        width="md"
+      />
+      
+      {/* Export Customers Modal */}
+      <CustomModalForm
+        title="Export Customers"
+        description="Choose export format and options"
+        fields={exportCustomersFields}
+        onSubmit={handleExportCustomers}
+        submitText="Export"
+        cancelText="Cancel"
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        width="md"
+      />
+      
+      {/* Add Tag Modal */}
+      <CustomModalForm
+        title="Add New Tag"
+        description="Create a new tag and apply it to customers"
+        fields={addTagFields}
+        onSubmit={handleAddTag}
+        submitText="Create Tag"
+        cancelText="Cancel"
+        open={isAddTagModalOpen}
+        onOpenChange={setIsAddTagModalOpen}
+        width="sm"
+      />
+      
+      {/* Contact Customer Modal */}
+      <CustomModalForm
+        title={`Contact ${selectedCustomer?.name || 'Customer'}`}
+        description="Send a message to this customer"
+        fields={contactCustomerFields}
+        onSubmit={handleContactCustomer}
+        submitText="Send Message"
+        cancelText="Cancel"
+        open={isContactModalOpen}
+        onOpenChange={setIsContactModalOpen}
+        width="md"
+      />
     </div>
   );
 };

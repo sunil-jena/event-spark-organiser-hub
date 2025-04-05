@@ -78,7 +78,6 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
           newFilters[groupId] = optionId;
         }
       }
-
       onFilterChange(newFilters);
       return newFilters;
     });
@@ -126,7 +125,6 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
             <DropdownMenuGroup>
               {group.options.map(option => {
                 const selected = isSelected(group.id, option.id);
-
                 return (
                   <DropdownMenuItem
                     key={option.id}

@@ -41,7 +41,6 @@ export const DataPagination: React.FC<DataPaginationProps> = ({
   const getPageNumbers = () => {
     const pages = [];
     const maxPagesToShow = 5;
-
     if (totalPages <= maxPagesToShow) {
       // Show all pages if total pages are less than or equal to maxPagesToShow
       for (let i = 1; i <= totalPages; i++) {
@@ -59,12 +58,10 @@ export const DataPagination: React.FC<DataPaginationProps> = ({
       if (startPage > 2) {
         pages.push(-1); // -1 represents ellipsis
       }
-
       // Add middle page numbers
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
       }
-
       // Add ellipsis before last page if needed
       if (endPage < totalPages - 1) {
         pages.push(-2); // -2 represents ellipsis
@@ -84,7 +81,6 @@ export const DataPagination: React.FC<DataPaginationProps> = ({
         <span className="font-medium">{endItem}</span> of{' '}
         <span className="font-medium">{totalItems}</span> results
       </div>
-
       <div className="flex items-center gap-4">
         {showPageSizeSelector && onPageSizeChange && (
           <div className="flex items-center gap-2">
@@ -107,7 +103,6 @@ export const DataPagination: React.FC<DataPaginationProps> = ({
             <span className="text-sm text-muted-foreground">per page</span>
           </div>
         )}
-
         <Pagination>
           <PaginationContent>
             <PaginationItem>
@@ -116,7 +111,6 @@ export const DataPagination: React.FC<DataPaginationProps> = ({
                 onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
               />
             </PaginationItem>
-
             {getPageNumbers().map((pageNum, idx) => {
               // If pageNum is negative, it represents an ellipsis
               if (pageNum < 0) {
@@ -126,7 +120,6 @@ export const DataPagination: React.FC<DataPaginationProps> = ({
                   </PaginationItem>
                 );
               }
-
               return (
                 <PaginationItem key={pageNum}>
                   <PaginationLink
@@ -138,7 +131,6 @@ export const DataPagination: React.FC<DataPaginationProps> = ({
                 </PaginationItem>
               );
             })}
-
             <PaginationItem>
               <PaginationNext
                 className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}

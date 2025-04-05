@@ -40,6 +40,7 @@ import {
 import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
 import { motion, AnimatePresence } from 'framer-motion';
 
+<<<<<<< HEAD
 // Mock order data generator
 const generateMockOrders = (count: number): Order[] => {
   const events = [
@@ -63,6 +64,71 @@ const generateMockOrders = (count: number): Order[] => {
 
   const orders: Order[] = [];
 
+=======
+import React, { useState, useEffect } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Download, 
+  Filter, 
+  Search, 
+  Eye, 
+  Mail, 
+  MoreHorizontal, 
+  Ticket,
+  Calendar,
+  FileText,
+  Plus
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { AdvancedSearch, Filter as FilterType } from '@/components/ui/advanced-search';
+import { DataPagination } from '@/components/ui/data-pagination';
+import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
+import { OrderStatus } from '@/components/ui/order-statistics';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Mock order data generator
+const generateMockOrders = (count: number): Order[] => {
+  const events = [
+    'Summer Music Festival', 
+    'Tech Conference 2025', 
+    'Food & Wine Expo', 
+    'Business Summit', 
+    'Art Exhibition', 
+    'Wellness Retreat'
+  ];
+  
+  const names = [
+    'John Smith', 'Emma Johnson', 'Carlos Rodriguez', 'Sarah Lee', 
+    'Michael Brown', 'Lisa Wang', 'David Kim', 'Jennifer Miller', 
+    'Robert Chen', 'Amanda Taylor', 'Raj Patel', 'Priya Singh',
+    'Mohammed Ali', 'Sophia Zhang', 'Aiden Lee', 'Olivia Wang'
+  ];
+  
+  const ticketTypes = ['VIP', 'Standard', 'Early Bird', 'Group', 'Premium', 'Basic'];
+  const statuses: OrderStatus[] = ['completed', 'pending', 'cancelled', 'refunded'];
+  
+  const orders: Order[] = [];
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   for (let i = 1; i <= count; i++) {
     const randomName = names[Math.floor(Math.random() * names.length)];
     const randomEvent = events[Math.floor(Math.random() * events.length)];
@@ -72,20 +138,34 @@ const generateMockOrders = (count: number): Order[] => {
     const ticketPrice = Math.floor(Math.random() * 2000) + 200;
     const totalAmount = ticketCount * ticketPrice;
     const isOffline = Math.random() > 0.7;
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
     // Generate a random date within the last 90 days
     const currentDate = new Date();
     const pastDate = new Date();
     pastDate.setDate(currentDate.getDate() - Math.floor(Math.random() * 90));
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
     const order: Order = {
       id: (1000 + i).toString(),
       eventName: randomEvent,
       customer: randomName,
       email: randomName.toLowerCase().replace(' ', '.') + '@example.com',
+<<<<<<< HEAD
       date: pastDate.toLocaleString('en-IN', {
         year: 'numeric',
         month: 'short',
+=======
+      date: pastDate.toLocaleString('en-IN', { 
+        year: 'numeric', 
+        month: 'short', 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
@@ -96,10 +176,17 @@ const generateMockOrders = (count: number): Order[] => {
       status: randomStatus,
       isOffline: isOffline
     };
+<<<<<<< HEAD
 
     orders.push(order);
   }
 
+=======
+    
+    orders.push(order);
+  }
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   return orders;
 };
 
@@ -123,24 +210,43 @@ const Orders = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+<<<<<<< HEAD
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+=======
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Data state
   const [allOrders] = useState<Order[]>(generateMockOrders(150));
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [displayedOrders, setDisplayedOrders] = useState<Order[]>([]);
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<FilterType[]>([]);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string | string[]>>({});
+<<<<<<< HEAD
 
   // Data loading and animation state
   const [isLoading, setIsLoading] = useState(false);
 
+=======
+  
+  // Data loading and animation state
+  const [isLoading, setIsLoading] = useState(false);
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Filter configuration
   const searchFilters = [
     {
@@ -176,14 +282,22 @@ const Orders = () => {
       ]
     }
   ];
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   const statusOptions = [
     { value: 'completed', label: 'Completed', color: 'bg-green-100' },
     { value: 'pending', label: 'Pending', color: 'bg-amber-100' },
     { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100' },
     { value: 'refunded', label: 'Refunded', color: 'bg-blue-100' }
   ];
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   const filterGroups: FilterGroup[] = [
     {
       id: 'status',
@@ -215,7 +329,11 @@ const Orders = () => {
       ]
     }
   ];
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Fields for add note form
   const addNoteFields: FormField[] = [
     {
@@ -244,7 +362,11 @@ const Orders = () => {
       helperText: 'This will highlight the note for all team members'
     }
   ];
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Fields for export form
   const exportFields: FormField[] = [
     {
@@ -289,6 +411,7 @@ const Orders = () => {
       defaultValue: true
     }
   ];
+<<<<<<< HEAD
 
   // Effect to apply filtering
   useEffect(() => {
@@ -302,19 +425,39 @@ const Orders = () => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         results = results.filter(order =>
+=======
+  
+  // Effect to apply filtering
+  useEffect(() => {
+    setIsLoading(true);
+    
+    // Simulate a network delay
+    const timer = setTimeout(() => {
+      let results = [...allOrders];
+      
+      // Apply search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        results = results.filter(order => 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
           order.customer.toLowerCase().includes(query) ||
           order.id.includes(query) ||
           order.email.toLowerCase().includes(query) ||
           order.eventName.toLowerCase().includes(query)
         );
       }
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
       // Apply advanced search filters
       if (activeFilters.length > 0) {
         activeFilters.forEach(filter => {
           if (filter.field === 'status' && filter.value) {
             results = results.filter(order => order.status === filter.value);
           }
+<<<<<<< HEAD
 
           if (filter.field === 'eventName' && filter.value) {
             results = results.filter(order => order.eventName === filter.value);
@@ -324,20 +467,39 @@ const Orders = () => {
             results = results.filter((order: any) => filter?.value?.includes(order.ticketType));
           }
 
+=======
+          
+          if (filter.field === 'eventName' && filter.value) {
+            results = results.filter(order => order.eventName === filter.value);
+          }
+          
+          if (filter.field === 'ticketType' && Array.isArray(filter.value) && filter.value.length > 0) {
+            results = results.filter(order => filter.value.includes(order.ticketType));
+          }
+          
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
           if (filter.field === 'isOffline' && filter.value) {
             const isOffline = filter.value === 'true';
             results = results.filter(order => order.isOffline === isOffline);
           }
         });
       }
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
       // Apply dropdown filters
       if (Object.keys(selectedFilters).length > 0) {
         // Status filter
         if (selectedFilters.status) {
           results = results.filter(order => order.status === selectedFilters.status);
         }
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
         // Source filter
         if (selectedFilters.source) {
           if (selectedFilters.source === 'online') {
@@ -346,12 +508,20 @@ const Orders = () => {
             results = results.filter(order => order.isOffline);
           }
         }
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
         // Time period filter
         if (selectedFilters.period) {
           const now = new Date();
           const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+<<<<<<< HEAD
 
+=======
+          
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
           switch (selectedFilters.period) {
             case 'today':
               results = results.filter(order => {
@@ -394,6 +564,7 @@ const Orders = () => {
           }
         }
       }
+<<<<<<< HEAD
 
       setFilteredOrders(results);
       setIsLoading(false);
@@ -402,44 +573,78 @@ const Orders = () => {
     return () => clearTimeout(timer);
   }, [searchQuery, activeFilters, selectedFilters, allOrders]);
 
+=======
+      
+      setFilteredOrders(results);
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeFilters, selectedFilters, allOrders]);
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Effect to update displayed orders based on pagination
   useEffect(() => {
     const startIdx = (currentPage - 1) * pageSize;
     const endIdx = startIdx + pageSize;
     setDisplayedOrders(filteredOrders.slice(startIdx, endIdx));
   }, [filteredOrders, currentPage, pageSize]);
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Handle search
   const handleSearch = (query: string, filters: FilterType[]) => {
     setSearchQuery(query);
     setActiveFilters(filters);
     setCurrentPage(1);
   };
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Handle filter change
   const handleFilterChange = (newFilters: Record<string, string | string[]>) => {
     setSelectedFilters(newFilters);
     setCurrentPage(1);
   };
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Handle view order 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setIsViewModalOpen(true);
   };
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Handle add note
   const handleAddNote = (order: Order) => {
     setSelectedOrder(order);
     setIsAddNoteModalOpen(true);
   };
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Handle resend confirmation
   const handleResendConfirmation = (order: Order) => {
     toast({
@@ -447,7 +652,11 @@ const Orders = () => {
       description: `Confirmation email sent to ${order.email}`,
     });
   };
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Handle export orders
   const handleExportOrders = (data: Record<string, any>) => {
     return new Promise<void>(resolve => {
@@ -460,7 +669,11 @@ const Orders = () => {
       }, 1500);
     });
   };
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
   // Handle add note form submission
   const handleAddNoteSubmit = (data: Record<string, any>) => {
     return new Promise<void>(resolve => {
@@ -473,17 +686,29 @@ const Orders = () => {
       }, 1000);
     });
   };
+<<<<<<< HEAD
 
   const statusBadge = (status: OrderStatus) => {
     const statusMap: Record<OrderStatus, { status: any, label: string }> = {
+=======
+  
+  const statusBadge = (status: OrderStatus) => {
+    const statusMap: Record<OrderStatus, { status: Status, label: string }> = {
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
       completed: { status: 'success', label: 'Completed' },
       pending: { status: 'pending', label: 'Pending' },
       cancelled: { status: 'error', label: 'Cancelled' },
       refunded: { status: 'warning', label: 'Refunded' }
     };
+<<<<<<< HEAD
 
     return (
       <StatusBadge
+=======
+    
+    return (
+      <StatusBadge 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
         status={statusMap[status].status}
         label={statusMap[status].label}
       />
@@ -501,15 +726,24 @@ const Orders = () => {
           <h1 className="text-2xl font-bold">Orders</h1>
           <p className="text-muted-foreground mt-1">Manage all your ticket orders</p>
         </motion.div>
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
         <div className="flex flex-wrap gap-2">
           <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
+<<<<<<< HEAD
             <Button
               variant="outline"
+=======
+            <Button 
+              variant="outline" 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
               className="flex items-center gap-2"
               onClick={() => setIsExportModalOpen(true)}
             >
@@ -517,7 +751,11 @@ const Orders = () => {
               <span>Export Orders</span>
             </Button>
           </motion.div>
+<<<<<<< HEAD
 
+=======
+          
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
           <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -546,16 +784,26 @@ const Orders = () => {
                 statusOptions={statusOptions}
                 showFilterButton={true}
               />
+<<<<<<< HEAD
 
+=======
+              
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
               <div className="flex flex-wrap gap-2">
                 <FilterDropdown
                   groups={filterGroups}
                   onFilterChange={handleFilterChange}
                   triggerClassName="text-sm"
                 />
+<<<<<<< HEAD
 
                 <Button
                   variant="outline"
+=======
+                
+                <Button 
+                  variant="outline" 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                   size="sm"
                   className="flex items-center gap-2 text-sm"
                   onClick={() => {
@@ -569,9 +817,15 @@ const Orders = () => {
                   <Calendar className="h-4 w-4" />
                   Today
                 </Button>
+<<<<<<< HEAD
 
                 <Button
                   variant="outline"
+=======
+                
+                <Button 
+                  variant="outline" 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                   size="sm"
                   className="flex items-center gap-2 text-sm"
                   onClick={() => {
@@ -585,9 +839,15 @@ const Orders = () => {
                   <Badge className="h-2 w-2 rounded-full bg-amber-500" />
                   Pending
                 </Button>
+<<<<<<< HEAD
 
                 <Button
                   variant="outline"
+=======
+                
+                <Button 
+                  variant="outline" 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                   size="sm"
                   className="flex items-center gap-2 text-sm"
                   onClick={() => {
@@ -602,7 +862,11 @@ const Orders = () => {
                 </Button>
               </div>
             </div>
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
             <div className="rounded-md border overflow-hidden">
               <Table>
                 <TableHeader>
@@ -651,10 +915,17 @@ const Orders = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
+<<<<<<< HEAD
                             <Button
                               size="sm"
                               variant="ghost"
                               className="h-8 w-8 p-0"
+=======
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0" 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleViewOrder(order);
@@ -664,10 +935,17 @@ const Orders = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
                             {order.status !== 'cancelled' && order.status !== 'refunded' && (
+<<<<<<< HEAD
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 p-0"
+=======
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 w-8 p-0" 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleResendConfirmation(order);
@@ -677,9 +955,15 @@ const Orders = () => {
                                 <Mail className="h-4 w-4" />
                               </Button>
                             )}
+<<<<<<< HEAD
                             <Button
                               size="sm"
                               variant="ghost"
+=======
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                               className="h-8 w-8 p-0"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -689,9 +973,15 @@ const Orders = () => {
                               <span className="sr-only">Add note</span>
                               <FileText className="h-4 w-4" />
                             </Button>
+<<<<<<< HEAD
                             <Button
                               size="sm"
                               variant="ghost"
+=======
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                               className="h-8 w-8 p-0"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -718,7 +1008,11 @@ const Orders = () => {
                 </TableBody>
               </Table>
             </div>
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
             <DataPagination
               totalItems={filteredOrders.length}
               currentPage={currentPage}
@@ -730,7 +1024,11 @@ const Orders = () => {
           </div>
         </CardContent>
       </Card>
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
       {/* Order Details Modal */}
       <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
         <DialogContent className="max-w-3xl">
@@ -742,7 +1040,11 @@ const Orders = () => {
                   Complete information about this order
                 </DialogDescription>
               </DialogHeader>
+<<<<<<< HEAD
 
+=======
+              
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
@@ -772,7 +1074,11 @@ const Orders = () => {
                       </CardContent>
                     </Card>
                   </div>
+<<<<<<< HEAD
 
+=======
+                  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Order Status</h3>
                     <Card>
@@ -782,7 +1088,11 @@ const Orders = () => {
                             <span className="text-muted-foreground">Current Status:</span>
                             {statusBadge(selectedOrder.status)}
                           </div>
+<<<<<<< HEAD
 
+=======
+                          
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                           <div>
                             <h4 className="font-medium text-sm mb-2">Update Status</h4>
                             <div className="flex gap-2 flex-wrap">
@@ -845,7 +1155,11 @@ const Orders = () => {
                     </Card>
                   </div>
                 </div>
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Event & Ticket Details</h3>
@@ -872,7 +1186,11 @@ const Orders = () => {
                       </CardContent>
                     </Card>
                   </div>
+<<<<<<< HEAD
 
+=======
+                  
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Payment Details</h3>
                     <Card>
@@ -900,9 +1218,15 @@ const Orders = () => {
                   </div>
                 </div>
               </div>
+<<<<<<< HEAD
 
               <div className="flex justify-end gap-2 mt-4">
                 <Button
+=======
+              
+              <div className="flex justify-end gap-2 mt-4">
+                <Button 
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
                   variant="outline"
                   className="flex items-center gap-2"
                   onClick={() => {
@@ -932,7 +1256,11 @@ const Orders = () => {
           )}
         </DialogContent>
       </Dialog>
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
       {/* Add Note Modal */}
       <CustomModalForm
         title={`Add Note to Order #${selectedOrder?.id}`}
@@ -941,10 +1269,18 @@ const Orders = () => {
         onSubmit={handleAddNoteSubmit}
         submitText="Add Note"
         cancelText="Cancel"
+<<<<<<< HEAD
         onOpenChange={setIsAddNoteModalOpen}
         width="md"
       />
 
+=======
+        open={isAddNoteModalOpen}
+        onOpenChange={setIsAddNoteModalOpen}
+        width="md"
+      />
+      
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
       {/* Export Orders Modal */}
       <CustomModalForm
         title="Export Orders"
@@ -953,6 +1289,10 @@ const Orders = () => {
         onSubmit={handleExportOrders}
         submitText="Export"
         cancelText="Cancel"
+<<<<<<< HEAD
+=======
+        open={isExportModalOpen}
+>>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
         onOpenChange={setIsExportModalOpen}
         width="md"
       />

@@ -1,692 +1,1121 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
-  CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardDescription,
+  CardFooter
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { 
+  BarChart, 
   Calendar, 
   ChevronDown, 
   Download, 
   FilterIcon, 
+  TrendingUp, 
+  TrendingDown, 
   Printer,
-  FileText,
+  Share2,
   ArrowRight,
-  ArrowUpRight,
-  ArrowDownRight,
-  DollarSign,
-  Users,
-  Calendar as CalendarIcon,
-  Search,
-  Plus,
-  MoreHorizontal,
-  RefreshCw,
-  PackageCheck,
-  Truck,
-  MapPin,
-  User,
-  ShoppingCart,
-  LucideIcon,
-  Package,
-  Receipt,
-  ChevronsUpDown,
-  Copy,
-  Mail,
-  Phone,
-  Map,
-  Edit,
-  Eye,
-  X,
+  BarChart3,
+  PieChart,
+  LineChart,
+  MoveRight,
+  IndianRupee,
+  Wallet
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { motion } from 'framer-motion';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { DataPagination } from '@/components/ui/data-pagination';
-import { AdvancedSearch, Filter } from '@/components/ui/advanced-search';
-import { FilterDropdown, FilterGroup, FilterItem } from '@/components/ui/filter-dropdown';
+import { AdvancedSearch, Filter as SearchFilter } from '@/components/ui/advanced-search';
+import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import { onSubmitSalesForm } from '@/utils/sales-utils';
+  AreaChart,
+  Area,
+  BarChart as RechartsBarChart,
+  Bar,
+  LineChart as RechartsLineChart,
+  Line,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
-export interface SalesData {
-  name: string;
-  value: number;
-  online?: number;
-  offline?: number;
-  total?: number;
-}
-
-interface Sale {
+interface SalesData {
   id: string;
+  eventName: string;
   date: string;
-  customer: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
-  };
-  event: {
-    id: string;
-    name: string;
-    venue: string;
-    date: string;
-  };
-  items: {
-    name: string;
-    quantity: number;
-    price: number;
-  }[];
-  totalAmount: number;
-  paymentMethod: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
-  shippingAddress: string;
-  trackingNumber: string;
+  tickets: number;
+  revenue: number;
+  averagePrice: number;
+  change: number;
 }
 
-const Sales: React.FC = () => {
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("overview");
+// Generate a larger dataset for sales data
+const generateSalesData = (count: number): SalesData[] => {
+  const events = [
+    'Summer Music Festival',
+    'Tech Conference 2025',
+    'Food & Wine Expo',
+    'Business Leadership Summit',
+    'Comedy Night Special',
+    'Wellness Retreat',
+    'Art Exhibition',
+    'Fashion Show 2025',
+    'Gaming Convention',
+    'Film Festival'
+  ];
   
-  // Sample sales data for demonstration
-  const salesData: Sale[] = [
+  const salesData: SalesData[] = [];
+  
+  for (let i = 1; i <= count; i++) {
+    const randomEvent = events[Math.floor(Math.random() * events.length)];
+    const randomTickets = Math.floor(Math.random() * 500) + 100;
+    const randomAvgPrice = Math.floor(Math.random() * 2000) + 300;
+    const randomRevenue = randomTickets * randomAvgPrice;
+    const randomChange = (Math.random() * 20) - 10; // Between -10 and 10
+    
+    // Generate a random date within the last 90 days
+    const currentDate = new Date();
+    const pastDate = new Date();
+    pastDate.setDate(currentDate.getDate() - Math.floor(Math.random() * 90));
+    
+    salesData.push({
+      id: i.toString(),
+      eventName: randomEvent,
+      date: pastDate.toISOString().split('T')[0],
+      tickets: randomTickets,
+      revenue: randomRevenue,
+      averagePrice: randomAvgPrice,
+      change: parseFloat(randomChange.toFixed(1)),
+    });
+  }
+  
+  return salesData;
+};
+
+// Generate monthly sales data for charts
+const generateMonthlySalesData = () => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return months.map(month => ({
+    name: month,
+    online: Math.floor(Math.random() * 1000000) + 200000,
+    offline: Math.floor(Math.random() * 500000) + 100000,
+    total: 0 // Will be calculated
+  })).map(item => ({
+    ...item,
+    total: item.online + item.offline
+  }));
+};
+
+// Generate ticket type sales data for pie chart
+const generateTicketTypeData = () => {
+  return [
+    { name: 'VIP', value: Math.floor(Math.random() * 300) + 100 },
+    { name: 'Standard', value: Math.floor(Math.random() * 800) + 400 },
+    { name: 'Early Bird', value: Math.floor(Math.random() * 500) + 200 },
+    { name: 'Group', value: Math.floor(Math.random() * 200) + 100 },
+    { name: 'Premium', value: Math.floor(Math.random() * 150) + 50 },
+  ];
+};
+
+// Generate event comparison data for bar chart
+const generateEventComparisonData = () => {
+  const events = [
+    'Summer Music Festival',
+    'Tech Conference 2025',
+    'Food & Wine Expo',
+    'Business Summit',
+    'Comedy Night',
+    'Wellness Retreat',
+  ];
+  
+  return events.map(event => ({
+    name: event,
+    revenue: Math.floor(Math.random() * 2000000) + 500000,
+    tickets: Math.floor(Math.random() * 1000) + 200,
+  }));
+};
+
+const Sales = () => {
+  const { toast } = useToast();
+  const allSalesData = generateSalesData(150);
+  const [salesData, setSalesData] = useState<SalesData[]>([]);
+  const [displayedSalesData, setDisplayedSalesData] = useState<SalesData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Chart data
+  const [monthlySalesData] = useState(generateMonthlySalesData());
+  const [ticketTypeData] = useState(generateTicketTypeData());
+  const [eventComparisonData] = useState(generateEventComparisonData());
+  
+  // Chart state
+  const [selectedChartView, setSelectedChartView] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
+  const [selectedChartType, setSelectedChartType] = useState<'area' | 'bar' | 'line'>('area');
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [selectedTimeFrame, setSelectedTimeFrame] = useState('This Month');
+  const [selectedEvent, setSelectedEvent] = useState('All Events');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  // Filter and search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string | string[]>>({});
+  
+  // Summary data calculation
+  const calculateSummaryData = () => {
+    const totalRevenue = salesData.reduce((sum, item) => sum + item.revenue, 0);
+    const ticketsSold = salesData.reduce((sum, item) => sum + item.tickets, 0);
+    const averageTicketPrice = ticketsSold > 0 ? totalRevenue / ticketsSold : 0;
+    const revenueGrowth = 8.7; // Fixed value for demo purposes
+    
+    return {
+      totalRevenue,
+      ticketsSold,
+      averageTicketPrice,
+      revenueGrowth
+    };
+  };
+  
+  const summaryData = calculateSummaryData();
+  
+  // Format currency function
+  const formatCurrency = (amount: number) => {
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
+
+  // Format date function
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN');
+  };
+  
+  // Color scheme for charts
+  const COLORS = ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9', '#10B981'];
+  
+  // Filter configuration
+  const searchFilters = [
     {
-      id: "S-1001",
-      date: "2023-04-01",
-      customer: {
-        id: "C-1001",
-        name: "John Smith",
-        email: "john@example.com",
-        phone: "555-1234",
-        address: "123 Main St, New York, NY"
-      },
-      event: {
-        id: "E-1001",
-        name: "Summer Music Festival",
-        venue: "Central Park",
-        date: "2023-07-15"
-      },
-      items: [
-        { name: "VIP Ticket", quantity: 2, price: 150 },
-        { name: "T-Shirt", quantity: 1, price: 25 }
-      ],
-      totalAmount: 325,
-      paymentMethod: "Credit Card",
-      status: "delivered",
-      shippingAddress: "123 Main St, New York, NY",
-      trackingNumber: "TRK12345"
+      id: 'eventName',
+      name: 'Event',
+      type: 'select' as const,
+      options: Array.from(new Set(allSalesData.map(item => item.eventName))).map(event => ({
+        value: event,
+        label: event
+      }))
     },
     {
-      id: "S-1002",
-      date: "2023-04-02",
-      customer: {
-        id: "C-1002",
-        name: "Jane Doe",
-        email: "jane@example.com",
-        phone: "555-5678",
-        address: "456 Elm St, Los Angeles, CA"
-      },
-      event: {
-        id: "E-1002",
-        name: "Tech Conference",
-        venue: "Convention Center",
-        date: "2023-08-10"
-      },
-      items: [
-        { name: "General Admission", quantity: 1, price: 100 },
-        { name: "Workshop Access", quantity: 1, price: 50 }
-      ],
-      totalAmount: 150,
-      paymentMethod: "PayPal",
-      status: "processing",
-      shippingAddress: "456 Elm St, Los Angeles, CA",
-      trackingNumber: "TRK67890"
+      id: 'date',
+      name: 'Date',
+      type: 'date' as const,
     },
     {
-      id: "S-1003",
-      date: "2023-04-03",
-      customer: {
-        id: "C-1003",
-        name: "Robert Johnson",
-        email: "robert@example.com",
-        phone: "555-9012",
-        address: "789 Oak St, Chicago, IL"
-      },
-      event: {
-        id: "E-1003",
-        name: "Food Festival",
-        venue: "City Park",
-        date: "2023-09-05"
-      },
-      items: [
-        { name: "Weekend Pass", quantity: 4, price: 75 }
-      ],
-      totalAmount: 300,
-      paymentMethod: "Credit Card",
-      status: "pending",
-      shippingAddress: "789 Oak St, Chicago, IL",
-      trackingNumber: ""
+      id: 'revenueBracket',
+      name: 'Revenue Bracket',
+      type: 'select' as const,
+      options: [
+        { value: 'low', label: 'Below ₹100,000' },
+        { value: 'medium', label: '₹100,000 - ₹500,000' },
+        { value: 'high', label: 'Above ₹500,000' }
+      ]
     }
   ];
   
-  const getStatusColor = (status: Sale['status']) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'processing': return 'bg-blue-100 text-blue-800';
-      case 'shipped': return 'bg-purple-100 text-purple-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'refunded': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const filterGroups: FilterGroup[] = [
+    {
+      id: 'timeFrame',
+      label: 'Time Frame',
+      options: [
+        { id: 'today', label: 'Today' },
+        { id: 'yesterday', label: 'Yesterday' },
+        { id: 'thisWeek', label: 'This Week' },
+        { id: 'thisMonth', label: 'This Month' },
+        { id: 'lastMonth', label: 'Last Month' },
+        { id: 'thisYear', label: 'This Year' }
+      ]
+    },
+    {
+      id: 'growth',
+      label: 'Growth',
+      options: [
+        { id: 'positive', label: 'Positive Growth', colorClass: 'bg-green-500' },
+        { id: 'negative', label: 'Negative Growth', colorClass: 'bg-red-500' }
+      ]
+    }
+  ];
+  
+  // Export form fields
+  const exportFields: FormField[] = [
+    {
+      id: 'format',
+      label: 'Export Format',
+      type: 'select',
+      placeholder: 'Select format',
+      required: true,
+      options: [
+        { value: 'csv', label: 'CSV' },
+        { value: 'excel', label: 'Excel (XLSX)' },
+        { value: 'pdf', label: 'PDF' }
+      ],
+      defaultValue: 'csv'
+    },
+    {
+      id: 'dateRange',
+      label: 'Date Range',
+      type: 'select',
+      placeholder: 'Select date range',
+      required: true,
+      options: [
+        { value: 'all', label: 'All Time' },
+        { value: 'today', label: 'Today' },
+        { value: 'yesterday', label: 'Yesterday' },
+        { value: 'thisWeek', label: 'This Week' },
+        { value: 'thisMonth', label: 'This Month' },
+        { value: 'lastMonth', label: 'Last Month' },
+        { value: 'thisYear', label: 'This Year' },
+        { value: 'custom', label: 'Custom Range' }
+      ],
+      defaultValue: 'thisMonth'
+    },
+    {
+      id: 'includeCharts',
+      label: 'Include Charts',
+      type: 'switch',
+      defaultValue: true
+    },
+    {
+      id: 'includeSummary',
+      label: 'Include Summary',
+      type: 'switch',
+      defaultValue: true
+    }
+  ];
+  
+  // Apply filtering
+  useEffect(() => {
+    setIsLoading(true);
+    
+    // Simulate a network delay
+    const timer = setTimeout(() => {
+      let results = [...allSalesData];
+      
+      // Apply search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        results = results.filter(item => 
+          item.eventName.toLowerCase().includes(query) ||
+          item.id.includes(query)
+        );
+      }
+      
+      // Apply advanced search filters
+      if (activeFilters.length > 0) {
+        activeFilters.forEach(filter => {
+          if (filter.field === 'eventName' && filter.value) {
+            results = results.filter(item => item.eventName === filter.value);
+          }
+          
+          if (filter.field === 'date' && filter.value) {
+            const filterDate = new Date(filter.value as string).toISOString().split('T')[0];
+            results = results.filter(item => item.date === filterDate);
+          }
+          
+          if (filter.field === 'revenueBracket' && filter.value) {
+            switch (filter.value) {
+              case 'low':
+                results = results.filter(item => item.revenue < 100000);
+                break;
+              case 'medium':
+                results = results.filter(item => item.revenue >= 100000 && item.revenue <= 500000);
+                break;
+              case 'high':
+                results = results.filter(item => item.revenue > 500000);
+                break;
+            }
+          }
+        });
+      }
+      
+      // Apply dropdown filters
+      if (Object.keys(selectedFilters).length > 0) {
+        // Time frame filter
+        if (selectedFilters.timeFrame) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          const timeFrame = selectedFilters.timeFrame as string;
+          
+          switch (timeFrame) {
+            case 'today':
+              results = results.filter(item => new Date(item.date).getTime() === today.getTime());
+              break;
+            case 'yesterday':
+              const yesterday = new Date(today);
+              yesterday.setDate(yesterday.getDate() - 1);
+              results = results.filter(item => new Date(item.date).getTime() === yesterday.getTime());
+              break;
+            case 'thisWeek':
+              const thisWeekStart = new Date(today);
+              thisWeekStart.setDate(today.getDate() - today.getDay());
+              results = results.filter(item => new Date(item.date) >= thisWeekStart);
+              break;
+            case 'thisMonth':
+              const thisMonthStart = new Date(today);
+              thisMonthStart.setDate(1);
+              results = results.filter(item => new Date(item.date) >= thisMonthStart);
+              break;
+            case 'lastMonth':
+              const lastMonthStart = new Date(today);
+              lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
+              lastMonthStart.setDate(1);
+              const thisMonthStart2 = new Date(today);
+              thisMonthStart2.setDate(1);
+              results = results.filter(item => {
+                const itemDate = new Date(item.date);
+                return itemDate >= lastMonthStart && itemDate < thisMonthStart2;
+              });
+              break;
+            case 'thisYear':
+              const thisYearStart = new Date(today);
+              thisYearStart.setMonth(0, 1);
+              results = results.filter(item => new Date(item.date) >= thisYearStart);
+              break;
+          }
+        }
+        
+        // Growth filter
+        if (selectedFilters.growth) {
+          if (selectedFilters.growth === 'positive') {
+            results = results.filter(item => item.change >= 0);
+          } else if (selectedFilters.growth === 'negative') {
+            results = results.filter(item => item.change < 0);
+          }
+        }
+      }
+      
+      // Sort by date (most recent first)
+      results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      setSalesData(results);
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeFilters, selectedFilters, allSalesData]);
+  
+  // Update displayed sales data based on pagination
+  useEffect(() => {
+    const startIdx = (currentPage - 1) * pageSize;
+    const endIdx = startIdx + pageSize;
+    setDisplayedSalesData(salesData.slice(startIdx, endIdx));
+  }, [salesData, currentPage, pageSize]);
+  
+  // Handle time frame selection
+  const handleTimeFrameChange = (timeFrame: string) => {
+    setSelectedTimeFrame(timeFrame);
+    // Apply time frame filter logic here
+    toast({
+      title: "Time Frame Changed",
+      description: `Showing data for ${timeFrame}`
+    });
+  };
+  
+  // Handle event selection
+  const handleEventChange = (event: string) => {
+    setSelectedEvent(event);
+    // Apply event filter logic here
+    toast({
+      title: "Event Filter Changed",
+      description: `Showing data for ${event}`
+    });
+  };
+  
+  // Handle search
+  const handleSearch = (query: string, filters: SearchFilter[]) => {
+    setSearchQuery(query);
+    setActiveFilters(filters);
+    setCurrentPage(1);
+  };
+  
+  // Handle filter change
+  const handleFilterChange = (newFilters: Record<string, string | string[]>) => {
+    setSelectedFilters(newFilters);
+    setCurrentPage(1);
+    
+    // Show toast with selected filter info
+    const filterNames = Object.entries(newFilters).map(([key, value]) => {
+      const filterGroup = filterGroups.find(group => group.id === key);
+      if (!filterGroup) return '';
+      
+      const option = filterGroup.options.find(opt => opt.id === value);
+      return option ? option.label : '';
+    }).filter(Boolean);
+    
+    if (filterNames.length > 0) {
+      toast({
+        title: "Filters Applied",
+        description: `Showing data for ${filterNames.join(', ')}`
+      });
     }
   };
   
+  // Handle export data
+  const handleExportData = (data: Record<string, any>) => {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        toast({
+          title: "Data Exported",
+          description: `Sales data exported as ${data.format.toUpperCase()} with ${data.dateRange} date range.`,
+        });
+        resolve();
+      }, 1500);
+    });
+  };
+  
+  // Handle chart view change
+  const handleChartViewChange = (view: 'daily' | 'weekly' | 'monthly') => {
+    setSelectedChartView(view);
+    toast({
+      title: "Chart View Changed",
+      description: `Showing ${view} view`
+    });
+  };
+  
+  // Handle chart type change
+  const handleChartTypeChange = (type: 'area' | 'bar' | 'line') => {
+    setSelectedChartType(type);
+    toast({
+      title: "Chart Type Changed",
+      description: `Chart type changed to ${type}`
+    });
+  };
+  
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  // Render chart based on selected type
+  const renderSalesChart = () => {
+    switch (selectedChartType) {
+      case 'area':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={monthlySalesData}>
+              <defs>
+                <linearGradient id="colorOnline" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorOffline" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#D946EF" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#D946EF" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" />
+              <YAxis tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+              <Tooltip formatter={(value) => [`₹${Number(value).toLocaleString()}`, undefined]} />
+              <Legend />
+              <Area
+                type="monotone"
+                dataKey="online"
+                stroke="#8B5CF6"
+                fillOpacity={1}
+                fill="url(#colorOnline)"
+                name="Online Sales"
+              />
+              <Area
+                type="monotone"
+                dataKey="offline"
+                stroke="#D946EF"
+                fillOpacity={1}
+                fill="url(#colorOffline)"
+                name="Offline Sales"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <RechartsBarChart data={monthlySalesData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" />
+              <YAxis tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+              <Tooltip formatter={(value) => [`₹${Number(value).toLocaleString()}`, undefined]} />
+              <Legend />
+              <Bar dataKey="online" name="Online Sales" fill="#8B5CF6" />
+              <Bar dataKey="offline" name="Offline Sales" fill="#D946EF" />
+            </RechartsBarChart>
+          </ResponsiveContainer>
+        );
+      case 'line':
+        return (
+          <ResponsiveContainer width="100%" height="100%">
+            <RechartsLineChart data={monthlySalesData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" />
+              <YAxis tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+              <Tooltip formatter={(value) => [`₹${Number(value).toLocaleString()}`, undefined]} />
+              <Legend />
+              <Line type="monotone" dataKey="online" name="Online Sales" stroke="#8B5CF6" activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="offline" name="Offline Sales" stroke="#D946EF" />
+              <Line type="monotone" dataKey="total" name="Total Sales" stroke="#10B981" />
+            </RechartsLineChart>
+          </ResponsiveContainer>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Sales Management</h1>
-          <p className="text-muted-foreground">Manage and track all your sales and transactions</p>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h1 className="text-2xl font-bold">Sales</h1>
+          <p className="text-muted-foreground">Track your event sales and revenue</p>
+        </motion.div>
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" /> Export
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-1"
+              onClick={() => setIsExportModalOpen(true)}
+            >
+              <Download size={16} />
+              Export Report
+            </Button>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <Button className="flex items-center gap-1">
+              <BarChart size={16} />
+              Generate Insights
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-4 md:flex-row">
+        <AdvancedSearch
+          placeholder="Search sales by event name or ID..."
+          filters={searchFilters}
+          onSearch={handleSearch}
+          showFilterButton={true}
+          className="flex-1"
+        />
+        
+        <div className="flex flex-wrap gap-2">
+          <FilterDropdown
+            groups={filterGroups}
+            onFilterChange={handleFilterChange}
+            triggerClassName="text-sm"
+          />
+          
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={() => {
+              const timeFrames = ['Today', 'This Week', 'This Month', 'This Quarter', 'This Year'];
+              const nextIndex = (timeFrames.indexOf(selectedTimeFrame) + 1) % timeFrames.length;
+              handleTimeFrameChange(timeFrames[nextIndex]);
+            }}
+          >
+            <Calendar size={16} />
+            {selectedTimeFrame}
+            <ChevronDown size={14} />
           </Button>
-          <Button variant="outline">
-            <Printer className="mr-2 h-4 w-4" /> Print
-          </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> New Sale
+          
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={() => {
+              const events = ['All Events', 'Summer Music Festival', 'Tech Conference 2025', 'Food & Wine Expo'];
+              const nextIndex = (events.indexOf(selectedEvent) + 1) % events.length;
+              handleEventChange(events[nextIndex]);
+            }}
+          >
+            <Filter size={16} />
+            {selectedEvent}
+            <ChevronDown size={14} />
           </Button>
         </div>
       </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="space-y-4 mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">$24,567.89</div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+        >
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Revenue
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="text-2xl font-bold">{formatCurrency(summaryData.totalRevenue)}</div>
+              <div className="flex items-center mt-1 text-sm">
+                {summaryData.revenueGrowth > 0 ? (
                   <div className="flex items-center text-green-500">
-                    <ArrowUpRight className="h-4 w-4 mr-1" />
-                    <span className="text-sm">12.5%</span>
+                    <TrendingUp size={16} className="mr-1" />
+                    <span>{summaryData.revenueGrowth}% from last period</span>
                   </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">+$3,234.89 from last month</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Order Count</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">1,234</div>
-                  <div className="flex items-center text-green-500">
-                    <ArrowUpRight className="h-4 w-4 mr-1" />
-                    <span className="text-sm">8.2%</span>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">+89 from last month</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">$78.32</div>
+                ) : (
                   <div className="flex items-center text-red-500">
-                    <ArrowDownRight className="h-4 w-4 mr-1" />
-                    <span className="text-sm">3.1%</span>
+                    <TrendingDown size={16} className="mr-1" />
+                    <span>{Math.abs(summaryData.revenueGrowth)}% from last period</span>
                   </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+        >
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Tickets Sold
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="text-2xl font-bold">{summaryData.ticketsSold.toLocaleString()}</div>
+              <div className="flex items-center mt-1 text-sm">
+                <div className="flex items-center text-green-500">
+                  <TrendingUp size={16} className="mr-1" />
+                  <span>6.2% from last period</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">-$2.45 from last month</p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Sales Over Time</CardTitle>
-                <CardDescription>
-                  Revenue breakdown by month
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80 flex items-center justify-center bg-muted/20 rounded-md">
-                  <p className="text-muted-foreground">Sales chart would go here</p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+        >
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Average Ticket Price
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="text-2xl font-bold">{formatCurrency(summaryData.averageTicketPrice)}</div>
+              <div className="flex items-center mt-1 text-sm">
+                <div className="flex items-center text-green-500">
+                  <TrendingUp size={16} className="mr-1" />
+                  <span>2.5% from last period</span>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Selling Events</CardTitle>
-                <CardDescription>
-                  By revenue in the last 30 days
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">Summer Music Festival</p>
-                      <p className="text-sm text-muted-foreground">Central Park</p>
-                    </div>
-                    <p className="font-bold">$12,345</p>
-                  </div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">Tech Conference 2023</p>
-                      <p className="text-sm text-muted-foreground">Convention Center</p>
-                    </div>
-                    <p className="font-bold">$8,724</p>
-                  </div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">Food & Wine Festival</p>
-                      <p className="text-sm text-muted-foreground">City Park</p>
-                    </div>
-                    <p className="font-bold">$5,678</p>
-                  </div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">Comedy Night</p>
-                      <p className="text-sm text-muted-foreground">Downtown Theater</p>
-                    </div>
-                    <p className="font-bold">$3,456</p>
-                  </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+        >
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Conversion Rate
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="text-2xl font-bold">42.8%</div>
+              <div className="flex items-center mt-1 text-sm">
+                <div className="flex items-center text-red-500">
+                  <TrendingDown size={16} className="mr-1" />
+                  <span>1.3% from last period</span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card className="lg:col-span-2">
-              <CardHeader>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Revenue Trend Chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.5 }}
+      >
+        <Card>
+          <CardHeader className="pb-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Revenue Trend</CardTitle>
+                <CardDescription>Analysis of your sales performance</CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="flex rounded-md border overflow-hidden">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={selectedChartView === 'daily' ? "bg-primary text-white" : ""}
+                    onClick={() => handleChartViewChange('daily')}
+                  >
+                    Daily
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={selectedChartView === 'weekly' ? "bg-primary text-white" : ""}
+                    onClick={() => handleChartViewChange('weekly')}
+                  >
+                    Weekly
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={selectedChartView === 'monthly' ? "bg-primary text-white" : ""}
+                    onClick={() => handleChartViewChange('monthly')}
+                  >
+                    Monthly
+                  </Button>
+                </div>
+                <div className="flex rounded-md border overflow-hidden">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={selectedChartType === 'area' ? "bg-primary text-white" : ""}
+                    onClick={() => handleChartTypeChange('area')}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Area
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={selectedChartType === 'bar' ? "bg-primary text-white" : ""}
+                    onClick={() => handleChartTypeChange('bar')}
+                  >
+                    <BarChart className="h-4 w-4 mr-1" />
+                    Bar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={selectedChartType === 'line' ? "bg-primary text-white" : ""}
+                    onClick={() => handleChartTypeChange('line')}
+                  >
+                    <LineChart className="h-4 w-4 mr-1" />
+                    Line
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="h-[400px]">
+              {renderSalesChart()}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Additional Charts - First Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.6 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Ticket Type Distribution</CardTitle>
+              <CardDescription>Breakdown of sales by ticket type</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={ticketTypeData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {ticketTypeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`${value} Tickets`, undefined]} />
+                    <Legend />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" className="w-full flex items-center justify-center gap-1" onClick={() => {
+                toast({
+                  title: "Detailed Analysis",
+                  description: "Opening detailed ticket type analysis report"
+                });
+              }}>
+                <span>View Detailed Analysis</span>
+                <MoveRight className="h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.7 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Event Revenue Comparison</CardTitle>
+              <CardDescription>Top performing events by revenue</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsBarChart
+                    data={eventComparisonData}
+                    layout="vertical"
+                    margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                    <XAxis type="number" tickFormatter={(value) => `₹${(value / 100000).toFixed(0)}L`} />
+                    <YAxis type="category" dataKey="name" width={100} />
+                    <Tooltip formatter={(value) => [`₹${Number(value).toLocaleString()}`, undefined]} />
+                    <Legend />
+                    <Bar dataKey="revenue" name="Revenue" fill="#8B5CF6" />
+                  </RechartsBarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" className="w-full flex items-center justify-center gap-1" onClick={() => {
+                toast({
+                  title: "Event Comparison",
+                  description: "Opening detailed event comparison report"
+                });
+              }}>
+                <span>View Full Comparison</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Sales Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.8 }}
+      >
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-center">
+              <div>
                 <CardTitle>Recent Sales</CardTitle>
-                <CardDescription>
-                  Latest transactions in your account
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Event</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {salesData.map((sale) => (
-                      <TableRow key={sale.id}>
-                        <TableCell className="font-medium">{sale.id}</TableCell>
-                        <TableCell>{sale.customer.name}</TableCell>
-                        <TableCell>{sale.event.name}</TableCell>
-                        <TableCell>${sale.totalAmount.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={getStatusColor(sale.status)}>
-                            {sale.status.charAt(0).toUpperCase() + sale.status.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" /> View details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Edit className="mr-2 h-4 w-4" /> Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem>
-                                <FileText className="mr-2 h-4 w-4" /> Generate invoice
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Methods</CardTitle>
-                <CardDescription>
-                  Distribution by payment method
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-primary rounded-full mr-2"></div>
-                      <span>Credit Card</span>
-                    </div>
-                    <span className="font-medium">68%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-blue-400 rounded-full mr-2"></div>
-                      <span>PayPal</span>
-                    </div>
-                    <span className="font-medium">22%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
-                      <span>Bank Transfer</span>
-                    </div>
-                    <span className="font-medium">7%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
-                      <span>Other</span>
-                    </div>
-                    <span className="font-medium">3%</span>
-                  </div>
-                </div>
-                <div className="h-36 flex items-center justify-center bg-muted/20 rounded-md mt-4">
-                  <p className="text-muted-foreground">Chart would go here</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="sales" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>All Sales</CardTitle>
-              <CardDescription>
-                Manage all your sale records
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="relative w-60">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search sales..." className="pl-8" />
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <FilterIcon className="mr-2 h-4 w-4" /> Filter
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[200px]">
-                      <DropdownMenuLabel>Filter By</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        Status
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        Date
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        Amount
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        Customer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button variant="outline" size="sm">
-                    <Calendar className="mr-2 h-4 w-4" /> Date Range
-                  </Button>
-                </div>
-                <Button size="sm">
-                  <Plus className="mr-2 h-4 w-4" /> New Sale
+                <CardDescription>Details of your recent ticket sales</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex items-center gap-1" onClick={() => {
+                  toast({
+                    title: "Print Report",
+                    description: "Preparing report for printing"
+                  });
+                }}>
+                  <Printer className="h-4 w-4" />
+                  <span className="hidden sm:inline">Print</span>
+                </Button>
+                <Button variant="outline" size="sm" className="flex items-center gap-1" onClick={() => {
+                  toast({
+                    title: "Share Report",
+                    description: "Share options opened"
+                  });
+                }}>
+                  <Share2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Share</span>
                 </Button>
               </div>
-              
-              <Table>
-                <TableHeader>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Tickets Sold</TableHead>
+                  <TableHead>Revenue</TableHead>
+                  <TableHead>Avg. Price</TableHead>
+                  <TableHead>Change</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array(5).fill(0).map((_, idx) => (
+                    <TableRow key={`skeleton-${idx}`}>
+                      <TableCell colSpan={6} className="h-16">
+                        <div className="w-full h-full bg-gray-100 animate-pulse rounded"></div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : displayedSalesData.length > 0 ? (
+                  displayedSalesData.map((item) => (
+                    <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => {
+                      toast({
+                        title: "Event Details",
+                        description: `Viewing details for ${item.eventName}`
+                      });
+                    }}>
+                      <TableCell className="font-medium">{item.eventName}</TableCell>
+                      <TableCell>{formatDate(item.date)}</TableCell>
+                      <TableCell>{item.tickets}</TableCell>
+                      <TableCell>{formatCurrency(item.revenue)}</TableCell>
+                      <TableCell>{formatCurrency(item.averagePrice)}</TableCell>
+                      <TableCell>
+                        <div className={`flex items-center ${item.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {item.change >= 0 ? (
+                            <TrendingUp size={16} className="mr-1" />
+                          ) : (
+                            <TrendingDown size={16} className="mr-1" />
+                          )}
+                          <span>{Math.abs(item.change)}%</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
                   <TableRow>
-                    <TableHead>Order ID</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead></TableHead>
+                    <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                      No sales data found. Try adjusting your filters.
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {salesData.map((sale) => (
-                    <TableRow key={sale.id}>
-                      <TableCell className="font-medium">{sale.id}</TableCell>
-                      <TableCell>{new Date(sale.date).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span>{sale.customer.name}</span>
-                          <span className="text-xs text-muted-foreground">{sale.customer.email}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span>{sale.event.name}</span>
-                          <span className="text-xs text-muted-foreground">{new Date(sale.event.date).toLocaleDateString()}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">${sale.totalAmount.toFixed(2)}</TableCell>
-                      <TableCell>{sale.paymentMethod}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={getStatusColor(sale.status)}>
-                          {sale.status.charAt(0).toUpperCase() + sale.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Eye className="mr-2 h-4 w-4" /> View details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              <FileText className="mr-2 h-4 w-4" /> Generate invoice
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Truck className="mr-2 h-4 w-4" /> Update shipping
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              <RefreshCw className="mr-2 h-4 w-4" /> Change status
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium">1</span> to <span className="font-medium">10</span> of <span className="font-medium">42</span> results
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm" disabled>
-                    Previous
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <CardFooter className="p-4">
+            <DataPagination
+              totalItems={salesData.length}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={setPageSize}
+              showPageSizeSelector={true}
+            />
+          </CardFooter>
+        </Card>
+      </motion.div>
+
+      {/* Additional Card for Payment Methods */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.9 }}
+      >
+        <Card className="bg-gradient-to-br from-primary to-primary/80 text-white">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <h3 className="text-2xl font-bold mb-2">Analyze Your Sales Performance</h3>
+                <p className="text-white/80 mb-4">Get deeper insights into your sales trends and customer behavior with our advanced analytics.</p>
+                <div className="flex gap-3 mt-6">
+                  <Button 
+                    variant="outline" 
+                    className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                    onClick={() => {
+                      toast({
+                        title: "Sales Report",
+                        description: "Generating comprehensive sales report"
+                      });
+                    }}
+                  >
+                    <IndianRupee className="h-4 w-4 mr-2" />
+                    Revenue Report
                   </Button>
-                  <Button variant="outline" size="sm" className="ml-2">
-                    Next
+                  <Button 
+                    variant="default" 
+                    className="bg-white text-primary hover:bg-white/90"
+                    onClick={() => {
+                      toast({
+                        title: "Advanced Analytics",
+                        description: "Opening advanced analytics dashboard"
+                      });
+                    }}
+                  >
+                    <Wallet className="h-4 w-4 mr-2" />
+                    Payment Analytics
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="reports" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sales Reports</CardTitle>
-              <CardDescription>
-                Generate custom reports for your sales data
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="space-y-2">
-                  <Label>Report Type</Label>
-                  <Select defaultValue="sales">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select report type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sales">Sales Summary</SelectItem>
-                      <SelectItem value="products">Product Performance</SelectItem>
-                      <SelectItem value="customers">Customer Analysis</SelectItem>
-                      <SelectItem value="payments">Payment Methods</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Time Period</Label>
-                  <Select defaultValue="month">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select time period" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="week">This Week</SelectItem>
-                      <SelectItem value="month">This Month</SelectItem>
-                      <SelectItem value="quarter">This Quarter</SelectItem>
-                      <SelectItem value="year">This Year</SelectItem>
-                      <SelectItem value="custom">Custom Range</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="hidden md:flex justify-end">
+                <div className="rounded-full bg-white/10 p-6">
+                  <PieChart className="h-16 w-16" />
                 </div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="space-y-2">
-                  <Label>Group By</Label>
-                  <Select defaultValue="day">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select grouping" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="day">Day</SelectItem>
-                      <SelectItem value="week">Week</SelectItem>
-                      <SelectItem value="month">Month</SelectItem>
-                      <SelectItem value="quarter">Quarter</SelectItem>
-                      <SelectItem value="category">Category</SelectItem>
-                      <SelectItem value="customer">Customer</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Format</Label>
-                  <Select defaultValue="chart">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="chart">Chart</SelectItem>
-                      <SelectItem value="table">Table</SelectItem>
-                      <SelectItem value="both">Both</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="flex justify-end mb-6">
-                <Button className="mr-2">
-                  <FileText className="mr-2 h-4 w-4" /> Generate Report
-                </Button>
-                <Button variant="outline">
-                  <Download className="mr-2 h-4 w-4" /> Export
-                </Button>
-              </div>
-              
-              <div className="h-80 flex items-center justify-center bg-muted/20 rounded-md">
-                <div className="text-center">
-                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">Generate a report to see the data here</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+      
+      {/* Export Data Modal */}
+      <CustomModalForm
+        title="Export Sales Data"
+        description="Choose the format and filters for your sales data export"
+        fields={exportFields}
+        onSubmit={handleExportData}
+        submitText="Export"
+        cancelText="Cancel"
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        width="md"
+      />
     </div>
   );
 };

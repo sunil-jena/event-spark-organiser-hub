@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/ui/stats-card';
@@ -171,17 +172,11 @@ const Analytics = () => {
         
         <div className="space-y-6">
           <SalesStatistics
-            data={[
-              { name: 'Product A', value: 35000 },
-              { name: 'Product B', value: 25000 },
-              { name: 'Product C', value: 15000 }
-            ]}
-            type="products"
-            title="Revenue by Product"
-            totalSales={75000}
-            onlineSales={50000}
-            offlineSales={25000}
-            percentageChange={12.5}
+            title="Ticket Sales"
+            totalSales={15250}
+            onlineSales={12450}
+            offlineSales={2800}
+            percentageChange={8.2}
           />
           
           <OrderStatistics
