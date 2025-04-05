@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, IndianRupee } from 'lucide-react';
 
 interface SalesStatisticsProps {
   title: string;
@@ -21,16 +21,16 @@ export function SalesStatistics({
   offlineSales,
   percentageChange,
   timeFrame = "vs last month",
-  currency = "$",
+  currency = "₹",
   className,
 }: SalesStatisticsProps) {
   const isPositive = percentageChange && percentageChange > 0;
-  const formattedTotal = new Intl.NumberFormat('en-US', {
+  const formattedTotal = new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(totalSales).replace('$', currency);
+  }).format(totalSales).replace('₹', currency);
 
   const onlinePercentage = Math.round((onlineSales / totalSales) * 100) || 0;
   const offlinePercentage = 100 - onlinePercentage;
@@ -64,7 +64,7 @@ export function SalesStatistics({
       <div className="mt-4">
         <div className="flex justify-between text-sm mb-1">
           <span className="font-medium">Online Sales</span>
-          <span className="text-gray-500">{currency}{onlineSales.toLocaleString()} ({onlinePercentage}%)</span>
+          <span className="text-gray-500">{currency}{onlineSales.toLocaleString('en-IN')} ({onlinePercentage}%)</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
           <div className="bg-primary h-2 rounded-full" style={{ width: `${onlinePercentage}%` }}></div>
@@ -72,7 +72,7 @@ export function SalesStatistics({
         
         <div className="flex justify-between text-sm mb-1">
           <span className="font-medium">Offline Sales</span>
-          <span className="text-gray-500">{currency}{offlineSales.toLocaleString()} ({offlinePercentage}%)</span>
+          <span className="text-gray-500">{currency}{offlineSales.toLocaleString('en-IN')} ({offlinePercentage}%)</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div className="bg-primary-light h-2 rounded-full" style={{ width: `${offlinePercentage}%` }}></div>

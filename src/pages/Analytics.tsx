@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/ui/stats-card';
 import { SalesChart } from '@/components/ui/sales-chart';
-import { OrderStatistics } from '@/components/ui/order-statistics';
+import { OrderStatistics, OrderStatus } from '@/components/ui/order-statistics';
 import { SalesStatistics } from '@/components/ui/sales-statistics';
 import { 
   BarChart3, 
@@ -11,7 +11,7 @@ import {
   Ticket, 
   Users,
   Calendar,
-  PieChart,
+  PieChartIcon, // Renamed to avoid conflict with recharts
   TrendingUp,
   Download
 } from 'lucide-react';
@@ -27,7 +27,7 @@ import {
   Line,
   LineChart,
   Pie,
-  PieChart,
+  PieChart, // This is from recharts
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -46,12 +46,12 @@ const salesData = [
   { name: 'Jul', online: 3490, offline: 4300, total: 7790 },
 ];
 
-// Order statistics data
+// Order statistics data with proper types
 const orderStatsData = [
-  { status: 'completed', count: 358 },
-  { status: 'pending', count: 124 },
-  { status: 'cancelled', count: 23 },
-  { status: 'refunded', count: 15 },
+  { status: 'completed' as OrderStatus, count: 358 },
+  { status: 'pending' as OrderStatus, count: 124 },
+  { status: 'cancelled' as OrderStatus, count: 23 },
+  { status: 'refunded' as OrderStatus, count: 15 },
 ];
 
 // Audience data for pie chart

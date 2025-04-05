@@ -8,9 +8,14 @@ import Header from './Header';
 const Layout = () => {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [minimized, setMinimized] = useState(false);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  const toggleMinimize = () => {
+    setMinimized(!minimized);
   };
 
   return (
@@ -19,10 +24,16 @@ const Layout = () => {
         isMobile={isMobile} 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
+        minimized={minimized}
+        toggleMinimize={toggleMinimize}
       />
       
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header onMenuClick={toggleSidebar} />
+        <Header 
+          onMenuClick={toggleSidebar}
+          minimized={minimized} 
+          toggleMinimize={toggleMinimize}
+        />
         
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
