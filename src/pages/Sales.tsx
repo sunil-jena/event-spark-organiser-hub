@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -53,7 +54,7 @@ import { motion } from 'framer-motion';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { DataPagination } from '@/components/ui/data-pagination';
 import { AdvancedSearch, Filter } from '@/components/ui/advanced-search';
-import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
+import { FilterDropdown, FilterGroup, FilterItem } from '@/components/ui/filter-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
 import { 
@@ -75,6 +76,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 
 // Define a unified SalesData interface that works for both components
 export interface SalesData {
@@ -122,6 +129,7 @@ const Sales = () => {
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const sales: Sale[] = [
     {
@@ -534,14 +542,15 @@ const Sales = () => {
     setDetailsModalOpen(true);
   };
 
-  const handleSubmitDetails = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitDetails = async (data: Record<string, any>) => {
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     toast({
       title: "Sale updated",
       description: `Sale ${selectedSale?.id} has been updated successfully`,
     });
+    
+    return true;
   };
 
   const saleDetailFields: FormField[] = [
@@ -666,27 +675,19 @@ const Sales = () => {
                   triggerText={filterGroup.name}
                   icon={<FilterIcon className="h-4 w-4" />}
                 >
-                  <FilterGroup>
+                  <FilterGroup title={filterGroup.name}>
                     {filterGroup.options.map((option) => {
                       const field = filterGroup.name === 'Status' ? 'status' : 'paymentMethod';
                       const isActive = activeFilters.some(f => f.field === field && f.value === option);
                       
                       return (
-                        <div key={option} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={`filter-${filterGroup.name}-${option}`}
-                            checked={isActive}
-                            onChange={(e) => handleFilterChange(filterGroup.name, option, e.target.checked)}
-                            className="rounded text-primary focus:ring-primary"
-                          />
-                          <Label 
-                            htmlFor={`filter-${filterGroup.name}-${option}`}
-                            className="text-sm cursor-pointer"
-                          >
-                            {option}
-                          </Label>
-                        </div>
+                        <FilterItem
+                          key={option}
+                          checked={isActive}
+                          onCheckedChange={(checked) => handleFilterChange(filterGroup.name, option, checked)}
+                          label={option}
+                          value={option}
+                        />
                       );
                     })}
                   </FilterGroup>
@@ -708,59 +709,335 @@ const Sales = () => {
             </div>
           </div>
           
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Sale ID</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Event</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Payment Method</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedSales.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                      No sales found. Try a different search or filter.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedSales.map((sale) => (
-                    <TableRow key={sale.id} className="table-row-hover">
-                      <TableCell className="font-medium">{sale.id}</TableCell>
-                      <TableCell>{new Date(sale.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{sale.customer.name}</TableCell>
-                      <TableCell>{sale.event.name}</TableCell>
-                      <TableCell>₹{sale.totalAmount.toLocaleString()}</TableCell>
-                      <TableCell>{sale.paymentMethod}</TableCell>
-                      <TableCell>{getStatusBadge(sale.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenDetailsModal(sale)}>
-                          View Details
-                        </Button>
-                      </TableCell>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="reports">Reports</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Total Sales</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-3xl font-bold">₹42,950</p>
+                        <p className="text-sm text-muted-foreground flex items-center">
+                          <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" /> 12.5% from last month
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <DollarSign className="h-6 w-6 text-primary" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Total Orders</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-3xl font-bold">267</p>
+                        <p className="text-sm text-muted-foreground flex items-center">
+                          <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" /> 8.2% from last month
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <ShoppingCart className="h-6 w-6 text-primary" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Total Customers</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-3xl font-bold">156</p>
+                        <p className="text-sm text-muted-foreground flex items-center">
+                          <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" /> 5.3% from last month
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <Users className="h-6 w-6 text-primary" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Sales Overview</CardTitle>
+                    <CardDescription>View monthly sales data</CardDescription>
+                    <div className="flex gap-2 mt-2">
+                      <Button variant="outline" size="sm">
+                        Daily
+                      </Button>
+                      <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">
+                        Monthly
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Month</TableHead>
+                          <TableHead>Online Sales</TableHead>
+                          <TableHead>Offline Sales</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium">January</TableCell>
+                          <TableCell>₹2,500</TableCell>
+                          <TableCell>₹1,500</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">February</TableCell>
+                          <TableCell>₹1,800</TableCell>
+                          <TableCell>₹1,200</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">March</TableCell>
+                          <TableCell>₹3,200</TableCell>
+                          <TableCell>₹1,800</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">April</TableCell>
+                          <TableCell>₹3,800</TableCell>
+                          <TableCell>₹2,200</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">May</TableCell>
+                          <TableCell>₹2,700</TableCell>
+                          <TableCell>₹1,800</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Events</CardTitle>
+                    <CardDescription>Events with most sales</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Summer Music Festival</p>
+                          <p className="text-sm text-muted-foreground">Mumbai Grounds</p>
+                        </div>
+                        <p className="font-medium">₹8,497</p>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Tech Conference 2025</p>
+                          <p className="text-sm text-muted-foreground">Bangalore Expo</p>
+                        </div>
+                        <p className="font-medium">₹6,996</p>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Comedy Night</p>
+                          <p className="text-sm text-muted-foreground">Chennai Auditorium</p>
+                        </div>
+                        <p className="font-medium">₹4,197</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="transactions" className="space-y-4">
+              <div className="border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Sale ID</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Payment</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          
-          <div className="mt-4">
-            <DataPagination
-              currentPage={currentPage}
-              totalItems={filteredSales.length}
-              pageSize={itemsPerPage}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setItemsPerPage}
-              showingText="sales"
-            />
-          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedSales.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                          No sales found. Try a different search or filter.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedSales.map((sale) => (
+                        <TableRow key={sale.id} className="table-row-hover">
+                          <TableCell className="font-medium">{sale.id}</TableCell>
+                          <TableCell>{new Date(sale.date).toLocaleDateString()}</TableCell>
+                          <TableCell>{sale.customer.name}</TableCell>
+                          <TableCell>{sale.event.name}</TableCell>
+                          <TableCell>₹{sale.totalAmount.toLocaleString()}</TableCell>
+                          <TableCell>{sale.paymentMethod}</TableCell>
+                          <TableCell>{getStatusBadge(sale.status)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenDetailsModal(sale)}>
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              <div className="mt-4">
+                <DataPagination
+                  currentPage={currentPage}
+                  totalItems={filteredSales.length}
+                  pageSize={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setItemsPerPage}
+                  showingText="sales"
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="reports" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Sales by Payment Method</CardTitle>
+                    <CardDescription>Distribution of sales by payment method</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <span>Credit Card</span>
+                        <span className="font-medium">₹18,995</span>
+                      </div>
+                      <div className="w-full bg-secondary h-2 rounded-full">
+                        <div className="bg-primary h-2 rounded-full" style={{ width: '45%' }}></div>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>UPI</span>
+                        <span className="font-medium">₹12,494</span>
+                      </div>
+                      <div className="w-full bg-secondary h-2 rounded-full">
+                        <div className="bg-primary h-2 rounded-full" style={{ width: '30%' }}></div>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>Debit Card</span>
+                        <span className="font-medium">₹6,497</span>
+                      </div>
+                      <div className="w-full bg-secondary h-2 rounded-full">
+                        <div className="bg-primary h-2 rounded-full" style={{ width: '15%' }}></div>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>NetBanking</span>
+                        <span className="font-medium">₹4,998</span>
+                      </div>
+                      <div className="w-full bg-secondary h-2 rounded-full">
+                        <div className="bg-primary h-2 rounded-full" style={{ width: '10%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 flex justify-end">
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Report
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Sales by Status</CardTitle>
+                    <CardDescription>Status of current sales</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                          <span>Delivered</span>
+                        </div>
+                        <span className="font-medium">86 orders</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                          <span>Processing</span>
+                        </div>
+                        <span className="font-medium">67 orders</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-blue-400 mr-2"></div>
+                          <span>Shipped</span>
+                        </div>
+                        <span className="font-medium">52 orders</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                          <span>Pending</span>
+                        </div>
+                        <span className="font-medium">35 orders</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                          <span>Cancelled</span>
+                        </div>
+                        <span className="font-medium">15 orders</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
+                          <span>Refunded</span>
+                        </div>
+                        <span className="font-medium">12 orders</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 flex justify-end">
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Report
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -845,3 +1122,31 @@ const Sales = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Item Name</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedSale?.items.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell>₹{item.price.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">₹{(item.quantity * item.price).toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+                <TableRow>
+                  <TableCell colSpan={3} className="text-right font-medium">Total Amount:</TableCell>
+                  <TableCell className="text-right font-bold">₹{selectedSale?.totalAmount.toLocaleString()}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </CustomModalForm>
+    </div>
+  );
+};
+
+export default Sales;
