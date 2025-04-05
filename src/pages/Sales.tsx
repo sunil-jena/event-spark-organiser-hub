@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -7,24 +6,6 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, 
   ChevronDown, 
@@ -63,7 +44,7 @@ import { motion } from 'framer-motion';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { DataPagination } from '@/components/ui/data-pagination';
 import { AdvancedSearch, Filter as SearchFilter } from '@/components/ui/advanced-search';
-import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
+import { FilterDropdown, FilterGroup as FilterGroupComponent } from '@/components/ui/filter-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
 
@@ -75,6 +56,13 @@ interface Transaction {
   paymentMethod: string;
   status: 'completed' | 'pending' | 'failed' | 'refunded';
   eventName: string;
+}
+
+interface SalesData {
+  name: string;
+  online: number;
+  offline: number;
+  total: number;
 }
 
 const Sales = () => {
@@ -198,15 +186,15 @@ const Sales = () => {
     },
   ];
 
-  // Filter transactions based on search and active filters
   const filteredTransactions = transactions.filter(transaction => {
-    // Check if transaction matches the search query
     const matchesSearch = 
-      transaction.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.eventName.toLowerCase().includes(searchQuery.toLowerCase());
+      (typeof transaction.customer === 'string' && typeof searchQuery === 'string' && 
+        transaction.customer.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (typeof transaction.id === 'string' && typeof searchQuery === 'string' && 
+        transaction.id.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (typeof transaction.eventName === 'string' && typeof searchQuery === 'string' && 
+        transaction.eventName.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    // Check if transaction matches all active filters
     const matchesFilters = activeFilters.every(filter => {
       const value = transaction[filter.field as keyof Transaction];
       
@@ -233,13 +221,11 @@ const Sales = () => {
     return matchesSearch && matchesFilters;
   });
 
-  // Paginate transactions
   const totalTransactions = filteredTransactions.length;
   const totalPages = Math.ceil(totalTransactions / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
 
-  // Calculate statistics
   const totalRevenue = transactions.reduce((sum, transaction) => {
     if (transaction.status !== 'refunded' && transaction.status !== 'failed') {
       return sum + transaction.amount;
@@ -256,7 +242,6 @@ const Sales = () => {
     .filter(t => t.status === 'refunded')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // Get status badge
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'completed':
@@ -272,13 +257,12 @@ const Sales = () => {
     }
   };
 
-  // Prepare data for charts
-  const dailySales = [
-    { name: 'Apr 1', sales: 8997 },
-    { name: 'Apr 2', sales: 5996 },
-    { name: 'Apr 3', sales: 4298 },
-    { name: 'Apr 4', sales: 4197 },
-    { name: 'Apr 5', sales: 4595 },
+  const dailySales: SalesData[] = [
+    { name: 'Apr 1', online: 5000, offline: 3997, total: 8997 },
+    { name: 'Apr 2', online: 4000, offline: 1996, total: 5996 },
+    { name: 'Apr 3', online: 3000, offline: 1298, total: 4298 },
+    { name: 'Apr 4', online: 3500, offline: 697, total: 4197 },
+    { name: 'Apr 5', online: 3800, offline: 795, total: 4595 },
   ];
 
   const paymentMethodsData = [
@@ -297,7 +281,6 @@ const Sales = () => {
     { name: 'Art Exhibition', value: 2697 },
   ];
 
-  // Filter options
   const filterOptions = [
     {
       name: 'Status',
@@ -320,18 +303,15 @@ const Sales = () => {
     },
   ];
 
-  // Filter change handler
   const handleFilterChange = (filterName: string, option: string, isSelected: boolean) => {
     setActiveFilters(prev => {
       if (isSelected) {
-        // Add new filter
         return [...prev, {
           field: filterName === 'Event' ? 'eventName' : filterName === 'Status' ? 'status' : 'paymentMethod',
           operator: 'equals',
           value: option
         }];
       } else {
-        // Remove filter
         return prev.filter(filter => 
           !(filter.field === (filterName === 'Event' ? 'eventName' : filterName === 'Status' ? 'status' : 'paymentMethod') && 
           filter.value === option)
@@ -339,24 +319,21 @@ const Sales = () => {
       }
     });
     
-    // Reset to first page when filter changes
     setCurrentPage(1);
   };
 
-  // Handle search
   const handleSearch = (query: string, filters: SearchFilter[]) => {
     setSearchQuery(query);
     setActiveFilters(filters);
     setCurrentPage(1);
   };
 
-  // Form fields for import modal
   const importModalFields: FormField[] = [
     {
       id: 'file',
       label: 'Upload File',
-      type: 'file',
-      acceptedFileTypes: '.csv, .xlsx',
+      type: 'file' as const,
+      accept: '.csv, .xlsx',
       required: true,
     },
     {
@@ -384,22 +361,18 @@ const Sales = () => {
     {
       id: 'skipHeaders',
       label: 'Skip Header Row',
-      type: 'checkbox',
+      type: 'switch' as const,
       defaultValue: true,
     },
   ];
 
-  // Handle import form submission
   const handleImportSubmit = async (data: Record<string, any>) => {
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     toast({
       title: "Import successful",
       description: `Imported sales data with settings: ${data.dateFormat}, ${data.currency}`,
     });
-    
-    return true;
   };
 
   return (
@@ -643,7 +616,7 @@ const Sales = () => {
                 <div className="flex-grow w-full md:w-auto">
                   <AdvancedSearch 
                     onSearch={handleSearch} 
-                    searchPlaceholder="Search transactions..." 
+                    placeholder="Search transactions..." 
                     fields={[
                       { name: 'customer', label: 'Customer' },
                       { name: 'id', label: 'Transaction ID' },
@@ -661,7 +634,7 @@ const Sales = () => {
                       triggerText={filterGroup.name}
                       icon={<FilterIcon className="h-4 w-4" />}
                     >
-                      <FilterGroup>
+                      <FilterGroupComponent>
                         {filterGroup.options.map((option) => {
                           const field = filterGroup.name === 'Event' ? 'eventName' : 
                                         filterGroup.name === 'Status' ? 'status' : 'paymentMethod';
@@ -685,7 +658,7 @@ const Sales = () => {
                             </div>
                           );
                         })}
-                      </FilterGroup>
+                      </FilterGroupComponent>
                     </FilterDropdown>
                   ))}
                   
@@ -744,11 +717,10 @@ const Sales = () => {
               <div className="mt-4">
                 <DataPagination
                   currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
                   totalItems={filteredTransactions.length}
-                  itemsPerPage={itemsPerPage}
-                  onItemsPerPageChange={setItemsPerPage}
+                  pageSize={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setItemsPerPage}
                   showingText="transactions"
                 />
               </div>
@@ -868,7 +840,6 @@ const Sales = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Import Modal */}
       <CustomModalForm
         title="Import Sales Data"
         description="Upload a file with your sales data to import"

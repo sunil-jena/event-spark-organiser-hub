@@ -1,83 +1,84 @@
-
 import React from 'react';
-import { cn } from '@/lib/utils';
-import { ArrowUp, ArrowDown, IndianRupee } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
-interface SalesStatisticsProps {
-  title: string;
-  totalSales: number;
-  onlineSales: number;
-  offlineSales: number;
-  percentageChange?: number;
-  timeFrame?: string;
-  currency?: string;
-  className?: string;
+// Update SalesStatisticsProps to accept the data format being passed
+export interface SalesStatisticsProps {
+  // Either accept the original data format with online/offline/total
+  // or add a more flexible format for different chart types
+  data: Array<{
+    name: string;
+    value?: number;
+    online?: number;
+    offline?: number;
+    total?: number;
+  }>;
+  type: 'pie' | 'bar' | 'line';
 }
 
-export function SalesStatistics({
-  title,
-  totalSales,
-  onlineSales,
-  offlineSales,
-  percentageChange,
-  timeFrame = "vs last month",
-  currency = "₹",
-  className,
-}: SalesStatisticsProps) {
-  const isPositive = percentageChange && percentageChange > 0;
-  const formattedTotal = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(totalSales).replace('₹', currency);
+export function SalesStatistics({ data, type }: SalesStatisticsProps) {
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#9c6ade'];
 
-  const onlinePercentage = Math.round((onlineSales / totalSales) * 100) || 0;
-  const offlinePercentage = 100 - onlinePercentage;
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-  return (
-    <div className={cn(
-      "bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-100 dark:border-gray-700",
-      className
-    )}>
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-          <h3 className="text-2xl font-bold mt-1">{formattedTotal}</h3>
-          {percentageChange !== undefined && (
-            <div className="flex items-center mt-2">
-              <span className={cn(
-                "text-xs font-medium flex items-center",
-                isPositive
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
-              )}>
-                {isPositive ? <ArrowUp className="mr-1 h-3 w-3" /> : <ArrowDown className="mr-1 h-3 w-3" />}
-                {isPositive ? "+" : ""}{percentageChange}%
-              </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">{timeFrame}</span>
-            </div>
-          )}
-        </div>
-      </div>
+    return (
+      <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
 
-      <div className="mt-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span className="font-medium">Online Sales</span>
-          <span className="text-gray-500">{currency}{onlineSales.toLocaleString('en-IN')} ({onlinePercentage}%)</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-          <div className="bg-primary h-2 rounded-full" style={{ width: `${onlinePercentage}%` }}></div>
-        </div>
-        
-        <div className="flex justify-between text-sm mb-1">
-          <span className="font-medium">Offline Sales</span>
-          <span className="text-gray-500">{currency}{offlineSales.toLocaleString('en-IN')} ({offlinePercentage}%)</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div className="bg-primary-light h-2 rounded-full" style={{ width: `${offlinePercentage}%` }}></div>
-        </div>
-      </div>
-    </div>
-  );
+  if (type === 'pie') {
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart width={400} height={300}>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            label={renderCustomizedLabel}
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="value"
+          >
+            {
+              data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))
+            }
+          </Pie>
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+    );
+  } else if (type === 'bar') {
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          width={500}
+          height={300}
+          data={data}
+          margin={{
+            top: 5,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="value" fill="#8884d8" />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  } else {
+    return <p>Unsupported chart type</p>;
+  }
 }

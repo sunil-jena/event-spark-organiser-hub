@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Table,
@@ -115,6 +114,8 @@ interface Order {
   status: OrderStatus;
   isOffline?: boolean;
 }
+
+type Status = 'success' | 'pending' | 'error' | 'warning' | 'info';
 
 const Orders = () => {
   const { toast } = useToast();
@@ -301,7 +302,8 @@ const Orders = () => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         results = results.filter(order => 
-          order.customer.toLowerCase().includes(query) ||
+          typeof query === 'string' && typeof order.customer === 'string' &&
+          order.customer.toLowerCase().includes(query.toLowerCase()) ||
           order.id.includes(query) ||
           order.email.toLowerCase().includes(query) ||
           order.eventName.toLowerCase().includes(query)
@@ -940,7 +942,7 @@ const Orders = () => {
         onSubmit={handleAddNoteSubmit}
         submitText="Add Note"
         cancelText="Cancel"
-        open={isAddNoteModalOpen}
+        isOpen={isAddNoteModalOpen}
         onOpenChange={setIsAddNoteModalOpen}
         width="md"
       />
@@ -953,7 +955,7 @@ const Orders = () => {
         onSubmit={handleExportOrders}
         submitText="Export"
         cancelText="Cancel"
-        open={isExportModalOpen}
+        isOpen={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}
         width="md"
       />

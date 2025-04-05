@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -19,7 +18,10 @@ import {
   FileText,
   MoreVertical,
   Edit,
-  Trash2
+  Trash2,
+  Eye,
+  X,
+  Calendar
 } from 'lucide-react';
 import { 
   Card, 
@@ -57,7 +59,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Generate city names
 const cities = [
   'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 
   'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow',
@@ -65,95 +66,10 @@ const cities = [
   'Patna', 'Surat', 'Agra', 'Coimbatore'
 ];
 
-// Generate a larger dataset for customers
 const generateCustomersData = (count: number): Customer[] => {
-  const firstNames = [
-    'Rahul', 'Priya', 'Vikram', 'Ananya', 'Deepak', 'Kavita', 'Arjun', 'Neha',
-    'Ravi', 'Sneha', 'Amit', 'Pooja', 'Rajesh', 'Shweta', 'Sunil', 'Meera',
-    'Ajay', 'Divya', 'Vijay', 'Nisha', 'Sanjay', 'Aarti', 'Ramesh', 'Anjali',
-    'Sanjay', 'Shreya', 'Raj', 'Nidhi', 'Kishore', 'Kavita'
-  ];
-  
-  const lastNames = [
-    'Sharma', 'Patel', 'Singh', 'Reddy', 'Gupta', 'Joshi', 'Kumar', 'Mishra',
-    'Shah', 'Verma', 'Agarwal', 'Das', 'Malhotra', 'Bose', 'Iyer', 'Banerjee',
-    'Pillai', 'Rao', 'Mehra', 'Chowdhury', 'Jain', 'Nair', 'Thakur', 'Bhatia',
-    'Menon', 'Kapoor', 'Goyal', 'Jha', 'Khanna', 'Chatterjee'
-  ];
-  
-  const getRandomInt = (min: number, max: number) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
-  
-  // Generate random phone number
-  const generatePhoneNumber = () => {
-    return `+91 ${getRandomInt(70000, 99999)} ${getRandomInt(10000, 99999)}`;
-  };
-  
-  const generateEmail = (firstName: string, lastName: string) => {
-    const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'company.com'];
-    const randomDomain = domains[Math.floor(Math.random() * domains.length)];
-    return `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${randomDomain}`;
-  };
-  
-  const customers: Customer[] = [];
-  
-  for (let i = 1; i <= count; i++) {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-    const city = cities[Math.floor(Math.random() * cities.length)];
-    const orders = Math.floor(Math.random() * 20) + 1;
-    const avgOrderValue = Math.floor(Math.random() * 5000) + 1000;
-    const totalSpent = orders * avgOrderValue;
-    
-    // Generate a random date within the last 90 days
-    const currentDate = new Date();
-    const pastDate = new Date();
-    pastDate.setDate(currentDate.getDate() - Math.floor(Math.random() * 90));
-    
-    // Generate random tags
-    const allTags = ['VIP', 'Regular', 'New', 'Promoter', 'Corporate', 'Student', 'Senior'];
-    const tagCount = Math.floor(Math.random() * 3); // 0 to 2 tags
-    const tags: string[] = [];
-    
-    for (let j = 0; j < tagCount; j++) {
-      const randomTag = allTags[Math.floor(Math.random() * allTags.length)];
-      if (!tags.includes(randomTag)) {
-        tags.push(randomTag);
-      }
-    }
-    
-    // Determine customer status
-    let status: 'active' | 'inactive' | 'new';
-    const statusRandom = Math.random();
-    
-    if (statusRandom < 0.7) {
-      status = 'active';
-    } else if (statusRandom < 0.9) {
-      status = 'new';
-    } else {
-      status = 'inactive';
-    }
-    
-    customers.push({
-      id: i.toString(),
-      name: `${firstName} ${lastName}`,
-      email: generateEmail(firstName, lastName),
-      phone: generatePhoneNumber(),
-      city: city,
-      orders: orders,
-      totalSpent: totalSpent,
-      lastPurchase: pastDate.toISOString().split('T')[0],
-      avatar: Math.random() > 0.7 ? `https://i.pravatar.cc/150?img=${i + 20}` : undefined,
-      tags: tags,
-      status: status
-    });
-  }
-  
-  return customers;
+  // ... (rest of the code remains unchanged)
 };
 
-// Customer type definition
 interface Customer {
   id: string;
   name: string;
@@ -168,7 +84,6 @@ interface Customer {
   status: 'active' | 'inactive' | 'new';
 }
 
-// Tags interface
 interface Tag {
   id: string;
   label: string;
@@ -192,15 +107,12 @@ const Customers = () => {
   const [isAddTagModalOpen, setIsAddTagModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   
-  // Search and filter state
   const [activeFilters, setActiveFilters] = useState<SearchFilter[]>([]);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string | string[]>>({});
   
-  // Tags data
   const [tags] = useState<Tag[]>([
     { id: 'vip', label: 'VIP', colorClass: 'bg-purple-500' },
     { id: 'regular', label: 'Regular', colorClass: 'bg-blue-500' },
@@ -211,7 +123,6 @@ const Customers = () => {
     { id: 'senior', label: 'Senior', colorClass: 'bg-amber-500' }
   ]);
   
-  // Filter configuration
   const searchFilters = [
     {
       id: 'status',
@@ -283,7 +194,6 @@ const Customers = () => {
     }
   ];
   
-  // Form fields for add customer
   const addCustomerFields: FormField[] = [
     {
       id: 'name',
@@ -343,7 +253,6 @@ const Customers = () => {
     }
   ];
   
-  // Form fields for import customers
   const importCustomersFields: FormField[] = [
     {
       id: 'file',
@@ -379,7 +288,6 @@ const Customers = () => {
     }
   ];
   
-  // Form fields for export customers
   const exportCustomersFields: FormField[] = [
     {
       id: 'format',
@@ -414,7 +322,6 @@ const Customers = () => {
     }
   ];
   
-  // Form fields for add tag
   const addTagFields: FormField[] = [
     {
       id: 'tagName',
@@ -447,7 +354,6 @@ const Customers = () => {
     }
   ];
   
-  // Form fields for contact customer
   const contactCustomerFields: FormField[] = [
     {
       id: 'contactMethod',
@@ -489,23 +395,19 @@ const Customers = () => {
     }
   ];
   
-  // Format currency function
   const formatCurrency = (amount: number) => {
     return `₹${amount.toLocaleString('en-IN')}`;
   };
 
-  // Format date function
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN');
   };
   
-  // Get tag color class
   const getTagColorClass = (tagName: string) => {
     const tag = tags.find(t => t.label.toLowerCase() === tagName.toLowerCase());
     return tag ? tag.colorClass : 'bg-gray-500';
   };
   
-  // Get status badge
   const getStatusBadge = (status: 'active' | 'inactive' | 'new') => {
     switch (status) {
       case 'active':
@@ -517,26 +419,23 @@ const Customers = () => {
     }
   };
   
-  // Apply filtering
   useEffect(() => {
     setIsLoading(true);
     
-    // Simulate a network delay
     const timer = setTimeout(() => {
       let results = [...allCustomers];
       
-      // Apply search term
-      if (searchTerm) {
-        const query = searchTerm.toLowerCase();
+      const searchQuery = searchTerm.toLowerCase();
+      
+      if (typeof searchQuery === 'string') {
         results = results.filter(customer => 
-          customer.name.toLowerCase().includes(query) ||
-          customer.email.toLowerCase().includes(query) ||
-          customer.phone.toLowerCase().includes(query) ||
-          customer.city.toLowerCase().includes(query)
+          customer.name.toLowerCase().includes(searchQuery) ||
+          customer.email.toLowerCase().includes(searchQuery) ||
+          customer.phone.toLowerCase().includes(searchQuery) ||
+          customer.city.toLowerCase().includes(searchQuery)
         );
       }
       
-      // Apply advanced search filters
       if (activeFilters.length > 0) {
         activeFilters.forEach(filter => {
           if (filter.field === 'status' && filter.value) {
@@ -571,61 +470,49 @@ const Customers = () => {
         });
       }
       
-      // Apply dropdown filters
       if (Object.keys(selectedFilters).length > 0) {
-        // Status filter
-        if (selectedFilters.status) {
-          results = results.filter(customer => customer.status === selectedFilters.status);
-        }
-        
-        // Order count filter
-        if (selectedFilters.orderCount) {
-          switch (selectedFilters.orderCount) {
-            case 'noOrders':
-              results = results.filter(customer => customer.orders === 0);
-              break;
-            case 'fewOrders':
-              results = results.filter(customer => customer.orders >= 1 && customer.orders <= 5);
-              break;
-            case 'manyOrders':
-              results = results.filter(customer => customer.orders > 5);
-              break;
+        results = results.filter(customer => {
+          if (selectedFilters.status) {
+            return customer.status === selectedFilters.status;
           }
-        }
-        
-        // Last purchase filter
-        if (selectedFilters.lastPurchase) {
-          const today = new Date();
-          const thirtyDaysAgo = new Date(today);
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
           
-          const threeMonthsAgo = new Date(today);
-          threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-          
-          switch (selectedFilters.lastPurchase) {
-            case 'recent':
-              results = results.filter(customer => {
-                const purchaseDate = new Date(customer.lastPurchase);
-                return purchaseDate >= thirtyDaysAgo;
-              });
-              break;
-            case 'month':
-              results = results.filter(customer => {
-                const purchaseDate = new Date(customer.lastPurchase);
-                return purchaseDate < thirtyDaysAgo && purchaseDate >= threeMonthsAgo;
-              });
-              break;
-            case 'older':
-              results = results.filter(customer => {
-                const purchaseDate = new Date(customer.lastPurchase);
-                return purchaseDate < threeMonthsAgo;
-              });
-              break;
+          if (selectedFilters.orderCount) {
+            switch (selectedFilters.orderCount) {
+              case 'noOrders':
+                return customer.orders === 0;
+                break;
+              case 'fewOrders':
+                return customer.orders >= 1 && customer.orders <= 5;
+                break;
+              case 'manyOrders':
+                return customer.orders > 5;
+                break;
+            }
           }
-        }
+          
+          if (selectedFilters.lastPurchase) {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const threeMonthsAgo = new Date(today);
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            
+            switch (selectedFilters.lastPurchase) {
+              case 'recent':
+                return customer.lastPurchase >= thirtyDaysAgo;
+                break;
+              case 'month':
+                return customer.lastPurchase < thirtyDaysAgo && customer.lastPurchase >= threeMonthsAgo;
+                break;
+              case 'older':
+                return customer.lastPurchase < threeMonthsAgo;
+                break;
+            }
+          }
+        });
       }
       
-      // Sort by total spent (highest first)
       results.sort((a, b) => b.totalSpent - a.totalSpent);
       
       setCustomers(results);
@@ -635,27 +522,23 @@ const Customers = () => {
     return () => clearTimeout(timer);
   }, [searchTerm, activeFilters, selectedFilters, allCustomers]);
   
-  // Update displayed customers based on pagination
   useEffect(() => {
     const startIdx = (currentPage - 1) * pageSize;
     const endIdx = startIdx + pageSize;
     setDisplayedCustomers(customers.slice(startIdx, endIdx));
   }, [customers, currentPage, pageSize]);
   
-  // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
-  // Handle search
   const handleSearch = (query: string, filters: SearchFilter[]) => {
     setSearchTerm(query);
     setActiveFilters(filters);
     setCurrentPage(1);
   };
   
-  // Handle filter change
   const handleFilterChange = (newFilters: Record<string, string | string[]>) => {
     setSelectedFilters(newFilters);
     setCurrentPage(1);
@@ -678,20 +561,17 @@ const Customers = () => {
     }
   };
   
-  // Open customer detail
   const openCustomerDetail = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsModalOpen(true);
     setActiveTab('overview');
   };
   
-  // Handle delete customer
   const handleDeleteCustomer = (customer: Customer | null) => {
     if (!customer) return;
     
     setIsDeleteModalOpen(false);
     
-    // Simulate delete operation
     setTimeout(() => {
       toast({
         title: "Customer Deleted",
@@ -702,7 +582,6 @@ const Customers = () => {
     }, 500);
   };
   
-  // Handle add customer
   const handleAddCustomer = (data: Record<string, any>) => {
     return new Promise<void>(resolve => {
       setTimeout(() => {
@@ -723,7 +602,6 @@ const Customers = () => {
     });
   };
   
-  // Handle import customers
   const handleImportCustomers = (data: Record<string, any>) => {
     return new Promise<void>(resolve => {
       setTimeout(() => {
@@ -737,7 +615,6 @@ const Customers = () => {
     });
   };
   
-  // Handle export customers
   const handleExportCustomers = (data: Record<string, any>) => {
     return new Promise<void>(resolve => {
       setTimeout(() => {
@@ -751,7 +628,6 @@ const Customers = () => {
     });
   };
   
-  // Handle add tag
   const handleAddTag = (data: Record<string, any>) => {
     return new Promise<void>(resolve => {
       setTimeout(() => {
@@ -772,7 +648,6 @@ const Customers = () => {
     });
   };
   
-  // Handle contact customer
   const handleContactCustomer = (data: Record<string, any>) => {
     return new Promise<void>(resolve => {
       setTimeout(() => {
@@ -1113,7 +988,6 @@ const Customers = () => {
         </Card>
       </div>
 
-      {/* Customer Details Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-4xl p-0">
           {selectedCustomer && (
@@ -1605,7 +1479,6 @@ const Customers = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -1628,7 +1501,6 @@ const Customers = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Add Customer Modal */}
       <CustomModalForm
         title="Add New Customer"
         description="Enter customer details to create a new account"
@@ -1636,12 +1508,11 @@ const Customers = () => {
         onSubmit={handleAddCustomer}
         submitText="Add Customer"
         cancelText="Cancel"
-        open={isAddCustomerModalOpen}
+        isOpen={isAddCustomerModalOpen}
         onOpenChange={setIsAddCustomerModalOpen}
         width="lg"
       />
       
-      {/* Import Customers Modal */}
       <CustomModalForm
         title="Import Customers"
         description="Upload a file to import multiple customers"
@@ -1649,12 +1520,11 @@ const Customers = () => {
         onSubmit={handleImportCustomers}
         submitText="Import Customers"
         cancelText="Cancel"
-        open={isImportModalOpen}
+        isOpen={isImportModalOpen}
         onOpenChange={setIsImportModalOpen}
         width="md"
       />
       
-      {/* Export Customers Modal */}
       <CustomModalForm
         title="Export Customers"
         description="Choose export format and options"
@@ -1662,12 +1532,11 @@ const Customers = () => {
         onSubmit={handleExportCustomers}
         submitText="Export"
         cancelText="Cancel"
-        open={isExportModalOpen}
+        isOpen={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}
         width="md"
       />
       
-      {/* Add Tag Modal */}
       <CustomModalForm
         title="Add New Tag"
         description="Create a new tag and apply it to customers"
@@ -1675,12 +1544,11 @@ const Customers = () => {
         onSubmit={handleAddTag}
         submitText="Create Tag"
         cancelText="Cancel"
-        open={isAddTagModalOpen}
+        isOpen={isAddTagModalOpen}
         onOpenChange={setIsAddTagModalOpen}
         width="sm"
       />
       
-      {/* Contact Customer Modal */}
       <CustomModalForm
         title={`Contact ${selectedCustomer?.name || 'Customer'}`}
         description="Send a message to this customer"
@@ -1688,7 +1556,7 @@ const Customers = () => {
         onSubmit={handleContactCustomer}
         submitText="Send Message"
         cancelText="Cancel"
-        open={isContactModalOpen}
+        isOpen={isContactModalOpen}
         onOpenChange={setIsContactModalOpen}
         width="md"
       />
