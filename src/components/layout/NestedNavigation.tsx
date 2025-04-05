@@ -4,12 +4,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
 
 export interface NavItem {
   title: string;
@@ -67,7 +61,7 @@ export const NestedNavigation: React.FC<NestedNavigationProps> = ({
     const activeClass = "bg-white/20 font-medium"; 
     const hoverClass = "hover:bg-white/10";
     
-    const navContent = (
+    return (
       <li key={item.title} className={cn("relative", depth > 0 ? "ml-4" : "")}>
         {item.href && !hasChildren ? (
           <NavLink
@@ -147,34 +141,11 @@ export const NestedNavigation: React.FC<NestedNavigationProps> = ({
         )}
       </li>
     );
-
-    // When sidebar is minimized, wrap navigation items with tooltips
-    if (minimized) {
-      return (
-        <Tooltip key={item.title}>
-          <TooltipTrigger asChild>
-            {navContent}
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{item.title}</p>
-            {item.label && (
-              <span className="ml-1 text-xs font-medium bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">
-                {item.label}
-              </span>
-            )}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return navContent;
   };
 
   return (
-    <TooltipProvider delayDuration={200}>
-      <ul className={cn("space-y-1", className)}>
-        {items.map(item => renderNavItem(item))}
-      </ul>
-    </TooltipProvider>
+    <ul className={cn("space-y-1", className)}>
+      {items.map(item => renderNavItem(item))}
+    </ul>
   );
 };
