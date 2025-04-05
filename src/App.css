@@ -35,30 +35,6 @@
   }
 }
 
-<<<<<<< HEAD
-.read-the-docs {
-  color: #888;
-}
-
-@keyframes loaderAnim {
-  to {
-    width: 100%;
-  }
-}
-
-/* Tailwind CSS Custom Utilities */
-.theme-bg-primary {
-  --tw-bg-opacity: 1;
-  background-color: rgba(36, 0, 91, var(--tw-bg-opacity));
-  /* Primary color */
-}
-
-.theme-text-secondary {
-  --tw-text-opacity: 1;
-  color: rgba(188, 244, 78, var(--tw-text-opacity));
-  /* Secondary color */
-}
-=======
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
@@ -96,6 +72,26 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a78bfa;
+}
+
+/* Custom scrollbar for sidebar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 /* Card hover effects */
@@ -196,7 +192,6 @@
   background-color: rgba(139, 92, 246, 0.05);
   transform: scale(1.005);
 }
-<<<<<<< HEAD
 
 /* Form field animation */
 .form-field-focus {
@@ -241,6 +236,3 @@
 .flip-card-back {
   transform: rotateY(180deg);
 }
->>>>>>> 5b77ec9f659651e404473c3c9aba8d6b9e2a6a3a
-=======
->>>>>>> f42c2775e203697e0f88cdebef06d31b3fb7cb98
