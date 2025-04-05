@@ -1,8 +1,15 @@
+
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
 
 export interface NavItem {
   title: string;
@@ -55,8 +62,12 @@ export const NestedNavigation: React.FC<NestedNavigationProps> = ({
     if (isChildActive && !isExpanded) {
       toggleItem(item.title);
     }
+
+    // Customize classes based on possible sidebar theme
+    const activeClass = "bg-white/20 font-medium"; 
+    const hoverClass = "hover:bg-white/10";
     
-    return (
+    const navContent = (
       <li key={item.title} className={cn("relative", depth > 0 ? "ml-4" : "")}>
         {item.href && !hasChildren ? (
           <NavLink
@@ -64,9 +75,7 @@ export const NestedNavigation: React.FC<NestedNavigationProps> = ({
             className={({ isActive }) => cn(
               "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
               "transition-colors duration-200",
-              isActive 
-                ? "bg-primary/10 text-primary font-medium" 
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              isActive ? activeClass : hoverClass,
               item.disabled && "pointer-events-none opacity-60",
               minimized && "justify-center"
             )}
@@ -78,7 +87,7 @@ export const NestedNavigation: React.FC<NestedNavigationProps> = ({
               <>
                 <span>{item.title}</span>
                 {item.label && (
-                  <span className="ml-auto text-xs font-medium bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                  <span className="ml-auto text-xs font-medium bg-white/20 px-1.5 py-0.5 rounded">
                     {item.label}
                   </span>
                 )}
@@ -91,9 +100,7 @@ export const NestedNavigation: React.FC<NestedNavigationProps> = ({
             className={cn(
               "flex items-center w-full gap-2 px-3 py-2 rounded-md text-sm",
               "transition-colors duration-200",
-              (isItemActive || isChildActive)
-                ? "bg-primary/10 text-primary font-medium"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              (isItemActive || isChildActive) ? activeClass : hoverClass,
               item.disabled && "pointer-events-none opacity-60",
               minimized && "justify-center"
             )}
@@ -113,7 +120,7 @@ export const NestedNavigation: React.FC<NestedNavigationProps> = ({
                   </span>
                 )}
                 {item.label && (
-                  <span className="ml-auto text-xs font-medium bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                  <span className="ml-auto text-xs font-medium bg-white/20 px-1.5 py-0.5 rounded">
                     {item.label}
                   </span>
                 )}
@@ -131,7 +138,7 @@ export const NestedNavigation: React.FC<NestedNavigationProps> = ({
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="mt-1 ml-2 overflow-hidden border-l border-border pl-2"
+                className="mt-1 ml-2 overflow-hidden border-l border-white/20 pl-2"
               >
                 {item.children?.map(child => renderNavItem(child, depth + 1))}
               </motion.ul>
@@ -140,11 +147,34 @@ export const NestedNavigation: React.FC<NestedNavigationProps> = ({
         )}
       </li>
     );
+
+    // When sidebar is minimized, wrap navigation items with tooltips
+    if (minimized) {
+      return (
+        <Tooltip key={item.title}>
+          <TooltipTrigger asChild>
+            {navContent}
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>{item.title}</p>
+            {item.label && (
+              <span className="ml-1 text-xs font-medium bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">
+                {item.label}
+              </span>
+            )}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return navContent;
   };
 
   return (
-    <ul className={cn("space-y-1", className)}>
-      {items.map(item => renderNavItem(item))}
-    </ul>
+    <TooltipProvider delayDuration={200}>
+      <ul className={cn("space-y-1", className)}>
+        {items.map(item => renderNavItem(item))}
+      </ul>
+    </TooltipProvider>
   );
 };

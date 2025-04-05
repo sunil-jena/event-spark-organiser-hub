@@ -222,11 +222,17 @@ const Dashboard = () => {
             transition={{ delay: 0.3 }}
           >
             <SalesStatistics
-              title="Ticket Sales"
-              totalSales={1525000}
-              onlineSales={1245000}
-              offlineSales={280000}
-              percentageChange={8.2}
+              data={[
+                { name: 'Product A', value: 42000 },
+                { name: 'Product B', value: 21000 },
+                { name: 'Product C', value: 15000 }
+              ]}
+              type="products"
+              title="Monthly Revenue"
+              totalSales={78000}
+              onlineSales={56000}
+              offlineSales={22000}
+              percentageChange={8.5}
               currency="₹"
             />
           </motion.div>

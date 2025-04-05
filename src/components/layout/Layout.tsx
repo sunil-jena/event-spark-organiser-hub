@@ -66,6 +66,13 @@ const Layout = () => {
     return () => window.removeEventListener('keydown', handleEscapeKey);
   }, [isMobile]);
 
+  // Calculate main content width based on sidebar state
+  const mainContentStyle = {
+    marginLeft: isMobile ? 0 : minimized ? '80px' : '280px',
+    width: isMobile ? '100%' : minimized ? 'calc(100% - 80px)' : 'calc(100% - 280px)',
+    transition: 'margin-left 0.3s ease, width 0.3s ease',
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <Sidebar
@@ -76,7 +83,10 @@ const Layout = () => {
         toggleMinimize={toggleMinimize}
       />
 
-      <div className="flex flex-col flex-1 overflow-hidden h-screen">
+      <div 
+        className="flex flex-col flex-1 overflow-hidden h-screen"
+        style={!isMobile ? mainContentStyle : undefined}
+      >
         <Header
           onMenuClick={toggleSidebar}
           minimized={minimized}

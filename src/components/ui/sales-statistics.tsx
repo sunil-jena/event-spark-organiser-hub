@@ -1,83 +1,98 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
-import { ArrowUp, ArrowDown, IndianRupee } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
 
-interface SalesStatisticsProps {
-  title: string;
-  totalSales: number;
-  onlineSales: number;
-  offlineSales: number;
+export interface SalesData {
+  name: string;
+  value: number;
+  online?: number;
+  offline?: number;
+  total?: number;
+}
+
+export interface SalesStatisticsProps {
+  data: SalesData[];
+  type: string;
+  title?: string;
+  totalSales?: number;
+  onlineSales?: number;
+  offlineSales?: number;
   percentageChange?: number;
-  timeFrame?: string;
   currency?: string;
-  className?: string;
 }
 
 export function SalesStatistics({
-  title,
+  data,
+  type,
+  title = 'Sales Statistics',
   totalSales,
   onlineSales,
   offlineSales,
-  percentageChange,
-  timeFrame = "vs last month",
-  currency = "₹",
-  className,
+  percentageChange = 0,
+  currency = '₹'
 }: SalesStatisticsProps) {
-  const isPositive = percentageChange && percentageChange > 0;
-  const formattedTotal = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(totalSales).replace('₹', currency);
-
-  const onlinePercentage = Math.round((onlineSales / totalSales) * 100) || 0;
-  const offlinePercentage = 100 - onlinePercentage;
+  const isPositive = percentageChange >= 0;
 
   return (
-    <div className={cn(
-      "bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-100 dark:border-gray-700",
-      className
-    )}>
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-          <h3 className="text-2xl font-bold mt-1">{formattedTotal}</h3>
-          {percentageChange !== undefined && (
-            <div className="flex items-center mt-2">
-              <span className={cn(
-                "text-xs font-medium flex items-center",
-                isPositive
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
-              )}>
-                {isPositive ? <ArrowUp className="mr-1 h-3 w-3" /> : <ArrowDown className="mr-1 h-3 w-3" />}
-                {isPositive ? "+" : ""}{percentageChange}%
-              </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">{timeFrame}</span>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-medium">{title}</CardTitle>
+        <CardDescription>Sales overview and statistics</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <span className="text-2xl font-bold">{currency}{totalSales?.toLocaleString() || '0'}</span>
+              <span className="text-sm text-muted-foreground">Total Sales</span>
+            </div>
+            <div className={`flex items-center ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+              {isPositive ? (
+                <ArrowUpRight className="h-4 w-4 mr-1" />
+              ) : (
+                <ArrowDownRight className="h-4 w-4 mr-1" />
+              )}
+              <span className="text-sm font-medium">{Math.abs(percentageChange)}%</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="overflow-hidden">
+              <CardContent className="p-2">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">Online</span>
+                  <span className="text-lg font-bold">{currency}{onlineSales?.toLocaleString() || '0'}</span>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <CardContent className="p-2">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">Offline</span>
+                  <span className="text-lg font-bold">{currency}{offlineSales?.toLocaleString() || '0'}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {data && data.length > 0 && (
+            <div className="rounded-lg border p-3">
+              <div className="text-sm font-medium mb-2">By {type}</div>
+              <div className="space-y-2">
+                {data.map((item, index) => (
+                  <div key={index} className="grid grid-cols-2 items-center gap-2">
+                    <div className="text-sm">{item.name}</div>
+                    <div className="flex items-center justify-end">
+                      <span className="text-sm font-medium">{currency}{item.value.toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
-      </div>
-
-      <div className="mt-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span className="font-medium">Online Sales</span>
-          <span className="text-gray-500">{currency}{onlineSales.toLocaleString('en-IN')} ({onlinePercentage}%)</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-          <div className="bg-primary h-2 rounded-full" style={{ width: `${onlinePercentage}%` }}></div>
-        </div>
-        
-        <div className="flex justify-between text-sm mb-1">
-          <span className="font-medium">Offline Sales</span>
-          <span className="text-gray-500">{currency}{offlineSales.toLocaleString('en-IN')} ({offlinePercentage}%)</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div className="bg-primary-light h-2 rounded-full" style={{ width: `${offlinePercentage}%` }}></div>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
