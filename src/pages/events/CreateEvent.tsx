@@ -43,6 +43,12 @@ import {
   Eye,
   X,
   Mic2,
+  Users,
+  AlertCircle,
+  FileText,
+  Video,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -54,29 +60,37 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { VenueSelector } from '@/components/ui/venue-selector';
+import { MultiDatePicker, DateTimeSlot } from '@/components/ui/multi-date-picker';
+import { MultiImageUpload, ImageFile } from '@/components/ui/multi-image-upload';
+import { TicketManager, TicketType } from '@/components/ui/ticket-manager';
+import { ProhibitedItems } from '@/components/ui/prohibited-items';
+import { Checkbox } from '@/components/ui/checkbox';
 
+// Updated event schema with all new fields
 const eventSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   category: z.string().min(1, { message: "Please select a category" }),
-  venue: z.string().min(3, { message: "Venue must be at least 3 characters" }),
-  address: z.string().min(5, { message: "Address must be at least 5 characters" }),
-  city: z.string().min(2, { message: "City is required" }),
-  state: z.string().min(2, { message: "State is required" }),
-  country: z.string().min(2, { message: "Country is required" }),
-  pincode: z.string().min(5, { message: "Pincode must be at least 5 characters" }),
-  startDate: z.date({ required_error: "Start date is required" }),
-  endDate: z.date({ required_error: "End date is required" }),
-  startTime: z.string().min(1, { message: "Start time is required" }),
-  endTime: z.string().min(1, { message: "End time is required" }),
-  isPublic: z.boolean().default(true),
-  capacity: z.string().min(1, { message: "Capacity is required" }),
+  shortDescription: z.string().max(150, { message: "Short description must be 150 characters or less" }).optional(),
   organizer: z.string().min(3, { message: "Organizer name is required" }),
   contactEmail: z.string().email({ message: "Invalid email address" }),
   contactPhone: z.string().min(10, { message: "Valid phone number is required" }),
-  ticketPrice: z.string().optional(),
-  ticketType: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+  isPublic: z.boolean().default(true),
+  termsAndConditions: z.string().optional(),
+  whyAttend: z.string().optional(),
+  faqItems: z.array(z.object({
+    question: z.string(),
+    answer: z.string()
+  })).optional(),
+  capacity: z.string().min(1, { message: "Capacity is required" }),
+  hasTermsAgreed: z.boolean().refine(val => val === true, {
+    message: "You must agree to the terms and conditions",
+  }),
+  isOnline: z.boolean().default(false),
+  videoConferenceUrl: z.string().optional(),
+  videoConferenceProvider: z.string().optional(),
+  videoConferencePassword: z.string().optional(),
 });
 
 type EventFormValues = z.infer<typeof eventSchema>;
@@ -89,27 +103,41 @@ const CreateEvent: React.FC = () => {
   const [previewMode, setPreviewMode] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [organizers, setOrganizers] = useState<Array<{ name: string; role: string; image?: string }>>([
+  const [organizers, setOrganizers] = useState<Array<{ name: string; role: string; email?: string; phone?: string; image?: string }>>([
     { name: "You (Primary)", role: "Owner" }
+  ]);
+  const [dateTimeSlots, setDateTimeSlots] = useState<DateTimeSlot[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<ImageFile[]>([]);
+  const [ticketTypes, setTicketTypes] = useState<TicketType[]>([]);
+  const [prohibitedItems, setProhibitedItems] = useState<string[]>([]);
+  const [venues, setVenues] = useState<Array<{
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+    lat: number;
+    lng: number;
+  }>>([]);
+  const [faqItems, setFaqItems] = useState<Array<{ question: string; answer: string }>>([
+    { question: "", answer: "" }
   ]);
 
   const defaultValues: Partial<EventFormValues> = {
     title: "",
     description: "",
     category: "",
-    venue: "",
-    address: "",
-    city: "",
-    state: "",
-    country: "India",
-    pincode: "",
-    isPublic: true,
-    capacity: "",
+    shortDescription: "",
     organizer: "",
     contactEmail: "",
     contactPhone: "",
-    tags: [],
+    isPublic: true,
+    capacity: "",
+    termsAndConditions: "",
+    whyAttend: "",
+    isOnline: false,
+    hasTermsAgreed: false,
   };
 
   const form = useForm<EventFormValues>({
@@ -127,34 +155,25 @@ const CreateEvent: React.FC = () => {
     { value: "sports", label: "Sports" },
     { value: "comedy", label: "Comedy" },
     { value: "festival", label: "Festival" },
+    { value: "networking", label: "Networking" },
+    { value: "charity", label: "Charity" },
+    { value: "food", label: "Food & Drink" },
+    { value: "arts", label: "Arts & Culture" },
+    { value: "health", label: "Health & Wellness" },
+    { value: "education", label: "Education" },
+    { value: "family", label: "Family & Kids" },
     { value: "other", label: "Other" },
   ];
 
   const addTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
-      form.setValue('tags', [...tags, tagInput.trim()]);
       setTagInput("");
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    const filteredTags = tags.filter(tag => tag !== tagToRemove);
-    setTags(filteredTags);
-    form.setValue('tags', filteredTags);
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setUploadedImage(e.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
   const addOrganizer = () => {
@@ -168,12 +187,47 @@ const CreateEvent: React.FC = () => {
     setOrganizers(updatedOrganizers);
   };
 
-  const updateOrganizer = (index: number, field: 'name' | 'role', value: string) => {
+  const updateOrganizer = (index: number, field: 'name' | 'role' | 'email' | 'phone', value: string) => {
     const updatedOrganizers = [...organizers];
     updatedOrganizers[index][field] = value;
     setOrganizers(updatedOrganizers);
   };
 
+  const addVenue = (venue: {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+    lat: number;
+    lng: number;
+  }) => {
+    setVenues([...venues, venue]);
+  };
+
+  const removeVenue = (index: number) => {
+    const updatedVenues = [...venues];
+    updatedVenues.splice(index, 1);
+    setVenues(updatedVenues);
+  };
+
+  const addFaqItem = () => {
+    setFaqItems([...faqItems, { question: "", answer: "" }]);
+  };
+
+  const removeFaqItem = (index: number) => {
+    const updatedFaqItems = [...faqItems];
+    updatedFaqItems.splice(index, 1);
+    setFaqItems(updatedFaqItems);
+  };
+
+  const updateFaqItem = (index: number, field: 'question' | 'answer', value: string) => {
+    const updatedFaqItems = [...faqItems];
+    updatedFaqItems[index][field] = value;
+    setFaqItems(updatedFaqItems);
+  };
+  
   const onSubmit = async (data: EventFormValues) => {
     setIsSubmitting(true);
     try {
@@ -182,7 +236,12 @@ const CreateEvent: React.FC = () => {
         ...data,
         tags,
         organizers,
-        image: uploadedImage
+        venues,
+        dateTimeSlots,
+        images: uploadedImages,
+        ticketTypes,
+        prohibitedItems,
+        faqItems: faqItems.filter(item => item.question.trim() !== "" && item.answer.trim() !== "")
       });
       
       // Simulate API call
@@ -196,6 +255,8 @@ const CreateEvent: React.FC = () => {
       setTimeout(() => {
         navigate('/events');
       }, 1000);
+
+      return true;
     } catch (error) {
       console.error("Error creating event:", error);
       toast({
@@ -203,10 +264,13 @@ const CreateEvent: React.FC = () => {
         description: "There was an error creating your event. Please try again.",
         variant: "destructive",
       });
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isOnlineEvent = form.watch('isOnline');
 
   return (
     <div className="container mx-auto py-6 mb-10">
@@ -255,44 +319,141 @@ const CreateEvent: React.FC = () => {
               <CardContent className="p-0">
                 <div className="relative">
                   <div className="h-64 bg-gradient-to-r from-primary/20 to-primary/40 flex items-center justify-center">
-                    {uploadedImage ? (
-                      <img src={uploadedImage} alt="Event cover" className="h-full w-full object-cover" />
+                    {uploadedImages.find(img => img.type === 'banner') ? (
+                      <img 
+                        src={uploadedImages.find(img => img.type === 'banner')?.preview} 
+                        alt="Event banner" 
+                        className="h-full w-full object-cover" 
+                      />
                     ) : (
                       <div className="text-center">
                         <ImagePlus className="h-12 w-12 mx-auto text-muted-foreground" />
-                        <p className="text-muted-foreground mt-2">No image uploaded</p>
+                        <p className="text-muted-foreground mt-2">No banner image uploaded</p>
                       </div>
                     )}
                   </div>
-                  <div className="absolute bottom-4 left-4">
-                    <Badge className="bg-primary/80 hover:bg-primary">{form.watch('category') ? eventCategories.find(c => c.value === form.watch('category'))?.label : 'Category'}</Badge>
+                  <div className="absolute bottom-4 left-4 flex gap-2">
+                    <Badge className="bg-primary/80 hover:bg-primary">
+                      {form.watch('category') ? eventCategories.find(c => c.value === form.watch('category'))?.label : 'Category'}
+                    </Badge>
+                    {form.watch('isOnline') && (
+                      <Badge variant="outline" className="bg-blue-500/80 text-white hover:bg-blue-600">
+                        Online Event
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <div className="p-6">
-                  <h2 className="text-2xl font-bold mb-4">{form.watch('title') || 'Event Title'}</h2>
+                  <h2 className="text-2xl font-bold mb-2">{form.watch('title') || 'Event Title'}</h2>
+                  {form.watch('shortDescription') && (
+                    <p className="text-muted-foreground mb-4">{form.watch('shortDescription')}</p>
+                  )}
+                  
                   <div className="flex flex-wrap gap-4 mb-6">
-                    <div className="flex items-center">
-                      <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>
-                        {form.watch('startDate') ? format(form.watch('startDate'), 'PPP') : 'Start Date'} 
-                        {form.watch('startTime') ? ` at ${form.watch('startTime')}` : ''}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>
-                        {form.watch('venue') || 'Venue'}, 
-                        {form.watch('city') ? ` ${form.watch('city')}` : ''}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Ticket className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{form.watch('ticketPrice') ? `₹${form.watch('ticketPrice')}` : 'Free'}</span>
-                    </div>
+                    {dateTimeSlots.length > 0 ? (
+                      <div className="flex items-center">
+                        <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <div>
+                          <div>{format(dateTimeSlots[0].date, 'PPP')}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {dateTimeSlots.length > 1 ? `+${dateTimeSlots.length - 1} more dates` : `${dateTimeSlots[0].startTime} - ${dateTimeSlots[0].endTime}`}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>No dates set</span>
+                      </div>
+                    )}
+                    
+                    {isOnlineEvent ? (
+                      <div className="flex items-center">
+                        <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>Online Event</span>
+                      </div>
+                    ) : venues.length > 0 ? (
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <div>
+                          <div>{venues[0].name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {venues.length > 1 ? `+${venues.length - 1} more locations` : `${venues[0].city}, ${venues[0].state}`}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>No venue selected</span>
+                      </div>
+                    )}
+                    
+                    {ticketTypes.length > 0 ? (
+                      <div className="flex items-center">
+                        <Ticket className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <div>
+                          <div>
+                            {ticketTypes[0].type === 'free' ? 'Free' : 
+                             ticketTypes[0].type === 'donation' ? 'Donation' : 
+                             `₹${ticketTypes[0].price}`}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {ticketTypes.length > 1 ? `+${ticketTypes.length - 1} more ticket types` : ticketTypes[0].name}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <Ticket className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>No tickets created</span>
+                      </div>
+                    )}
                   </div>
+                  
                   <div className="prose max-w-none mb-6">
+                    <h3 className="text-lg font-medium mb-2">About this event</h3>
                     <p>{form.watch('description') || 'Event description will appear here...'}</p>
                   </div>
+                  
+                  {form.watch('whyAttend') && (
+                    <div className="prose max-w-none mb-6">
+                      <h3 className="text-lg font-medium mb-2">Why you should attend</h3>
+                      <p>{form.watch('whyAttend')}</p>
+                    </div>
+                  )}
+                  
+                  {uploadedImages.filter(img => img.type === 'gallery').length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-2">Gallery</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        {uploadedImages
+                          .filter(img => img.type === 'gallery')
+                          .map((image) => (
+                            <img 
+                              key={image.id}
+                              src={image.preview} 
+                              alt="Gallery" 
+                              className="rounded-md object-cover h-32 w-full"
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {prohibitedItems.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-2">Prohibited Items</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {prohibitedItems.map((item) => (
+                          <Badge key={item} variant="outline" className="bg-red-50 text-red-500 border-red-200">
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex flex-wrap gap-2 mb-6">
                     {tags.length > 0 ? tags.map((tag, index) => (
                       <Badge key={index} variant="secondary">{tag}</Badge>
@@ -300,6 +461,23 @@ const CreateEvent: React.FC = () => {
                       <Badge variant="secondary">Example Tag</Badge>
                     )}
                   </div>
+                  
+                  {faqItems.filter(item => item.question && item.answer).length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-3">Frequently Asked Questions</h3>
+                      <div className="space-y-3">
+                        {faqItems
+                          .filter(item => item.question && item.answer)
+                          .map((faq, index) => (
+                            <div key={index} className="border rounded-md p-3">
+                              <h4 className="font-medium">{faq.question}</h4>
+                              <p className="text-muted-foreground text-sm mt-1">{faq.answer}</p>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="border-t pt-4">
                     <h3 className="font-semibold mb-2">Organizers</h3>
                     <div className="flex flex-wrap gap-4">
@@ -324,18 +502,24 @@ const CreateEvent: React.FC = () => {
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="space-y-6">
                   <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid grid-cols-4 w-full">
+                    <TabsList className="grid grid-cols-6 w-full">
                       <TabsTrigger value="details">
                         Basic Details
                       </TabsTrigger>
-                      <TabsTrigger value="location">
-                        Location & Time
+                      <TabsTrigger value="dates">
+                        Dates & Times
                       </TabsTrigger>
-                      <TabsTrigger value="organizers">
-                        Organizers
+                      <TabsTrigger value="location">
+                        Location
+                      </TabsTrigger>
+                      <TabsTrigger value="media">
+                        Media
                       </TabsTrigger>
                       <TabsTrigger value="tickets">
-                        Tickets & Settings
+                        Tickets
+                      </TabsTrigger>
+                      <TabsTrigger value="additional">
+                        Additional Info
                       </TabsTrigger>
                     </TabsList>
                     
@@ -357,6 +541,27 @@ const CreateEvent: React.FC = () => {
                                 <FormControl>
                                   <Input placeholder="Enter event title" {...field} />
                                 </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="shortDescription"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Short Description</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Brief description (150 chars max)" 
+                                    {...field} 
+                                    maxLength={150}
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  A short summary that appears in event listings
+                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -441,273 +646,96 @@ const CreateEvent: React.FC = () => {
                             </div>
                           </div>
                           
-                          <div>
-                            <Label>Event Image</Label>
-                            <div className="mt-1.5 border-2 border-dashed rounded-lg p-6 text-center">
-                              {uploadedImage ? (
-                                <div className="space-y-3">
-                                  <img 
-                                    src={uploadedImage} 
-                                    alt="Uploaded preview" 
-                                    className="max-h-48 mx-auto object-contain"
+                          <FormField
+                            control={form.control}
+                            name="isOnline"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
                                   />
-                                  <Button 
-                                    variant="outline" 
-                                    type="button"
-                                    onClick={() => setUploadedImage(null)}
-                                  >
-                                    Remove Image
-                                  </Button>
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>This is an online event</FormLabel>
+                                  <FormDescription>
+                                    Virtual events use video conferencing platforms instead of physical venues
+                                  </FormDescription>
                                 </div>
-                              ) : (
-                                <>
-                                  <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                                  <p className="text-sm text-muted-foreground mb-2">
-                                    Drag and drop an image, or click to browse
-                                  </p>
-                                  <Input 
-                                    id="event-image" 
-                                    type="file" 
-                                    accept="image/*" 
-                                    className="hidden" 
-                                    onChange={handleImageUpload}
-                                  />
-                                  <Button
-                                    variant="outline"
-                                    type="button"
-                                    onClick={() => document.getElementById('event-image')?.click()}
-                                  >
-                                    Select Image
-                                  </Button>
-                                </>
-                              )}
+                              </FormItem>
+                            )}
+                          />
+                          
+                          {form.watch('isOnline') && (
+                            <div className="space-y-4 p-4 border rounded-md">
+                              <h3 className="font-medium">Online Event Details</h3>
+                              
+                              <div>
+                                <Label htmlFor="videoProvider">Video Conference Provider</Label>
+                                <Select 
+                                  onValueChange={(value) => form.setValue('videoConferenceProvider', value)}
+                                >
+                                  <SelectTrigger id="videoProvider">
+                                    <SelectValue placeholder="Select provider" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="zoom">Zoom</SelectItem>
+                                    <SelectItem value="teams">Microsoft Teams</SelectItem>
+                                    <SelectItem value="meet">Google Meet</SelectItem>
+                                    <SelectItem value="webex">Cisco Webex</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="videoUrl">Meeting URL</Label>
+                                <Input 
+                                  id="videoUrl"
+                                  placeholder="https://..."
+                                  onChange={(e) => form.setValue('videoConferenceUrl', e.target.value)}
+                                />
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  This will be shared with attendees before the event
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="videoPassword">Meeting Password (optional)</Label>
+                                <Input 
+                                  id="videoPassword"
+                                  placeholder="Password"
+                                  onChange={(e) => form.setValue('videoConferencePassword', e.target.value)}
+                                />
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </CardContent>
                         <CardFooter className="flex justify-between">
                           <Button variant="outline" onClick={() => navigate('/events')}>
                             Cancel
                           </Button>
-                          <Button type="button" onClick={() => setActiveTab("location")}>
+                          <Button type="button" onClick={() => setActiveTab("dates")}>
                             Next <ChevronRight className="ml-2 h-4 w-4" />
                           </Button>
                         </CardFooter>
                       </Card>
                     </TabsContent>
                     
-                    <TabsContent value="location" className="space-y-4 mt-4">
+                    <TabsContent value="dates" className="space-y-4 mt-4">
                       <Card>
                         <CardHeader>
-                          <CardTitle>Location & Time</CardTitle>
+                          <CardTitle>Dates & Times</CardTitle>
                           <CardDescription>
-                            Specify when and where your event will take place
+                            Set when your event will take place
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="venue"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Venue Name</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter venue name" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                        <CardContent>
+                          <MultiDatePicker 
+                            value={dateTimeSlots}
+                            onChange={setDateTimeSlots}
                           />
-                          
-                          <FormField
-                            control={form.control}
-                            name="address"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Street Address</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter street address" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="city"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>City</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="Enter city" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="state"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>State</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="Enter state" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="country"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Country</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="Enter country" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="pincode"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Pincode / Zip Code</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="Enter pincode" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="startDate"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                  <FormLabel>Start Date</FormLabel>
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <FormControl>
-                                        <Button
-                                          variant={"outline"}
-                                          className={cn(
-                                            "w-full pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
-                                          )}
-                                        >
-                                          {field.value ? (
-                                            format(field.value, "PPP")
-                                          ) : (
-                                            <span>Pick a date</span>
-                                          )}
-                                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                      </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                      <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        disabled={(date) =>
-                                          date < new Date(new Date().setHours(0, 0, 0, 0))
-                                        }
-                                        initialFocus
-                                      />
-                                    </PopoverContent>
-                                  </Popover>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="startTime"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Start Time</FormLabel>
-                                  <FormControl>
-                                    <Input type="time" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="endDate"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                  <FormLabel>End Date</FormLabel>
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <FormControl>
-                                        <Button
-                                          variant={"outline"}
-                                          className={cn(
-                                            "w-full pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
-                                          )}
-                                        >
-                                          {field.value ? (
-                                            format(field.value, "PPP")
-                                          ) : (
-                                            <span>Pick a date</span>
-                                          )}
-                                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                      </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                      <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        disabled={(date) => {
-                                          const startDate = form.getValues("startDate");
-                                          return startDate ? date < startDate : date < new Date();
-                                        }}
-                                        initialFocus
-                                      />
-                                    </PopoverContent>
-                                  </Popover>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="endTime"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>End Time</FormLabel>
-                                  <FormControl>
-                                    <Input type="time" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
                         </CardContent>
                         <CardFooter className="flex justify-between">
                           <Button 
@@ -719,7 +747,7 @@ const CreateEvent: React.FC = () => {
                           </Button>
                           <Button 
                             type="button"
-                            onClick={() => setActiveTab("organizers")}
+                            onClick={() => setActiveTab("location")}
                           >
                             Next <ChevronRight className="ml-2 h-4 w-4" />
                           </Button>
@@ -727,114 +755,133 @@ const CreateEvent: React.FC = () => {
                       </Card>
                     </TabsContent>
                     
-                    <TabsContent value="organizers" className="space-y-4 mt-4">
+                    <TabsContent value="location" className="space-y-4 mt-4">
                       <Card>
                         <CardHeader>
-                          <CardTitle>Event Organizers</CardTitle>
+                          <CardTitle>Event Location</CardTitle>
                           <CardDescription>
-                            Add organizers and their contact information
+                            {isOnlineEvent 
+                              ? "Online events don't need a physical location"
+                              : "Specify where your event will take place"}
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="organizer"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Main Organizer Name</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter organizer name" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="contactEmail"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Contact Email</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="Enter contact email" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
+                          {!isOnlineEvent && (
+                            <>
+                              <div className="space-y-2">
+                                <Label>Search for a venue</Label>
+                                <VenueSelector onSelectVenue={(venue) => addVenue(venue)} />
+                              </div>
+                              
+                              {venues.length > 0 && (
+                                <div className="space-y-3 mt-4">
+                                  <Label>Selected Venues</Label>
+                                  <div className="space-y-2">
+                                    {venues.map((venue, index) => (
+                                      <div key={index} className="flex justify-between items-start border rounded-md p-3">
+                                        <div>
+                                          <h4 className="font-medium">{venue.name}</h4>
+                                          <p className="text-sm text-muted-foreground">{venue.address}</p>
+                                          <p className="text-sm text-muted-foreground">
+                                            {venue.city}, {venue.state}, {venue.country} {venue.postalCode}
+                                          </p>
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => removeVenue(index)}
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="contactPhone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Contact Phone</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="Enter contact phone" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
+                              
+                              <FormField
+                                control={form.control}
+                                name="capacity"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Venue Capacity</FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        type="number" 
+                                        placeholder="Maximum attendees" 
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    <FormDescription>
+                                      Maximum number of attendees allowed at the venue
+                                    </FormDescription>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </>
+                          )}
                           
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <h3 className="text-sm font-medium">Additional Organizers</h3>
-                              <Button 
-                                type="button" 
-                                size="sm" 
+                          {isOnlineEvent && (
+                            <div className="py-8 text-center">
+                              <Globe className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+                              <h3 className="text-lg font-medium">This is an online event</h3>
+                              <p className="text-muted-foreground mt-1">
+                                You've configured this as a virtual event. There's no need to specify a physical location.
+                              </p>
+                              <Button
+                                type="button"
                                 variant="outline"
-                                onClick={addOrganizer}
+                                className="mt-4"
+                                onClick={() => form.setValue('isOnline', false)}
                               >
-                                <Plus className="h-4 w-4 mr-1" /> Add Organizer
+                                Switch to In-Person Event
                               </Button>
                             </div>
-                            
-                            {organizers.map((organizer, index) => (
-                              <div key={index} className="border rounded-md p-4 space-y-2">
-                                <div className="flex justify-between items-start">
-                                  <h4 className="text-sm font-medium">
-                                    {index === 0 ? 'Primary Organizer' : `Co-Organizer ${index}`}
-                                  </h4>
-                                  {index !== 0 && (
-                                    <Button 
-                                      type="button" 
-                                      size="icon" 
-                                      variant="ghost" 
-                                      onClick={() => removeOrganizer(index)}
-                                    >
-                                      <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  )}
-                                </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <Label htmlFor={`organizer-name-${index}`}>Name</Label>
-                                    <Input
-                                      id={`organizer-name-${index}`}
-                                      value={organizer.name}
-                                      onChange={(e) => updateOrganizer(index, 'name', e.target.value)}
-                                      placeholder="Organizer name"
-                                      disabled={index === 0}
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor={`organizer-role-${index}`}>Role</Label>
-                                    <Input
-                                      id={`organizer-role-${index}`}
-                                      value={organizer.role}
-                                      onChange={(e) => updateOrganizer(index, 'role', e.target.value)}
-                                      placeholder="e.g. Host, Speaker, DJ"
-                                      disabled={index === 0}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                          )}
+                        </CardContent>
+                        <CardFooter className="flex justify-between">
+                          <Button 
+                            variant="outline" 
+                            type="button"
+                            onClick={() => setActiveTab("dates")}
+                          >
+                            Previous
+                          </Button>
+                          <Button 
+                            type="button"
+                            onClick={() => setActiveTab("media")}
+                          >
+                            Next <ChevronRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    </TabsContent>
+                    
+                    <TabsContent value="media" className="space-y-4 mt-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Event Media</CardTitle>
+                          <CardDescription>
+                            Upload images and videos for your event
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <MultiImageUpload
+                            images={uploadedImages}
+                            onChange={setUploadedImages}
+                            maxFiles={20}
+                          />
+                          
+                          <div className="mt-6 space-y-2">
+                            <Label>Video URL (optional)</Label>
+                            <Input 
+                              placeholder="e.g. https://youtube.com/watch?v=..."
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              Add a YouTube or Vimeo video to showcase your event
+                            </p>
                           </div>
                         </CardContent>
                         <CardFooter className="flex justify-between">
@@ -858,202 +905,307 @@ const CreateEvent: React.FC = () => {
                     <TabsContent value="tickets" className="space-y-4 mt-4">
                       <Card>
                         <CardHeader>
-                          <CardTitle>Tickets & Settings</CardTitle>
+                          <CardTitle>Tickets & Registration</CardTitle>
                           <CardDescription>
-                            Set up ticket information and additional settings
+                            Set up ticket types, pricing, and availability
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="capacity"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Event Capacity</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    placeholder="Enter maximum number of attendees" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormDescription>
-                                  Maximum number of attendees allowed
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                        <CardContent>
+                          <TicketManager
+                            tickets={ticketTypes}
+                            onChange={setTicketTypes}
                           />
-                          
-                          <FormField
-                            control={form.control}
-                            name="ticketType"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Ticket Type</FormLabel>
-                                <Select 
-                                  onValueChange={field.onChange} 
-                                  defaultValue={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select ticket type" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="free">Free</SelectItem>
-                                    <SelectItem value="paid">Paid</SelectItem>
-                                    <SelectItem value="donation">Donation-based</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormDescription>
-                                  Type of tickets for your event
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          {form.watch('ticketType') === 'paid' && (
-                            <FormField
-                              control={form.control}
-                              name="ticketPrice"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Ticket Price (₹)</FormLabel>
-                                  <FormControl>
-                                    <Input 
-                                      type="number" 
-                                      placeholder="Enter ticket price" 
-                                      {...field} 
-                                    />
-                                  </FormControl>
-                                  <FormDescription>
-                                    Price per ticket in INR
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          )}
-                          
-                          <FormField
-                            control={form.control}
-                            name="isPublic"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                <FormControl>
-                                  <input
-                                    type="checkbox"
-                                    checked={field.value}
-                                    onChange={field.onChange}
-                                    className="h-4 w-4 mt-1"
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>Public Event</FormLabel>
-                                  <FormDescription>
-                                    Make this event visible to everyone on the platform
-                                  </FormDescription>
-                                </div>
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="border rounded-md p-4 space-y-3">
-                            <h3 className="text-sm font-medium">Event Features</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div className="flex items-start space-x-3">
-                                <input
-                                  type="checkbox"
-                                  id="feature-food"
-                                  className="h-4 w-4 mt-1"
-                                />
-                                <div className="space-y-1 leading-none">
-                                  <Label htmlFor="feature-food">Food & Beverages</Label>
-                                  <p className="text-sm text-muted-foreground">
-                                    Food and drinks will be available
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-start space-x-3">
-                                <input
-                                  type="checkbox"
-                                  id="feature-parking"
-                                  className="h-4 w-4 mt-1"
-                                />
-                                <div className="space-y-1 leading-none">
-                                  <Label htmlFor="feature-parking">Parking Available</Label>
-                                  <p className="text-sm text-muted-foreground">
-                                    Parking facilities will be available
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-start space-x-3">
-                                <input
-                                  type="checkbox"
-                                  id="feature-accessible"
-                                  className="h-4 w-4 mt-1"
-                                />
-                                <div className="space-y-1 leading-none">
-                                  <Label htmlFor="feature-accessible">Wheelchair Accessible</Label>
-                                  <p className="text-sm text-muted-foreground">
-                                    Venue is wheelchair accessible
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-start space-x-3">
-                                <input
-                                  type="checkbox"
-                                  id="feature-seating"
-                                  className="h-4 w-4 mt-1"
-                                />
-                                <div className="space-y-1 leading-none">
-                                  <Label htmlFor="feature-seating">Seating Available</Label>
-                                  <p className="text-sm text-muted-foreground">
-                                    Seating will be provided
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-start space-x-3">
-                                <input
-                                  type="checkbox"
-                                  id="feature-speakers"
-                                  className="h-4 w-4 mt-1"
-                                />
-                                <div className="space-y-1 leading-none">
-                                  <Label htmlFor="feature-speakers">Guest Speakers</Label>
-                                  <p className="text-sm text-muted-foreground">
-                                    Event will have guest speakers
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-start space-x-3">
-                                <input
-                                  type="checkbox"
-                                  id="feature-performance"
-                                  className="h-4 w-4 mt-1"
-                                />
-                                <div className="space-y-1 leading-none">
-                                  <Label htmlFor="feature-performance">Live Performance</Label>
-                                  <p className="text-sm text-muted-foreground">
-                                    Event will have live performances
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
                         </CardContent>
                         <CardFooter className="flex justify-between">
                           <Button 
                             variant="outline" 
                             type="button"
-                            onClick={() => setActiveTab("organizers")}
+                            onClick={() => setActiveTab("media")}
+                          >
+                            Previous
+                          </Button>
+                          <Button 
+                            type="button"
+                            onClick={() => setActiveTab("additional")}
+                          >
+                            Next <ChevronRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    </TabsContent>
+                    
+                    <TabsContent value="additional" className="space-y-4 mt-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Additional Information</CardTitle>
+                          <CardDescription>
+                            Provide more details about your event
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="space-y-4">
+                            <h3 className="text-base font-medium">Why Attend</h3>
+                            <FormField
+                              control={form.control}
+                              name="whyAttend"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Explain why people should attend your event" 
+                                      className="min-h-24" 
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Highlight the unique benefits of attending your event
+                                  </FormDescription>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h3 className="text-base font-medium">FAQ</h3>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addFaqItem}
+                              >
+                                <Plus className="h-4 w-4 mr-2" /> Add Question
+                              </Button>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              {faqItems.map((faq, index) => (
+                                <div key={index} className="space-y-2 border rounded-md p-3">
+                                  <div className="flex justify-between items-start">
+                                    <h4 className="font-medium">FAQ Item {index + 1}</h4>
+                                    {index > 0 && (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeFaqItem(index)}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  
+                                  <div>
+                                    <Label htmlFor={`faq-question-${index}`}>Question</Label>
+                                    <Input
+                                      id={`faq-question-${index}`}
+                                      value={faq.question}
+                                      onChange={(e) => updateFaqItem(index, 'question', e.target.value)}
+                                      placeholder="e.g. What should I bring?"
+                                    />
+                                  </div>
+                                  
+                                  <div>
+                                    <Label htmlFor={`faq-answer-${index}`}>Answer</Label>
+                                    <Textarea
+                                      id={`faq-answer-${index}`}
+                                      value={faq.answer}
+                                      onChange={(e) => updateFaqItem(index, 'answer', e.target.value)}
+                                      placeholder="Provide a clear answer"
+                                      rows={2}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <ProhibitedItems
+                            selectedItems={prohibitedItems}
+                            onChange={setProhibitedItems}
+                          />
+                          
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="termsAndConditions"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Terms & Conditions</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Enter terms and conditions for attendees" 
+                                      className="min-h-24" 
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <h3 className="text-base font-medium">Contact Information</h3>
+                            
+                            <div className="space-y-4">
+                              <FormField
+                                control={form.control}
+                                name="organizer"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Main Organizer Name</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Enter organizer name" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name="contactEmail"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Contact Email</FormLabel>
+                                      <div className="flex items-center space-x-2">
+                                        <Mail className="h-4 w-4 text-muted-foreground" />
+                                        <FormControl>
+                                          <Input placeholder="Enter contact email" {...field} />
+                                        </FormControl>
+                                      </div>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                
+                                <FormField
+                                  control={form.control}
+                                  name="contactPhone"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Contact Phone</FormLabel>
+                                      <div className="flex items-center space-x-2">
+                                        <Phone className="h-4 w-4 text-muted-foreground" />
+                                        <FormControl>
+                                          <Input placeholder="Enter contact phone" {...field} />
+                                        </FormControl>
+                                      </div>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-4">
+                              <div className="flex justify-between items-center">
+                                <h3 className="text-sm font-medium">Additional Organizers</h3>
+                                <Button 
+                                  type="button" 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={addOrganizer}
+                                >
+                                  <Plus className="h-4 w-4 mr-1" /> Add Organizer
+                                </Button>
+                              </div>
+                              
+                              {organizers.map((organizer, index) => (
+                                <div key={index} className="border rounded-md p-4 space-y-3">
+                                  <div className="flex justify-between items-start">
+                                    <h4 className="text-sm font-medium">
+                                      {index === 0 ? 'Primary Organizer' : `Co-Organizer ${index}`}
+                                    </h4>
+                                    {index !== 0 && (
+                                      <Button 
+                                        type="button" 
+                                        size="icon" 
+                                        variant="ghost" 
+                                        onClick={() => removeOrganizer(index)}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                      <Label htmlFor={`organizer-name-${index}`}>Name</Label>
+                                      <Input
+                                        id={`organizer-name-${index}`}
+                                        value={organizer.name}
+                                        onChange={(e) => updateOrganizer(index, 'name', e.target.value)}
+                                        placeholder="Organizer name"
+                                        disabled={index === 0}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor={`organizer-role-${index}`}>Role</Label>
+                                      <Input
+                                        id={`organizer-role-${index}`}
+                                        value={organizer.role}
+                                        onChange={(e) => updateOrganizer(index, 'role', e.target.value)}
+                                        placeholder="e.g. Host, Speaker, DJ"
+                                        disabled={index === 0}
+                                      />
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                      <Label htmlFor={`organizer-email-${index}`}>Email</Label>
+                                      <Input
+                                        id={`organizer-email-${index}`}
+                                        value={organizer.email || ''}
+                                        onChange={(e) => updateOrganizer(index, 'email', e.target.value)}
+                                        placeholder="Email address"
+                                        disabled={index === 0}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor={`organizer-phone-${index}`}>Phone</Label>
+                                      <Input
+                                        id={`organizer-phone-${index}`}
+                                        value={organizer.phone || ''}
+                                        onChange={(e) => updateOrganizer(index, 'phone', e.target.value)}
+                                        placeholder="Phone number"
+                                        disabled={index === 0}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <FormField
+                            control={form.control}
+                            name="hasTermsAgreed"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>I agree to the terms and conditions</FormLabel>
+                                  <FormDescription>
+                                    By creating this event, you agree to our terms of service and privacy policy.
+                                  </FormDescription>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                        </CardContent>
+                        <CardFooter className="flex justify-between">
+                          <Button 
+                            variant="outline" 
+                            type="button"
+                            onClick={() => setActiveTab("tickets")}
                           >
                             Previous
                           </Button>
@@ -1089,9 +1241,33 @@ const CreateEvent: React.FC = () => {
                   <CalendarIcon className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Choose the right date & time</h4>
+                  <h4 className="text-sm font-medium">Choose multiple dates</h4>
                   <p className="text-sm text-muted-foreground">
-                    Avoid scheduling conflicts with similar events or holidays.
+                    Add multiple sessions for multi-day events.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <MapPin className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium">Google Maps integration</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Find venues easily with location search.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <Ticket className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium">Multiple ticket types</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Create different pricing tiers for your event.
                   </p>
                 </div>
               </div>
@@ -1101,33 +1277,33 @@ const CreateEvent: React.FC = () => {
                   <ImagePlus className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Add compelling images</h4>
+                  <h4 className="text-sm font-medium">Upload multiple images</h4>
                   <p className="text-sm text-muted-foreground">
-                    High-quality images attract more attendees.
+                    Add banner, card, and gallery images.
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start gap-2">
                 <div className="bg-primary/10 p-2 rounded-full">
-                  <Mic2 className="h-4 w-4 text-primary" />
+                  <AlertCircle className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Highlight special guests</h4>
+                  <h4 className="text-sm font-medium">Prohibited Items</h4>
                   <p className="text-sm text-muted-foreground">
-                    Feature performers or speakers to generate interest.
+                    Clearly list what attendees cannot bring.
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start gap-2">
                 <div className="bg-primary/10 p-2 rounded-full">
-                  <Tags className="h-4 w-4 text-primary" />
+                  <FileText className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Use relevant tags</h4>
+                  <h4 className="text-sm font-medium">Add FAQ section</h4>
                   <p className="text-sm text-muted-foreground">
-                    Tags help users discover your event more easily.
+                    Answer common questions in advance.
                   </p>
                 </div>
               </div>
