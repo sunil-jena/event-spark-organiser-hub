@@ -43,3 +43,22 @@
 .read-the-docs {
   color: #888;
 }
+
+@keyframes loaderAnim {
+  to {
+    width: 100%;
+  }
+}
+
+/* Tailwind CSS Custom Utilities */
+.theme-bg-primary {
+  --tw-bg-opacity: 1;
+  background-color: rgba(36, 0, 91, var(--tw-bg-opacity));
+  /* Primary color */
+}
+
+.theme-text-secondary {
+  --tw-text-opacity: 1;
+  color: rgba(188, 244, 78, var(--tw-text-opacity));
+  /* Secondary color */
+}

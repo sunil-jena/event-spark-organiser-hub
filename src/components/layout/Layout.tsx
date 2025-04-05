@@ -8,7 +8,7 @@ import Header from './Header';
 const Layout = () => {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(true);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

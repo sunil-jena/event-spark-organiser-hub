@@ -1,58 +1,132 @@
 
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarDays, Home, Settings, Users, Ticket, TrendingUp, PieChart, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { BarChart3, CalendarDays, Home, Settings, Users, Ticket, TrendingUp, PieChart, LogOut, ChevronLeft, ChevronRight, MessageSquare, HelpCircle, LayoutDashboard, Calendar, Tag, Clock, ShoppingCart, BarChart, CreditCard, FileText, LucideLayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { NavItem, NestedNavigation } from './NestedNavigation';
 
-type NavItem = {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-};
-
-const navItems: NavItem[] = [
+const mainNavItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/',
-    icon: Home,
+    icon: <Home className="h-5 w-5" />,
   },
   {
     title: 'Events',
     href: '/events',
-    icon: CalendarDays,
+    icon: <CalendarDays className="h-5 w-5" />,
   },
   {
-    title: 'Analytics',
-    href: '/analytics',
-    icon: BarChart3,
+    title: 'Tickets',
+    icon: <Ticket className="h-5 w-5" />,
+    children: [
+      {
+        title: 'Ticket Types',
+        href: '/tickets/types',
+      },
+      {
+        title: 'Pricing',
+        href: '/tickets/pricing',
+      },
+      {
+        title: 'Discounts',
+        href: '/tickets/discounts',
+        label: 'New',
+        children: [
+          {
+            title: 'Promo Codes',
+            href: '/tickets/discounts/promo-codes',
+            icon: <Tag className="h-4 w-4" />,
+          },
+          {
+            title: 'Early Bird',
+            href: '/tickets/discounts/early-bird',
+            icon: <Clock className="h-4 w-4" />,
+          },
+          {
+            title: 'Group Discounts',
+            href: '/tickets/discounts/group',
+            icon: <Users className="h-4 w-4" />,
+          },
+        ]
+      }
+    ]
   },
   {
     title: 'Orders',
     href: '/orders',
-    icon: Ticket,
-  },
-  {
-    title: 'Customers',
-    href: '/customers',
-    icon: Users,
-  },
-  {
-    title: 'Reports',
-    href: '/reports',
-    icon: PieChart,
+    icon: <ShoppingCart className="h-5 w-5" />,
   },
   {
     title: 'Sales',
     href: '/sales',
-    icon: TrendingUp,
+    icon: <BarChart className="h-5 w-5" />,
   },
+  {
+    title: 'Customers',
+    href: '/customers',
+    icon: <Users className="h-5 w-5" />,
+  },
+  {
+    title: 'Payments',
+    icon: <CreditCard className="h-5 w-5" />,
+    children: [
+      {
+        title: 'Transactions',
+        href: '/payments/transactions',
+      },
+      {
+        title: 'Payouts',
+        href: '/payouts',
+      },
+      {
+        title: 'Settings',
+        href: '/payments/settings',
+      }
+    ]
+  },
+  {
+    title: 'Reports',
+    href: '/reports',
+    icon: <FileText className="h-5 w-5" />,
+  },
+  {
+    title: 'Analytics',
+    href: '/analytics',
+    icon: <BarChart3 className="h-5 w-5" />,
+  }
+];
+
+const secondaryNavItems: NavItem[] = [
   {
     title: 'Settings',
     href: '/settings',
-    icon: Settings,
+    icon: <Settings className="h-5 w-5" />,
   },
+  {
+    title: 'Support',
+    icon: <HelpCircle className="h-5 w-5" />,
+    children: [
+      {
+        title: 'Help Center',
+        href: '/support/help',
+      },
+      {
+        title: 'Contact Us',
+        href: '/support/contact',
+      },
+      {
+        title: 'FAQs',
+        href: '/support/faqs',
+      }
+    ]
+  },
+  {
+    title: 'Feedback',
+    href: '/feedback',
+    icon: <MessageSquare className="h-5 w-5" />,
+  }
 ];
 
 interface SidebarProps {
@@ -90,34 +164,21 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
         </div>
 
       </div>
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <motion.li
-                key={item.href}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <Link
-                  to={item.href}
-                  className={cn(
-                    'flex items-center p-2 rounded-md transition-colors hover:bg-white/10',
-                    isActive && 'bg-white/20',
-                    minimized && 'justify-center'
-                  )}
-                  onClick={isMobile ? onClose : undefined}
-                  title={minimized ? item.title : undefined}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {!minimized && <span className='ml-3'>{item.title}</span>}
-                </Link>
-              </motion.li>
-            );
-          })}
-        </ul>
-      </nav>
+      {/* Nav sections */}
+      <div className="flex-1  py-4 px-3 overflow-hidden">
+        <nav className="space-y-6">
+          <div>
+            {!minimized && <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Main</h2>}
+            <NestedNavigation items={mainNavItems} minimized={minimized} className="text-white" />
+          </div>
+
+          <div>
+            {!minimized && <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Support</h2>}
+            <NestedNavigation items={secondaryNavItems} minimized={minimized} className="text-white" />
+          </div>
+        </nav>
+      </div>
+
       <div className="p-4 border-t border-primary-light/20">
         <Button
           variant="outline"

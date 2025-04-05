@@ -11,16 +11,16 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckCircle2, 
-  Clock, 
-  XCircle, 
-  AlertCircle, 
-  Download, 
-  Filter, 
-  Search, 
-  Eye, 
-  ArrowUpDown 
+import {
+  CheckCircle2,
+  Clock,
+  XCircle,
+  AlertCircle,
+  Download,
+  Filter,
+  Search,
+  Eye,
+  ArrowUpDown
 } from 'lucide-react';
 import { OrderStatus } from '@/components/ui/order-statistics';
 import { useToast } from '@/hooks/use-toast';
@@ -168,59 +168,59 @@ const Orders = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [eventFilter, setEventFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  
+
   const uniqueEvents = Array.from(new Set(mockOrders.map(order => order.eventName)));
   const uniqueTicketTypes = Array.from(new Set(mockOrders.map(order => order.ticketType)));
-  
+
   const handleViewOrder = (order: Order) => {
     toast({
       title: "View Order",
       description: `Viewing order #${order.id} for ${order.eventName}`,
     });
   };
-  
+
   const handleResendConfirmation = (order: Order) => {
     toast({
       title: "Confirmation Resent",
       description: `Confirmation email resent to ${order.email}`,
     });
   };
-  
+
   const handleExportOrders = () => {
     toast({
       title: "Orders Exported",
       description: "All orders have been exported to CSV",
     });
   };
-  
+
   const filteredOrders = mockOrders.filter(order => {
     // Apply search filter
-    if (searchQuery && !order.customer.toLowerCase().includes(searchQuery.toLowerCase()) && 
-        !order.id.includes(searchQuery) && 
-        !order.email.toLowerCase().includes(searchQuery.toLowerCase())) {
+    if (searchQuery && !order.customer.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !order.id.includes(searchQuery) &&
+      !order.email.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
-    
+
     // Apply status filter
     if (statusFilter !== 'all' && order.status !== statusFilter) {
       return false;
     }
-    
+
     // Apply event filter
     if (eventFilter !== 'all' && order.eventName !== eventFilter) {
       return false;
     }
-    
+
     // Apply ticket type filter
     if (typeFilter !== 'all' && order.ticketType !== typeFilter) {
       return false;
     }
-    
+
     return true;
   });
-  
+
   const statusBadge = (status: OrderStatus) => {
-    switch(status) {
+    switch (status) {
       case 'completed':
         return (
           <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 flex items-center gap-1">
@@ -256,8 +256,8 @@ const Orders = () => {
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Orders</h1>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="flex items-center gap-2"
           onClick={handleExportOrders}
         >
@@ -282,7 +282,7 @@ const Orders = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[160px]">
@@ -296,7 +296,7 @@ const Orders = () => {
                   <SelectItem value="refunded">Refunded</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={eventFilter} onValueChange={setEventFilter}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Event" />
@@ -308,7 +308,7 @@ const Orders = () => {
                   ))}
                 </SelectContent>
               </Select>
-              
+
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Ticket Type" />
@@ -322,7 +322,7 @@ const Orders = () => {
               </Select>
             </div>
           </div>
-          
+
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -363,20 +363,20 @@ const Orders = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            className="h-8 w-8 p-0" 
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
                             onClick={() => handleViewOrder(order)}
                           >
                             <span className="sr-only">View order</span>
                             <Eye className="h-4 w-4" />
                           </Button>
                           {order.status !== 'cancelled' && order.status !== 'refunded' && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="h-8 w-8 p-0" 
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
                               onClick={() => handleResendConfirmation(order)}
                             >
                               <span className="sr-only">Resend confirmation</span>
