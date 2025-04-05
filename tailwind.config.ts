@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 
 import type { Config } from "tailwindcss";
 
@@ -27,9 +26,9 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#24005b',
+					DEFAULT: '#24500b',
 					foreground: '#ffffff',
-					light: '#7b4ebc'
+					light: '#BCF44E'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -66,10 +65,6 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				}
 			},
-			backgroundImage: theme => ({
-				'main-background': "url('/abstract-line.svg')",
-				'login-background': "url('/login-abstract.svg')" // Update the path to your image
-			}),
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',

@@ -20,7 +20,6 @@ interface EventCardProps {
   onEdit?: (event: Event) => void;
   onDelete?: (event: Event) => void;
   className?: string;
-  currency?: string;
 }
 
 export function EventCard({
@@ -28,7 +27,6 @@ export function EventCard({
   onEdit,
   onDelete,
   className,
-  currency = "₹",
 }: EventCardProps) {
   const formattedDate = new Date(event.date).toLocaleDateString('en-US', {
     year: 'numeric',
