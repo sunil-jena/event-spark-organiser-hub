@@ -54,42 +54,42 @@ export function SalesChart({
           </div>
           <div className="flex items-center space-x-2">
             <div className="flex rounded-md border overflow-hidden">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className={cn(
-                  "rounded-none", 
-                  chartView === 'daily' && "bg-primary text-white hover:bg-primary/90"
+                  "rounded-none",
+                  chartView === 'daily' && "bg-primary text-white hover:bg-primary/90 hover:text-white"
                 )}
                 onClick={() => setChartView('daily')}
               >
                 Daily
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className={cn(
-                  "rounded-none", 
-                  chartView === 'weekly' && "bg-primary text-white hover:bg-primary/90"
+                  "rounded-none",
+                  chartView === 'weekly' && "bg-primary text-white hover:bg-primary/90 hover:text-white"
                 )}
                 onClick={() => setChartView('weekly')}
               >
                 Weekly
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className={cn(
-                  "rounded-none", 
-                  chartView === 'monthly' && "bg-primary text-white hover:bg-primary/90"
+                  "rounded-none",
+                  chartView === 'monthly' && "bg-primary text-white hover:bg-primary/90 hover:text-white"
                 )}
                 onClick={() => setChartView('monthly')}
               >
                 Monthly
               </Button>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="icon"
               className="h-8 w-8"
               onClick={() => setChartType(chartType === 'area' ? 'bar' : 'area')}
@@ -106,73 +106,73 @@ export function SalesChart({
               <AreaChart data={filteredData}>
                 <defs>
                   <linearGradient id="colorOnline" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#24005b" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#24005b" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#24005b" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#24005b" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorOffline" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7b4ebc" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#7b4ebc" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#7b4ebc" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#7b4ebc" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   tick={{ fontSize: 12 }}
                   tickLine={false}
                   axisLine={{ stroke: '#E5E7EB' }}
                 />
-                <YAxis 
+                <YAxis
                   tick={{ fontSize: 12 }}
                   tickLine={false}
                   axisLine={{ stroke: '#E5E7EB' }}
-                  tickFormatter={(value) => `$${value.toLocaleString()}`}
+                  tickFormatter={(value) => `₹${value.toLocaleString()}`}
                 />
                 <CartesianGrid stroke="#E5E7EB" strokeDasharray="3 3" vertical={false} />
-                <Tooltip 
-                  formatter={(value) => [`$${Number(value).toLocaleString()}`, undefined]}
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
+                <Tooltip
+                  formatter={(value) => [`${Number(value).toLocaleString()}`, undefined]}
+                  contentStyle={{
+                    backgroundColor: '#fff',
                     borderRadius: '6px',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                     border: '1px solid #E5E7EB'
                   }}
                 />
                 <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="online" 
-                  stroke="#24005b" 
-                  fillOpacity={1} 
-                  fill="url(#colorOnline)" 
+                <Area
+                  type="monotone"
+                  dataKey="online"
+                  stroke="#24005b"
+                  fillOpacity={1}
+                  fill="url(#colorOnline)"
                   name="Online Sales"
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="offline" 
-                  stroke="#7b4ebc" 
-                  fillOpacity={1} 
-                  fill="url(#colorOffline)" 
+                <Area
+                  type="monotone"
+                  dataKey="offline"
+                  stroke="#7b4ebc"
+                  fillOpacity={1}
+                  fill="url(#colorOffline)"
                   name="Offline Sales"
                 />
               </AreaChart>
             ) : (
               <BarChart data={filteredData}>
                 <CartesianGrid stroke="#E5E7EB" strokeDasharray="3 3" vertical={false} />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   tick={{ fontSize: 12 }}
                   tickLine={false}
                   axisLine={{ stroke: '#E5E7EB' }}
                 />
-                <YAxis 
+                <YAxis
                   tick={{ fontSize: 12 }}
                   tickLine={false}
                   axisLine={{ stroke: '#E5E7EB' }}
                   tickFormatter={(value) => `$${value.toLocaleString()}`}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => [`$${Number(value).toLocaleString()}`, undefined]}
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
+                  contentStyle={{
+                    backgroundColor: '#fff',
                     borderRadius: '6px',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                     border: '1px solid #E5E7EB'

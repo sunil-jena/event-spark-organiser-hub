@@ -7,13 +7,13 @@ import { SalesChart } from '@/components/ui/sales-chart';
 import { SalesStatistics } from '@/components/ui/sales-statistics';
 import { OrderStatistics, OrderStatus } from '@/components/ui/order-statistics';
 import { RecentOrders, Order } from '@/components/ui/recent-orders';
-import { 
-  BarChart3, 
-  CalendarDays, 
-  Ticket, 
-  Users, 
-  TrendingUp, 
-  PlusCircle, 
+import {
+  BarChart3,
+  CalendarDays,
+  Ticket,
+  Users,
+  TrendingUp,
+  PlusCircle,
   ChevronRight,
   IndianRupee,
   Badge,
@@ -54,7 +54,7 @@ const mockEvents: Event[] = [
 ];
 
 const salesData = [
-  { name: 'Jan', online: 4000, offline: 2400, total: 6400 },
+  { name: 'Jan', online: 4000, offline: 24000, total: 64000 },
   { name: 'Feb', online: 3000, offline: 1398, total: 4398 },
   { name: 'Mar', online: 2000, offline: 9800, total: 11800 },
   { name: 'Apr', online: 2780, offline: 3908, total: 6688 },
@@ -121,7 +121,7 @@ const orderStatsData = [
 
 const Dashboard = () => {
   const { toast } = useToast();
-  
+
   const handleEdit = (event: Event) => {
     toast({
       title: "Edit Event",
@@ -151,7 +151,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <motion.div 
+      <motion.div
         className="flex flex-col md:flex-row md:items-center justify-between gap-4"
         initial="hidden"
         animate="visible"
@@ -169,52 +169,52 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <StatsCard 
-            title="Total Revenue" 
-            value="₹15,25,000" 
-            icon={<TrendingUp className="h-8 w-8" />} 
+          <StatsCard
+            title="Total Revenue"
+            value="₹15,25,000"
+            icon={<TrendingUp className="h-8 w-8" />}
             trend={{ value: 12.5, isPositive: true }}
           />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <StatsCard 
-            title="Tickets Sold" 
-            value="1,520" 
-            icon={<Ticket className="h-8 w-8" />} 
+          <StatsCard
+            title="Tickets Sold"
+            value="1,520"
+            icon={<Ticket className="h-8 w-8" />}
             trend={{ value: 8.2, isPositive: true }}
           />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <StatsCard 
-            title="Active Events" 
-            value="5" 
-            icon={<CalendarDays className="h-8 w-8" />} 
+          <StatsCard
+            title="Active Events"
+            value="5"
+            icon={<CalendarDays className="h-8 w-8" />}
           />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <StatsCard 
-            title="Total Attendees" 
-            value="1,250" 
-            icon={<Users className="h-8 w-8" />} 
+          <StatsCard
+            title="Total Attendees"
+            value="1,250"
+            icon={<Users className="h-8 w-8" />}
             trend={{ value: 3.1, isPositive: false }}
           />
         </motion.div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <motion.div 
+        <motion.div
           className="lg:col-span-2"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <SalesChart 
-            data={salesData} 
+          <SalesChart
+            data={salesData}
             title="Sales Overview"
             description="Compare online vs offline ticket sales"
           />
         </motion.div>
-        
+
         <div className="space-y-6">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -222,15 +222,21 @@ const Dashboard = () => {
             transition={{ delay: 0.3 }}
           >
             <SalesStatistics
-              title="Ticket Sales"
-              totalSales={1525000}
-              onlineSales={1245000}
-              offlineSales={280000}
-              percentageChange={8.2}
+              data={[
+                { name: 'Product A', value: 42000 },
+                { name: 'Product B', value: 21000 },
+                { name: 'Product C', value: 15000 }
+              ]}
+              type="products"
+              title="Monthly Revenue"
+              totalSales={78000}
+              onlineSales={56000}
+              offlineSales={22000}
+              percentageChange={8.5}
               currency="₹"
             />
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -269,8 +275,8 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
             >
-              <EventCard 
-                event={event} 
+              <EventCard
+                event={event}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 currency="₹"
@@ -292,7 +298,7 @@ const Dashboard = () => {
                 <h3 className="text-2xl font-bold mb-2">Manage Your Offline Sales</h3>
                 <p className="text-white/80 mb-4">Track your offline ticket sales and manage them efficiently in one place.</p>
                 <div className="flex gap-3 mt-6">
-                  <Button variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white">
+                  <Button variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white hover:text-white/90">
                     Add Offline Orders
                   </Button>
                   <Button variant="default" className="bg-white text-primary hover:bg-white/90">

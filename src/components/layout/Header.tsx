@@ -11,30 +11,62 @@ interface HeaderProps {
   onMenuClick: () => void;
   minimized?: boolean;
   toggleMinimize?: () => void;
+  toggleSearch?: () => void;
+  toggleNotifications?: () => void;
+  toggleDatePicker?: () => void;
+  isSearchOpen?: boolean;
+  isNotificationsOpen?: boolean;
+  isDatePickerOpen?: boolean;
 }
 
-const Header = ({ onMenuClick, minimized, toggleMinimize }: HeaderProps) => {
+const Header = ({ 
+  onMenuClick, 
+  minimized, 
+  toggleMinimize,
+  toggleSearch: externalToggleSearch,
+  toggleNotifications: externalToggleNotifications,
+  toggleDatePicker: externalToggleDatePicker,
+  isSearchOpen: externalSearchOpen,
+  isNotificationsOpen: externalNotificationsOpen,
+  isDatePickerOpen: externalDatePickerOpen
+}: HeaderProps) => {
   const isMobile = useIsMobile();
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [internalSearchOpen, setInternalSearchOpen] = useState(false);
+  const [internalCalendarOpen, setInternalCalendarOpen] = useState(false);
+  const [internalNotificationsOpen, setInternalNotificationsOpen] = useState(false);
+
+  const searchOpen = externalSearchOpen !== undefined ? externalSearchOpen : internalSearchOpen;
+  const calendarOpen = externalDatePickerOpen !== undefined ? externalDatePickerOpen : internalCalendarOpen;
+  const notificationsOpen = externalNotificationsOpen !== undefined ? externalNotificationsOpen : internalNotificationsOpen;
 
   const toggleSearch = () => {
-    setSearchOpen(!searchOpen);
-    if (calendarOpen) setCalendarOpen(false);
-    if (notificationsOpen) setNotificationsOpen(false);
+    if (externalToggleSearch) {
+      externalToggleSearch();
+    } else {
+      setInternalSearchOpen(!internalSearchOpen);
+      if (internalCalendarOpen) setInternalCalendarOpen(false);
+      if (internalNotificationsOpen) setInternalNotificationsOpen(false);
+    }
   };
 
   const toggleCalendar = () => {
-    setCalendarOpen(!calendarOpen);
-    if (searchOpen) setSearchOpen(false);
-    if (notificationsOpen) setNotificationsOpen(false);
+    if (externalToggleDatePicker) {
+      externalToggleDatePicker();
+    } else {
+      setInternalCalendarOpen(!internalCalendarOpen);
+      if (internalSearchOpen) setInternalSearchOpen(false);
+      if (internalNotificationsOpen) setInternalNotificationsOpen(false);
+    }
   };
 
   const toggleNotifications = () => {
-    setNotificationsOpen(!notificationsOpen);
-    if (searchOpen) setSearchOpen(false);
-    if (calendarOpen) setCalendarOpen(false);
+    if (externalToggleNotifications) {
+      externalToggleNotifications();
+    } else {
+      setInternalNotificationsOpen(!internalNotificationsOpen);
+      if (internalSearchOpen) setInternalSearchOpen(false);
+      if (internalCalendarOpen) setInternalCalendarOpen(false);
+    }
   };
 
   return (
@@ -58,12 +90,11 @@ const Header = ({ onMenuClick, minimized, toggleMinimize }: HeaderProps) => {
             <Menu className="h-6 w-6" />
           </Button>
         )}
-        <h1 className="text-xl font-semibold hidden md:block">Event Organizer Hub</h1>
       </div>
-      
+
       <AnimatePresence>
         {searchOpen ? (
-          <motion.div 
+          <motion.div
             className="absolute left-0 right-0 top-0 bg-white dark:bg-gray-900 z-10 h-16 px-4 flex items-center"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -93,7 +124,7 @@ const Header = ({ onMenuClick, minimized, toggleMinimize }: HeaderProps) => {
           </div>
         )}
       </AnimatePresence>
-      
+
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="relative hidden sm:flex" onClick={toggleCalendar}>
           <Calendar className="h-5 w-5" />
@@ -106,8 +137,8 @@ const Header = ({ onMenuClick, minimized, toggleMinimize }: HeaderProps) => {
           <span className="absolute top-1 right-1 bg-primary w-2 h-2 rounded-full"></span>
         </Button>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="flex items-center gap-2 p-1 rounded-full border border-gray-200"
           >
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
