@@ -1,883 +1,962 @@
 
-import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Calendar, 
-  ChevronDown, 
-  Download, 
-  FilterIcon, 
-  Printer,
-  FileText,
-  ArrowRight,
-  ArrowUpRight,
-  ArrowDownRight,
-  DollarSign,
-  Users,
-  Calendar as CalendarIcon,
-  Search,
-  Plus,
-  MoreHorizontal,
-  RefreshCw,
-  PackageCheck,
-  Truck,
-  MapPin,
-  User,
-  ShoppingCart,
-  LucideIcon,
-  Package,
-  Receipt,
-  ChevronsUpDown,
-  Copy,
-  Mail,
-  Phone,
-  Map,
-  Edit,
-  Eye,
-  X,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from 'react';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { motion } from 'framer-motion';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { DataPagination } from '@/components/ui/data-pagination';
-import { AdvancedSearch, Filter } from '@/components/ui/advanced-search';
-import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
-import { useToast } from '@/hooks/use-toast';
-import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Download, 
+  Filter, 
+  Search, 
+  Eye, 
+  Mail, 
+  MoreHorizontal, 
+  Ticket,
+  Calendar,
+  FileText,
+  Plus
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { AdvancedSearch, Filter as FilterType } from '@/components/ui/advanced-search';
+import { DataPagination } from '@/components/ui/data-pagination';
+import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
+import { OrderStatus } from '@/components/ui/order-statistics';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
+import { motion, AnimatePresence } from 'framer-motion';
 
+// Mock order data generator
+const generateMockOrders = (count: number): Order[] => {
+  const events = [
+    'Summer Music Festival', 
+    'Tech Conference 2025', 
+    'Food & Wine Expo', 
+    'Business Summit', 
+    'Art Exhibition', 
+    'Wellness Retreat'
+  ];
+  
+  const names = [
+    'John Smith', 'Emma Johnson', 'Carlos Rodriguez', 'Sarah Lee', 
+    'Michael Brown', 'Lisa Wang', 'David Kim', 'Jennifer Miller', 
+    'Robert Chen', 'Amanda Taylor', 'Raj Patel', 'Priya Singh',
+    'Mohammed Ali', 'Sophia Zhang', 'Aiden Lee', 'Olivia Wang'
+  ];
+  
+  const ticketTypes = ['VIP', 'Standard', 'Early Bird', 'Group', 'Premium', 'Basic'];
+  const statuses: OrderStatus[] = ['completed', 'pending', 'cancelled', 'refunded'];
+  
+  const orders: Order[] = [];
+  
+  for (let i = 1; i <= count; i++) {
+    const randomName = names[Math.floor(Math.random() * names.length)];
+    const randomEvent = events[Math.floor(Math.random() * events.length)];
+    const randomType = ticketTypes[Math.floor(Math.random() * ticketTypes.length)];
+    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+    const ticketCount = Math.floor(Math.random() * 5) + 1;
+    const ticketPrice = Math.floor(Math.random() * 2000) + 200;
+    const totalAmount = ticketCount * ticketPrice;
+    const isOffline = Math.random() > 0.7;
+    
+    // Generate a random date within the last 90 days
+    const currentDate = new Date();
+    const pastDate = new Date();
+    pastDate.setDate(currentDate.getDate() - Math.floor(Math.random() * 90));
+    
+    const order: Order = {
+      id: (1000 + i).toString(),
+      eventName: randomEvent,
+      customer: randomName,
+      email: randomName.toLowerCase().replace(' ', '.') + '@example.com',
+      date: pastDate.toLocaleString('en-IN', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      amount: totalAmount,
+      ticketType: randomType,
+      tickets: ticketCount,
+      status: randomStatus,
+      isOffline: isOffline
+    };
+    
+    orders.push(order);
+  }
+  
+  return orders;
+};
+
+// Order interface
 interface Order {
   id: string;
+  eventName: string;
+  customer: string;
+  email: string;
   date: string;
-  customer: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
-  };
-  event: {
-    id: string;
-    name: string;
-    venue: string;
-    date: string;
-  };
-  items: {
-    name: string;
-    quantity: number;
-    price: number;
-  }[];
-  totalAmount: number;
-  paymentMethod: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
-  shippingAddress: string;
-  trackingNumber: string;
+  amount: number;
+  ticketType: string;
+  tickets: number;
+  status: OrderStatus;
+  isOffline?: boolean;
 }
 
 const Orders = () => {
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dateRange, setDateRange] = useState('7d');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-
-  const orders: Order[] = [
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  // Data state
+  const [allOrders] = useState<Order[]>(generateMockOrders(150));
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+  const [displayedOrders, setDisplayedOrders] = useState<Order[]>([]);
+  
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilters, setActiveFilters] = useState<FilterType[]>([]);
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string | string[]>>({});
+  
+  // Data loading and animation state
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Filter configuration
+  const searchFilters = [
     {
-      id: 'OD-2345',
-      date: '2025-04-01',
-      customer: {
-        id: 'CUST-1122',
-        name: 'Raj Patel',
-        email: 'raj.patel@example.com',
-        phone: '9876543210',
-        address: '123, Main Street, Mumbai'
-      },
-      event: {
-        id: 'EV-1001',
-        name: 'Summer Music Festival',
-        venue: 'Mumbai Grounds',
-        date: '2025-04-20'
-      },
-      items: [
-        { name: 'VIP Pass', quantity: 1, price: 2999 },
-      ],
-      totalAmount: 2999,
-      paymentMethod: 'Credit Card',
-      status: 'delivered',
-      shippingAddress: '123, Main Street, Mumbai',
-      trackingNumber: 'TN-987654321',
-    },
-    {
-      id: 'OD-2346',
-      date: '2025-04-01',
-      customer: {
-        id: 'CUST-1123',
-        name: 'Priya Sharma',
-        email: 'priya.sharma@example.com',
-        phone: '8765432109',
-        address: '456, Linking Road, Bandra'
-      },
-      event: {
-        id: 'EV-1001',
-        name: 'Summer Music Festival',
-        venue: 'Mumbai Grounds',
-        date: '2025-04-20'
-      },
-      items: [
-        { name: 'Regular Pass', quantity: 2, price: 1499 },
-        { name: 'Food Voucher', quantity: 2, price: 500 },
-      ],
-      totalAmount: 3998,
-      paymentMethod: 'UPI',
-      status: 'shipped',
-      shippingAddress: '456, Linking Road, Bandra',
-      trackingNumber: 'TN-876543210',
-    },
-    {
-      id: 'OD-2347',
-      date: '2025-04-02',
-      customer: {
-        id: 'CUST-1124',
-        name: 'Anil Kumar',
-        email: 'anil.kumar@example.com',
-        phone: '7654321098',
-        address: '789, MG Road, Bangalore'
-      },
-      event: {
-        id: 'EV-1002',
-        name: 'Tech Conference 2025',
-        venue: 'Bangalore Expo',
-        date: '2025-05-10'
-      },
-      items: [
-        { name: 'Full Access Pass', quantity: 1, price: 4499 },
-      ],
-      totalAmount: 4499,
-      paymentMethod: 'Debit Card',
-      status: 'processing',
-      shippingAddress: '789, MG Road, Bangalore',
-      trackingNumber: 'TN-765432109',
-    },
-    {
-      id: 'OD-2348',
-      date: '2025-04-02',
-      customer: {
-        id: 'CUST-1125',
-        name: 'Sunita Reddy',
-        email: 'sunita.reddy@example.com',
-        phone: '6543210987',
-        address: '101, Brigade Road, Bangalore'
-      },
-      event: {
-        id: 'EV-1002',
-        name: 'Tech Conference 2025',
-        venue: 'Bangalore Expo',
-        date: '2025-05-10'
-      },
-      items: [
-        { name: 'Basic Pass', quantity: 3, price: 1499 },
-      ],
-      totalAmount: 4497,
-      paymentMethod: 'NetBanking',
-      status: 'pending',
-      shippingAddress: '101, Brigade Road, Bangalore',
-      trackingNumber: 'TN-654321098',
-    },
-    {
-      id: 'OD-2349',
-      date: '2025-04-03',
-      customer: {
-        id: 'CUST-1126',
-        name: 'Vikram Singh',
-        email: 'vikram.singh@example.com',
-        phone: '5432109876',
-        address: '222, Park Street, Kolkata'
-      },
-      event: {
-        id: 'EV-1003',
-        name: 'Food & Wine Expo',
-        venue: 'Kolkata Grounds',
-        date: '2025-04-25'
-      },
-      items: [
-        { name: 'Entry Ticket', quantity: 1, price: 2499 },
-      ],
-      totalAmount: 2499,
-      paymentMethod: 'Credit Card',
-      status: 'cancelled',
-      shippingAddress: '222, Park Street, Kolkata',
-      trackingNumber: 'TN-543210987',
-    },
-    {
-      id: 'OD-2350',
-      date: '2025-04-03',
-      customer: {
-        id: 'CUST-1127',
-        name: 'Neha Verma',
-        email: 'neha.verma@example.com',
-        phone: '4321098765',
-        address: '333, Camac Street, Kolkata'
-      },
-      event: {
-        id: 'EV-1003',
-        name: 'Food & Wine Expo',
-        venue: 'Kolkata Grounds',
-        date: '2025-04-25'
-      },
-      items: [
-        { name: 'Entry Ticket', quantity: 1, price: 1799 },
-      ],
-      totalAmount: 1799,
-      paymentMethod: 'UPI',
-      status: 'refunded',
-      shippingAddress: '333, Camac Street, Kolkata',
-      trackingNumber: 'TN-432109876',
-    },
-    {
-      id: 'OD-2351',
-      date: '2025-04-04',
-      customer: {
-        id: 'CUST-1128',
-        name: 'Rahul Gupta',
-        email: 'rahul.gupta@example.com',
-        phone: '3210987654',
-        address: '444, Central Avenue, Chennai'
-      },
-      event: {
-        id: 'EV-1004',
-        name: 'Comedy Night',
-        venue: 'Chennai Auditorium',
-        date: '2025-05-05'
-      },
-      items: [
-        { name: 'Gold Ticket', quantity: 2, price: 1749 },
-      ],
-      totalAmount: 3498,
-      paymentMethod: 'Credit Card',
-      status: 'delivered',
-      shippingAddress: '444, Central Avenue, Chennai',
-      trackingNumber: 'TN-321098765',
-    },
-    {
-      id: 'OD-2352',
-      date: '2025-04-04',
-      customer: {
-        id: 'CUST-1129',
-        name: 'Anjali Das',
-        email: 'anjali.das@example.com',
-        phone: '2109876543',
-        address: '555, Mount Road, Chennai'
-      },
-      event: {
-        id: 'EV-1004',
-        name: 'Comedy Night',
-        venue: 'Chennai Auditorium',
-        date: '2025-05-05'
-      },
-      items: [
-        { name: 'Silver Ticket', quantity: 1, price: 699 },
-      ],
-      totalAmount: 699,
-      paymentMethod: 'UPI',
-      status: 'pending',
-      shippingAddress: '555, Mount Road, Chennai',
-      trackingNumber: 'TN-210987654',
-    },
-    {
-      id: 'OD-2353',
-      date: '2025-04-05',
-      customer: {
-        id: 'CUST-1130',
-        name: 'Sanjay Joshi',
-        email: 'sanjay.joshi@example.com',
-        phone: '1098765432',
-        address: '666, Anna Salai, Chennai'
-      },
-      event: {
-        id: 'EV-1004',
-        name: 'Comedy Night',
-        venue: 'Chennai Auditorium',
-        date: '2025-05-05'
-      },
-      items: [
-        { name: 'Bronze Ticket', quantity: 1, price: 1499 },
-      ],
-      totalAmount: 1499,
-      paymentMethod: 'Credit Card',
-      status: 'cancelled',
-      shippingAddress: '666, Anna Salai, Chennai',
-      trackingNumber: 'TN-109876543',
-    },
-    {
-      id: 'OD-2354',
-      date: '2025-04-05',
-      customer: {
-        id: 'CUST-1131',
-        name: 'Kavita Nair',
-        email: 'kavita.nair@example.com',
-        phone: '9988776655',
-        address: '777, T Nagar, Chennai'
-      },
-      event: {
-        id: 'EV-1005',
-        name: 'Tech Workshop',
-        venue: 'Chennai Tech Park',
-        date: '2025-04-15'
-      },
-      items: [
-        { name: 'Workshop Pass', quantity: 1, price: 998 },
-      ],
-      totalAmount: 998,
-      paymentMethod: 'NetBanking',
-      status: 'delivered',
-      shippingAddress: '777, T Nagar, Chennai',
-      trackingNumber: 'TN-998877665',
-    },
-    {
-      id: 'OD-2355',
-      date: '2025-04-05',
-      customer: {
-        id: 'CUST-1132',
-        name: 'Mohammed Khan',
-        email: 'mohammed.khan@example.com',
-        phone: '8877665544',
-        address: '888, Nungambakkam, Chennai'
-      },
-      event: {
-        id: 'EV-1006',
-        name: 'Art Exhibition',
-        venue: 'Chennai Art Gallery',
-        date: '2025-04-10'
-      },
-      items: [
-        { name: 'Entry Pass', quantity: 2, price: 899 },
-      ],
-      totalAmount: 1798,
-      paymentMethod: 'Credit Card',
-      status: 'shipped',
-      shippingAddress: '888, Nungambakkam, Chennai',
-      trackingNumber: 'TN-887766554',
-    },
-    {
-      id: 'OD-2356',
-      date: '2025-04-05',
-      customer: {
-        id: 'CUST-1133',
-        name: 'Lakshmi Pillai',
-        email: 'lakshmi.pillai@example.com',
-        phone: '7766554433',
-        address: '999, Adyar, Chennai'
-      },
-      event: {
-        id: 'EV-1006',
-        name: 'Art Exhibition',
-        venue: 'Chennai Art Gallery',
-        date: '2025-04-10'
-      },
-      items: [
-        { name: 'Entry Pass', quantity: 1, price: 899 },
-      ],
-      totalAmount: 899,
-      paymentMethod: 'UPI',
-      status: 'processing',
-      shippingAddress: '999, Adyar, Chennai',
-      trackingNumber: 'TN-776655443',
-    },
-  ];
-
-  // Helper function to safely check if a value includes a search string
-  const safeIncludes = (value: string | number | boolean | string[], search: string): boolean => {
-    if (typeof value === 'string') {
-      return value.toLowerCase().includes(search.toLowerCase());
-    } else if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
-      return value.some(item => item.toLowerCase().includes(search.toLowerCase()));
-    }
-    return String(value).includes(search);
-  };
-
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      safeIncludes(order.id, searchQuery) ||
-      safeIncludes(order.customer.name, searchQuery) ||
-      safeIncludes(order.event.name, searchQuery);
-    
-    const matchesFilters = activeFilters.every(filter => {
-      const value = order[filter.field as keyof Order];
-      
-      if (typeof value === 'string') {
-        if (filter.operator === 'equals') {
-          return value === filter.value;
-        } else if (filter.operator === 'contains') {
-          return value.toLowerCase().includes(filter.value.toLowerCase());
-        }
-      } else if (typeof value === 'number') {
-        const numValue = Number(filter.value);
-        if (filter.operator === 'equals') {
-          return value === numValue;
-        } else if (filter.operator === 'greaterThan') {
-          return value > numValue;
-        } else if (filter.operator === 'lessThan') {
-          return value < numValue;
-        }
-      }
-      
-      return true;
-    });
-    
-    return matchesSearch && matchesFilters;
-  });
-
-  const totalOrders = filteredOrders.length;
-  const totalPages = Math.ceil(totalOrders / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
-
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'pending':
-        return <StatusBadge status="warning" label="Pending" />;
-      case 'processing':
-        return <StatusBadge status="info" label="Processing" />;
-      case 'shipped':
-        return <StatusBadge status="info" label="Shipped" />;
-      case 'delivered':
-        return <StatusBadge status="success" label="Delivered" />;
-      case 'cancelled':
-        return <StatusBadge status="error" label="Cancelled" />;
-      case 'refunded':
-        return <StatusBadge status="error" label="Refunded" />;
-      default:
-        return <StatusBadge status="default" label={status} />;
-    }
-  };
-
-  const filterOptions = [
-    {
+      id: 'status',
       name: 'Status',
-      options: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+      type: 'status' as const,
     },
     {
-      name: 'Payment Method',
-      options: ['Credit Card', 'Debit Card', 'UPI', 'NetBanking'],
+      id: 'eventName',
+      name: 'Event',
+      type: 'select' as const,
+      options: Array.from(new Set(allOrders.map(order => order.eventName))).map(event => ({
+        value: event,
+        label: event
+      }))
     },
+    {
+      id: 'ticketType',
+      name: 'Ticket Type',
+      type: 'multiselect' as const,
+      options: Array.from(new Set(allOrders.map(order => order.ticketType))).map(type => ({
+        value: type,
+        label: type
+      }))
+    },
+    {
+      id: 'isOffline',
+      name: 'Source',
+      type: 'select' as const,
+      options: [
+        { value: 'true', label: 'Offline' },
+        { value: 'false', label: 'Online' }
+      ]
+    }
   ];
-
-  const handleFilterChange = (filterName: string, option: string, isSelected: boolean) => {
-    setActiveFilters(prev => {
-      if (isSelected) {
-        return [...prev, {
-          field: filterName === 'Status' ? 'status' : 'paymentMethod',
-          operator: 'equals',
-          value: option
-        }];
-      } else {
-        return prev.filter(filter => 
-          !(filter.field === (filterName === 'Status' ? 'status' : 'paymentMethod') && 
-          filter.value === option)
+  
+  const statusOptions = [
+    { value: 'completed', label: 'Completed', color: 'bg-green-100' },
+    { value: 'pending', label: 'Pending', color: 'bg-amber-100' },
+    { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100' },
+    { value: 'refunded', label: 'Refunded', color: 'bg-blue-100' }
+  ];
+  
+  const filterGroups: FilterGroup[] = [
+    {
+      id: 'status',
+      label: 'Status',
+      options: [
+        { id: 'completed', label: 'Completed', colorClass: 'bg-green-500' },
+        { id: 'pending', label: 'Pending', colorClass: 'bg-amber-500' },
+        { id: 'cancelled', label: 'Cancelled', colorClass: 'bg-red-500' },
+        { id: 'refunded', label: 'Refunded', colorClass: 'bg-blue-500' }
+      ]
+    },
+    {
+      id: 'source',
+      label: 'Source',
+      options: [
+        { id: 'online', label: 'Online' },
+        { id: 'offline', label: 'Offline' }
+      ]
+    },
+    {
+      id: 'period',
+      label: 'Time Period',
+      options: [
+        { id: 'today', label: 'Today' },
+        { id: 'yesterday', label: 'Yesterday' },
+        { id: 'last7days', label: 'Last 7 Days' },
+        { id: 'last30days', label: 'Last 30 Days' },
+        { id: 'last90days', label: 'Last 90 Days' }
+      ]
+    }
+  ];
+  
+  // Fields for add note form
+  const addNoteFields: FormField[] = [
+    {
+      id: 'note',
+      label: 'Note',
+      type: 'textarea',
+      placeholder: 'Enter your note about this order...',
+      required: true
+    },
+    {
+      id: 'noteType',
+      label: 'Note Type',
+      type: 'select',
+      placeholder: 'Select note type',
+      required: true,
+      options: [
+        { value: 'info', label: 'Information' },
+        { value: 'issue', label: 'Issue' },
+        { value: 'followup', label: 'Follow-up' }
+      ]
+    },
+    {
+      id: 'isImportant',
+      label: 'Mark as Important',
+      type: 'switch',
+      helperText: 'This will highlight the note for all team members'
+    }
+  ];
+  
+  // Fields for export form
+  const exportFields: FormField[] = [
+    {
+      id: 'format',
+      label: 'Export Format',
+      type: 'select',
+      placeholder: 'Select format',
+      required: true,
+      options: [
+        { value: 'csv', label: 'CSV' },
+        { value: 'excel', label: 'Excel (XLSX)' },
+        { value: 'pdf', label: 'PDF' }
+      ],
+      defaultValue: 'csv'
+    },
+    {
+      id: 'dateRange',
+      label: 'Date Range',
+      type: 'select',
+      placeholder: 'Select date range',
+      required: true,
+      options: [
+        { value: 'all', label: 'All Time' },
+        { value: 'today', label: 'Today' },
+        { value: 'yesterday', label: 'Yesterday' },
+        { value: 'last7days', label: 'Last 7 Days' },
+        { value: 'last30days', label: 'Last 30 Days' },
+        { value: 'custom', label: 'Custom Range' }
+      ],
+      defaultValue: 'last30days'
+    },
+    {
+      id: 'includeCustomerData',
+      label: 'Include Customer Data',
+      type: 'switch',
+      defaultValue: true
+    },
+    {
+      id: 'includePaymentDetails',
+      label: 'Include Payment Details',
+      type: 'switch',
+      defaultValue: true
+    }
+  ];
+  
+  // Effect to apply filtering
+  useEffect(() => {
+    setIsLoading(true);
+    
+    // Simulate a network delay
+    const timer = setTimeout(() => {
+      let results = [...allOrders];
+      
+      // Apply search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        results = results.filter(order => 
+          order.customer.toLowerCase().includes(query) ||
+          order.id.includes(query) ||
+          order.email.toLowerCase().includes(query) ||
+          order.eventName.toLowerCase().includes(query)
         );
       }
-    });
+      
+      // Apply advanced search filters
+      if (activeFilters.length > 0) {
+        activeFilters.forEach(filter => {
+          if (filter.field === 'status' && filter.value) {
+            results = results.filter(order => order.status === filter.value);
+          }
+          
+          if (filter.field === 'eventName' && filter.value) {
+            results = results.filter(order => order.eventName === filter.value);
+          }
+          
+          if (filter.field === 'ticketType' && Array.isArray(filter.value) && filter.value.length > 0) {
+            results = results.filter(order => filter.value.includes(order.ticketType));
+          }
+          
+          if (filter.field === 'isOffline' && filter.value) {
+            const isOffline = filter.value === 'true';
+            results = results.filter(order => order.isOffline === isOffline);
+          }
+        });
+      }
+      
+      // Apply dropdown filters
+      if (Object.keys(selectedFilters).length > 0) {
+        // Status filter
+        if (selectedFilters.status) {
+          results = results.filter(order => order.status === selectedFilters.status);
+        }
+        
+        // Source filter
+        if (selectedFilters.source) {
+          if (selectedFilters.source === 'online') {
+            results = results.filter(order => !order.isOffline);
+          } else if (selectedFilters.source === 'offline') {
+            results = results.filter(order => order.isOffline);
+          }
+        }
+        
+        // Time period filter
+        if (selectedFilters.period) {
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          
+          switch (selectedFilters.period) {
+            case 'today':
+              results = results.filter(order => {
+                const orderDate = new Date(order.date);
+                return orderDate >= today;
+              });
+              break;
+            case 'yesterday':
+              const yesterday = new Date(today);
+              yesterday.setDate(yesterday.getDate() - 1);
+              results = results.filter(order => {
+                const orderDate = new Date(order.date);
+                return orderDate >= yesterday && orderDate < today;
+              });
+              break;
+            case 'last7days':
+              const last7Days = new Date(today);
+              last7Days.setDate(last7Days.getDate() - 7);
+              results = results.filter(order => {
+                const orderDate = new Date(order.date);
+                return orderDate >= last7Days;
+              });
+              break;
+            case 'last30days':
+              const last30Days = new Date(today);
+              last30Days.setDate(last30Days.getDate() - 30);
+              results = results.filter(order => {
+                const orderDate = new Date(order.date);
+                return orderDate >= last30Days;
+              });
+              break;
+            case 'last90days':
+              const last90Days = new Date(today);
+              last90Days.setDate(last90Days.getDate() - 90);
+              results = results.filter(order => {
+                const orderDate = new Date(order.date);
+                return orderDate >= last90Days;
+              });
+              break;
+          }
+        }
+      }
+      
+      setFilteredOrders(results);
+      setIsLoading(false);
+    }, 500);
     
-    setCurrentPage(1);
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeFilters, selectedFilters, allOrders]);
+  
+  // Effect to update displayed orders based on pagination
+  useEffect(() => {
+    const startIdx = (currentPage - 1) * pageSize;
+    const endIdx = startIdx + pageSize;
+    setDisplayedOrders(filteredOrders.slice(startIdx, endIdx));
+  }, [filteredOrders, currentPage, pageSize]);
+  
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  const handleSearch = (query: string, filters: Filter[]) => {
+  
+  // Handle search
+  const handleSearch = (query: string, filters: FilterType[]) => {
     setSearchQuery(query);
     setActiveFilters(filters);
     setCurrentPage(1);
   };
-
-  const handleOpenDetailsModal = (order: Order) => {
-    setSelectedOrder(order);
-    setDetailsModalOpen(true);
+  
+  // Handle filter change
+  const handleFilterChange = (newFilters: Record<string, string | string[]>) => {
+    setSelectedFilters(newFilters);
+    setCurrentPage(1);
   };
-
-  const handleSubmitDetails = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+  
+  // Handle view order 
+  const handleViewOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setIsViewModalOpen(true);
+  };
+  
+  // Handle add note
+  const handleAddNote = (order: Order) => {
+    setSelectedOrder(order);
+    setIsAddNoteModalOpen(true);
+  };
+  
+  // Handle resend confirmation
+  const handleResendConfirmation = (order: Order) => {
     toast({
-      title: "Order updated",
-      description: `Order ${selectedOrder?.id} has been updated successfully`,
+      title: "Confirmation Resent",
+      description: `Confirmation email sent to ${order.email}`,
     });
   };
-
-  const orderDetailFields: FormField[] = [
-    {
-      id: 'status',
-      label: 'Status',
-      type: 'select',
-      options: [
-        { value: 'pending', label: 'Pending' },
-        { value: 'processing', label: 'Processing' },
-        { value: 'shipped', label: 'Shipped' },
-        { value: 'delivered', label: 'Delivered' },
-        { value: 'cancelled', label: 'Cancelled' },
-        { value: 'refunded', label: 'Refunded' },
-      ],
-      defaultValue: selectedOrder?.status || 'pending',
-    },
-    {
-      id: 'trackingNumber',
-      label: 'Tracking Number',
-      type: 'text',
-      placeholder: 'Enter tracking number',
-      defaultValue: selectedOrder?.trackingNumber || '',
-    },
-    {
-      id: 'shippingAddress',
-      label: 'Shipping Address',
-      type: 'textarea',
-      placeholder: 'Enter shipping address',
-      defaultValue: selectedOrder?.shippingAddress || '',
-    },
-  ];
+  
+  // Handle export orders
+  const handleExportOrders = (data: Record<string, any>) => {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        toast({
+          title: "Orders Exported",
+          description: `Orders exported as ${data.format.toUpperCase()} file with ${data.dateRange} date range.`,
+        });
+        resolve();
+      }, 1500);
+    });
+  };
+  
+  // Handle add note form submission
+  const handleAddNoteSubmit = (data: Record<string, any>) => {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        toast({
+          title: "Note Added",
+          description: `Note added to order #${selectedOrder?.id}`,
+        });
+        resolve();
+      }, 1000);
+    });
+  };
+  
+  const statusBadge = (status: OrderStatus) => {
+    const statusMap: Record<OrderStatus, { status: Status, label: string }> = {
+      completed: { status: 'success', label: 'Completed' },
+      pending: { status: 'pending', label: 'Pending' },
+      cancelled: { status: 'error', label: 'Cancelled' },
+      refunded: { status: 'warning', label: 'Refunded' }
+    };
+    
+    return (
+      <StatusBadge 
+        status={statusMap[status].status}
+        label={statusMap[status].label}
+      />
+    );
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <h1 className="text-2xl font-bold">Orders</h1>
-          <p className="text-muted-foreground">Track and manage customer orders</p>
-        </div>
+          <p className="text-muted-foreground mt-1">Manage all your ticket orders</p>
+        </motion.div>
+        
         <div className="flex flex-wrap gap-2">
-          <Select defaultValue={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[160px]">
-              <Calendar className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Select range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="yesterday">Yesterday</SelectItem>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="year">This year</SelectItem>
-            </SelectContent>
-          </Select>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => toast({ title: "Exporting PDF" })}>
-                <FileText className="mr-2 h-4 w-4" /> Export as PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast({ title: "Exporting CSV" })}>
-                <FileText className="mr-2 h-4 w-4" /> Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast({ title: "Exporting Excel" })}>
-                <FileText className="mr-2 h-4 w-4" /> Export as Excel
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => toast({ title: "Print initiated" })}>
-                <Printer className="mr-2 h-4 w-4" /> Print Orders Report
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => setIsExportModalOpen(true)}
+            >
+              <Download className="h-4 w-4" />
+              <span>Export Orders</span>
+            </Button>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              <span>Add Manual Order</span>
+            </Button>
+          </motion.div>
         </div>
       </div>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>Recent Orders</CardTitle>
-          <CardDescription>
-            Showing {filteredOrders.length} orders for the selected period
-          </CardDescription>
+          <CardTitle>Order Management</CardTitle>
+          <CardDescription>View and manage all your ticket orders</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div className="flex-grow w-full md:w-auto">
-              <AdvancedSearch 
-                onSearch={handleSearch} 
-                placeholder="Search orders..." 
-                fields={[
-                  { name: 'id', label: 'Order ID' },
-                  { name: 'customer.name', label: 'Customer Name' },
-                  { name: 'event.name', label: 'Event Name' },
-                ]}
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4">
+              <AdvancedSearch
+                placeholder="Search by order ID, customer name, or email..."
+                filters={searchFilters}
+                onSearch={handleSearch}
+                statusOptions={statusOptions}
+                showFilterButton={true}
               />
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {filterOptions.map((filterGroup) => (
-                <FilterDropdown 
-                  key={filterGroup.name}
-                  triggerText={filterGroup.name}
-                  icon={<FilterIcon className="h-4 w-4" />}
-                >
-                  {filterGroup.options.map((option) => {
-                    const field = filterGroup.name === 'Status' ? 'status' : 'paymentMethod';
-                    const isActive = activeFilters.some(f => f.field === field && f.value === option);
-                    
-                    return (
-                      <div key={option} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`filter-${filterGroup.name}-${option}`}
-                          checked={isActive}
-                          onChange={(e) => handleFilterChange(filterGroup.name, option, e.target.checked)}
-                          className="rounded text-primary focus:ring-primary"
-                        />
-                        <Label 
-                          htmlFor={`filter-${filterGroup.name}-${option}`}
-                          className="text-sm cursor-pointer"
-                        >
-                          {option}
-                        </Label>
-                      </div>
-                    );
-                  })}
-                </FilterDropdown>
-              ))}
               
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => {
-                  setActiveFilters([]);
-                  setSearchQuery('');
-                }}
-                disabled={activeFilters.length === 0 && searchQuery === ''}
-                title="Clear filters"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <FilterDropdown
+                  groups={filterGroups}
+                  onFilterChange={handleFilterChange}
+                  triggerClassName="text-sm"
+                />
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2 text-sm"
+                  onClick={() => {
+                    toast({
+                      title: "Today's Orders",
+                      description: "Showing orders placed today"
+                    });
+                    handleFilterChange({ period: 'today' });
+                  }}
+                >
+                  <Calendar className="h-4 w-4" />
+                  Today
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2 text-sm"
+                  onClick={() => {
+                    toast({
+                      title: "Pending Orders",
+                      description: "Showing pending orders"
+                    });
+                    handleFilterChange({ status: 'pending' });
+                  }}
+                >
+                  <Badge className="h-2 w-2 rounded-full bg-amber-500" />
+                  Pending
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2 text-sm"
+                  onClick={() => {
+                    toast({
+                      title: "All Orders",
+                      description: "Showing all orders"
+                    });
+                    handleFilterChange({});
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Event</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Payment Method</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedOrders.length === 0 ? (
+            
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                      No orders found. Try a different search or filter.
-                    </TableCell>
+                    <TableHead className="w-[100px]">Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Event</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Tickets</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  paginatedOrders.map((order) => (
-                    <TableRow key={order.id} className="table-row-hover">
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{order.customer.name}</TableCell>
-                      <TableCell>{order.event.name}</TableCell>
-                      <TableCell>₹{order.totalAmount.toLocaleString()}</TableCell>
-                      <TableCell>{order.paymentMethod}</TableCell>
-                      <TableCell>{getStatusBadge(order.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenDetailsModal(order)}>
-                          View Details
-                        </Button>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    Array(5).fill(0).map((_, idx) => (
+                      <TableRow key={`skeleton-${idx}`}>
+                        <TableCell colSpan={10} className="h-16">
+                          <div className="w-full h-full bg-gray-100 animate-pulse rounded"></div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : displayedOrders.length > 0 ? (
+                    displayedOrders.map((order) => (
+                      <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
+                        <TableCell className="font-medium">#{order.id}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{order.customer}</div>
+                            <div className="text-sm text-muted-foreground">{order.email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{order.eventName}</TableCell>
+                        <TableCell>{order.date}</TableCell>
+                        <TableCell>{order.ticketType}</TableCell>
+                        <TableCell>{order.tickets}</TableCell>
+                        <TableCell>₹{order.amount.toLocaleString()}</TableCell>
+                        <TableCell>{statusBadge(order.status)}</TableCell>
+                        <TableCell>
+                          <Badge variant={order.isOffline ? "outline" : "default"} className="text-xs">
+                            {order.isOffline ? 'Offline' : 'Online'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewOrder(order);
+                              }}
+                            >
+                              <span className="sr-only">View order</span>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {order.status !== 'cancelled' && order.status !== 'refunded' && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 w-8 p-0" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleResendConfirmation(order);
+                                }}
+                              >
+                                <span className="sr-only">Resend confirmation</span>
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddNote(order);
+                              }}
+                            >
+                              <span className="sr-only">Add note</span>
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toast({
+                                  title: "More Options",
+                                  description: `Showing options for order #${order.id}`,
+                                });
+                              }}
+                            >
+                              <span className="sr-only">More options</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-6 text-muted-foreground">
+                        No orders found. Try adjusting your filters.
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          
-          <div className="mt-4">
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            
             <DataPagination
-              currentPage={currentPage}
               totalItems={filteredOrders.length}
-              pageSize={itemsPerPage}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setItemsPerPage}
-              showingText="orders"
+              currentPage={currentPage}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={setPageSize}
+              showPageSizeSelector={true}
             />
           </div>
         </CardContent>
       </Card>
-
+      
+      {/* Order Details Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className="max-w-3xl">
+          {selectedOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Order Details #{selectedOrder.id}</DialogTitle>
+                <DialogDescription>
+                  Complete information about this order
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Customer Information</h3>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Name:</span>
+                            <span className="font-medium">{selectedOrder.customer}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Email:</span>
+                            <span>{selectedOrder.email}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Order Date:</span>
+                            <span>{selectedOrder.date}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Source:</span>
+                            <Badge variant={selectedOrder.isOffline ? "outline" : "default"}>
+                              {selectedOrder.isOffline ? 'Offline' : 'Online'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Order Status</h3>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Current Status:</span>
+                            {statusBadge(selectedOrder.status)}
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">Update Status</h4>
+                            <div className="flex gap-2 flex-wrap">
+                              <Button
+                                size="sm"
+                                variant={selectedOrder.status === 'completed' ? 'default' : 'outline'}
+                                className="text-xs h-8"
+                                onClick={() => {
+                                  toast({
+                                    title: "Status Updated",
+                                    description: `Order #${selectedOrder.id} status changed to Completed`,
+                                  });
+                                }}
+                              >
+                                Completed
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={selectedOrder.status === 'pending' ? 'default' : 'outline'}
+                                className="text-xs h-8"
+                                onClick={() => {
+                                  toast({
+                                    title: "Status Updated",
+                                    description: `Order #${selectedOrder.id} status changed to Pending`,
+                                  });
+                                }}
+                              >
+                                Pending
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={selectedOrder.status === 'cancelled' ? 'default' : 'outline'}
+                                className="text-xs h-8"
+                                onClick={() => {
+                                  toast({
+                                    title: "Status Updated",
+                                    description: `Order #${selectedOrder.id} status changed to Cancelled`,
+                                  });
+                                }}
+                              >
+                                Cancelled
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={selectedOrder.status === 'refunded' ? 'default' : 'outline'}
+                                className="text-xs h-8"
+                                onClick={() => {
+                                  toast({
+                                    title: "Status Updated",
+                                    description: `Order #${selectedOrder.id} status changed to Refunded`,
+                                  });
+                                }}
+                              >
+                                Refunded
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Event & Ticket Details</h3>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Event:</span>
+                            <span className="font-medium">{selectedOrder.eventName}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Ticket Type:</span>
+                            <span>{selectedOrder.ticketType}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Quantity:</span>
+                            <span>{selectedOrder.tickets}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Price per Ticket:</span>
+                            <span>₹{(selectedOrder.amount / selectedOrder.tickets).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Payment Details</h3>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Subtotal:</span>
+                            <span>₹{selectedOrder.amount.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Tax (18%):</span>
+                            <span>₹{(selectedOrder.amount * 0.18).toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between font-medium">
+                            <span>Total Amount:</span>
+                            <span>₹{(selectedOrder.amount * 1.18).toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Payment Method:</span>
+                            <span>{selectedOrder.isOffline ? 'Cash/POS' : 'Credit Card'}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 mt-4">
+                <Button 
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={() => {
+                    toast({
+                      title: "Invoice Downloaded",
+                      description: `Invoice for order #${selectedOrder.id} downloaded successfully`,
+                    });
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                  Download Invoice
+                </Button>
+                <Button
+                  className="flex items-center gap-2"
+                  onClick={() => {
+                    toast({
+                      title: "Email Sent",
+                      description: `Confirmation email sent to ${selectedOrder.email}`,
+                    });
+                  }}
+                >
+                  <Mail className="h-4 w-4" />
+                  Resend Email
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Note Modal */}
       <CustomModalForm
-        title="Order Details"
-        description="View complete order information"
-        fields={orderDetailFields}
-        onSubmit={handleSubmitDetails}
-        submitText="Update Order"
-        cancelText="Close"
-        isOpen={detailsModalOpen}
-        onOpenChange={setDetailsModalOpen}
+        title={`Add Note to Order #${selectedOrder?.id}`}
+        description="Add a note to track important information about this order"
+        fields={addNoteFields}
+        onSubmit={handleAddNoteSubmit}
+        submitText="Add Note"
+        cancelText="Cancel"
+        open={isAddNoteModalOpen}
+        onOpenChange={setIsAddNoteModalOpen}
         width="md"
-      >
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Customer Information</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedOrder?.customer.name}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedOrder?.customer.email}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedOrder?.customer.phone}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedOrder?.customer.address}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold">Event Information</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedOrder?.event.name}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Map className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedOrder?.event.venue}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  <span>{new Date(selectedOrder?.event.date || '').toLocaleDateString()}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold">Order Items</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item Name</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Price</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {selectedOrder?.items.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>₹{item.price.toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Shipping Information</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Truck className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedOrder?.shippingAddress}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <PackageCheck className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedOrder?.trackingNumber}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold">Payment Information</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span>Total Amount: ₹{selectedOrder?.totalAmount.toLocaleString()}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Receipt className="h-4 w-4 text-muted-foreground" />
-                  <span>Payment Method: {selectedOrder?.paymentMethod}</span>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CustomModalForm>
+      />
+      
+      {/* Export Orders Modal */}
+      <CustomModalForm
+        title="Export Orders"
+        description="Choose the format and filters for your order export"
+        fields={exportFields}
+        onSubmit={handleExportOrders}
+        submitText="Export"
+        cancelText="Cancel"
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        width="md"
+      />
     </div>
   );
 };

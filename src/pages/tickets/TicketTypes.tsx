@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Ticket,
@@ -85,6 +86,7 @@ const TicketTypes = () => {
   const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Sample ticket types data
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
     {
       id: '1',
@@ -244,6 +246,7 @@ const TicketTypes = () => {
     }
   ]);
 
+  // Filter tickets based on search query and filter status
   const filteredTickets = ticketTypes.filter(ticket => {
     const matchesSearch = 
       ticket.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -254,6 +257,7 @@ const TicketTypes = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Sort tickets
   const sortedTickets = [...filteredTickets].sort((a, b) => {
     const fieldA = a[sortField];
     const fieldB = b[sortField];
@@ -269,32 +273,38 @@ const TicketTypes = () => {
     return 0;
   });
 
+  // Paginate tickets
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentTickets = sortedTickets.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(sortedTickets.length / itemsPerPage);
 
+  // Toggle sort direction
   const toggleSort = (field: keyof TicketType) => {
     const newDirection = field === sortField && sortDirection === 'asc' ? 'desc' : 'asc';
     setSortField(field);
     setSortDirection(newDirection);
   };
 
+  // Handle edit ticket
   const handleEditTicket = (ticket: TicketType) => {
     setSelectedTicket(ticket);
     setEditModalOpen(true);
   };
 
+  // Handle delete ticket
   const handleDeleteTicket = (ticket: TicketType) => {
     setSelectedTicket(ticket);
     setDeleteModalOpen(true);
   };
 
+  // Save edited ticket
   const saveTicket = () => {
     if (!selectedTicket) return;
     
     setIsLoading(true);
     
+    // Simulate API call
     setTimeout(() => {
       setTicketTypes(prev => 
         prev.map(ticket => 
@@ -312,11 +322,13 @@ const TicketTypes = () => {
     }, 1000);
   };
 
+  // Confirm delete ticket
   const confirmDeleteTicket = () => {
     if (!selectedTicket) return;
     
     setIsLoading(true);
     
+    // Simulate API call
     setTimeout(() => {
       setTicketTypes(prev => prev.filter(ticket => ticket.id !== selectedTicket.id));
       setDeleteModalOpen(false);
@@ -329,6 +341,7 @@ const TicketTypes = () => {
     }, 1000);
   };
 
+  // Handle status badge styling
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -344,6 +357,7 @@ const TicketTypes = () => {
     }
   };
 
+  // Handle duplicate ticket
   const handleDuplicateTicket = (ticket: TicketType) => {
     const duplicatedTicket: TicketType = {
       ...ticket,
@@ -359,6 +373,7 @@ const TicketTypes = () => {
     });
   };
 
+  // Add new ticket
   const handleAddTicket = () => {
     const newTicket: TicketType = {
       id: `new-${Date.now()}`,
@@ -522,16 +537,18 @@ const TicketTypes = () => {
           <div className="mt-4">
             <DataPagination
               currentPage={currentPage}
-              totalItems={filteredTickets.length}
-              pageSize={itemsPerPage}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              onPageSizeChange={setItemsPerPage}
+              totalItems={sortedTickets.length}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={setItemsPerPage}
               showingText="tickets"
             />
           </div>
         </CardContent>
       </Card>
 
+      {/* Edit Ticket Modal */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -692,6 +709,7 @@ const TicketTypes = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Modal */}
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

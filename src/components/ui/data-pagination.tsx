@@ -1,192 +1,154 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import { Button } from './button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export interface DataPaginationProps {
-  currentPage: number;
+interface DataPaginationProps {
   totalItems: number;
+  currentPage: number;
   pageSize: number;
   onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-  showingText?: string;
+  onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: number[];
+  showPageSizeSelector?: boolean;
+  className?: string;
 }
 
-export function DataPagination({
-  currentPage,
+export const DataPagination: React.FC<DataPaginationProps> = ({
   totalItems,
+  currentPage,
   pageSize,
   onPageChange,
   onPageSizeChange,
-  showingText = 'items',
-  pageSizeOptions = [5, 10, 20, 50, 100],
-}: DataPaginationProps) {
+  pageSizeOptions = [10, 25, 50, 100],
+  showPageSizeSelector = true,
+  className = ''
+}) => {
   const totalPages = Math.ceil(totalItems / pageSize);
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const startItem = (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
-  const handlePageChange = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      onPageChange(page);
-    }
-  };
-
-  const renderPageButtons = () => {
-    const buttons = [];
-    const maxVisiblePages = 5;
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
     
-    // Always show first page
-    buttons.push(
-      <PageButton
-        key={1}
-        page={1}
-        isActive={currentPage === 1}
-        onClick={() => handlePageChange(1)}
-      />
-    );
-
-    // Calculate range of visible page buttons
-    let startPage = Math.max(2, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 3);
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total pages are less than or equal to maxPagesToShow
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always include first and last page
+      pages.push(1);
+      
+      // Add middle pages
+      const startPage = Math.max(2, currentPage - 1);
+      const endPage = Math.min(totalPages - 1, currentPage + 1);
+      
+      // Add ellipsis after first page if needed
+      if (startPage > 2) {
+        pages.push(-1); // -1 represents ellipsis
+      }
+      
+      // Add middle page numbers
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      
+      // Add ellipsis before last page if needed
+      if (endPage < totalPages - 1) {
+        pages.push(-2); // -2 represents ellipsis
+      }
+      
+      // Add last page
+      pages.push(totalPages);
+    }
     
-    if (endPage - startPage < maxVisiblePages - 3) {
-      startPage = Math.max(2, endPage - (maxVisiblePages - 3) + 1);
-    }
-
-    // Add ellipsis if needed before visible pages
-    if (startPage > 2) {
-      buttons.push(<div key="ellipsis-1" className="px-2">...</div>);
-    }
-
-    // Add visible page buttons
-    for (let i = startPage; i <= endPage; i++) {
-      buttons.push(
-        <PageButton
-          key={i}
-          page={i}
-          isActive={currentPage === i}
-          onClick={() => handlePageChange(i)}
-        />
-      );
-    }
-
-    // Add ellipsis if needed after visible pages
-    if (endPage < totalPages - 1) {
-      buttons.push(<div key="ellipsis-2" className="px-2">...</div>);
-    }
-
-    // Always show last page if there is more than one page
-    if (totalPages > 1) {
-      buttons.push(
-        <PageButton
-          key={totalPages}
-          page={totalPages}
-          isActive={currentPage === totalPages}
-          onClick={() => handlePageChange(totalPages)}
-        />
-      );
-    }
-
-    return buttons;
+    return pages;
   };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${className}`}>
       <div className="text-sm text-muted-foreground">
-        Showing <strong>{startItem}</strong> to <strong>{endItem}</strong> of{' '}
-        <strong>{totalItems}</strong> {showingText}
+        Showing <span className="font-medium">{totalItems === 0 ? 0 : startItem}</span> to{' '}
+        <span className="font-medium">{endItem}</span> of{' '}
+        <span className="font-medium">{totalItems}</span> results
       </div>
       
-      <div className="flex items-center gap-2">
-        <div className="flex items-center">
-          <Select
-            value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(parseInt(value))}
-          >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={pageSize} />
-            </SelectTrigger>
-            <SelectContent>
-              {pageSizeOptions.map((size) => (
-                <SelectItem key={size} value={size.toString()}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-sm ml-2">per page</span>
-        </div>
-        
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={() => handlePageChange(1)}
-            disabled={currentPage === 1}
-            aria-label="First Page"
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            aria-label="Previous Page"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <div className="flex items-center">
-            {renderPageButtons()}
+      <div className="flex items-center gap-4">
+        {showPageSizeSelector && onPageSizeChange && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Show</span>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => onPageSizeChange(Number(value))}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue placeholder={pageSize} />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizeOptions.map((size) => (
+                  <SelectItem key={size} value={size.toString()}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground">per page</span>
           </div>
-          
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            aria-label="Next Page"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={() => handlePageChange(totalPages)}
-            disabled={currentPage === totalPages}
-            aria-label="Last Page"
-          >
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </div>
+        )}
+        
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
+              />
+            </PaginationItem>
+            
+            {getPageNumbers().map((pageNum, idx) => {
+              // If pageNum is negative, it represents an ellipsis
+              if (pageNum < 0) {
+                return (
+                  <PaginationItem key={`ellipsis-${idx}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                );
+              }
+              
+              return (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    isActive={pageNum === currentPage}
+                    onClick={() => onPageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+            
+            <PaginationItem>
+              <PaginationNext
+                className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
     </div>
   );
-}
-
-interface PageButtonProps {
-  page: number;
-  isActive: boolean;
-  onClick: () => void;
-}
-
-function PageButton({ page, isActive, onClick }: PageButtonProps) {
-  return (
-    <Button
-      variant={isActive ? "default" : "outline"}
-      size="icon"
-      className="h-8 w-8"
-      onClick={onClick}
-      aria-current={isActive ? "page" : undefined}
-    >
-      {page}
-    </Button>
-  );
-}
+};
