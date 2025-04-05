@@ -15,7 +15,7 @@ import {
   Calendar, 
   ChevronDown, 
   Download, 
-  Filter, 
+  FilterIcon, 
   TrendingUp, 
   TrendingDown, 
   Printer,
@@ -31,7 +31,7 @@ import {
 import { motion } from 'framer-motion';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { DataPagination } from '@/components/ui/data-pagination';
-import { AdvancedSearch, Filter } from '@/components/ui/advanced-search';
+import { AdvancedSearch, Filter as SearchFilter } from '@/components/ui/advanced-search';
 import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
@@ -445,7 +445,7 @@ const Sales = () => {
   };
   
   // Handle search
-  const handleSearch = (query: string, filters: Filter[]) => {
+  const handleSearch = (query: string, filters: SearchFilter[]) => {
     setSearchQuery(query);
     setActiveFilters(filters);
     setCurrentPage(1);
