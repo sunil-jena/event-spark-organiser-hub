@@ -269,7 +269,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
         <div className="flex items-center space-x-2">
           {
             minimized &&
-            <div className="w-7 h-8 p-1">
+            <div className="w-7 h-8 p-1 mx-auto">
               <img src="/logo/logo1.png" alt="" />
             </div>
           }

@@ -88,9 +88,9 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       "transition-colors duration-200",
       isActive ? activeClass : hoverClass,
       disabled && "pointer-events-none opacity-60",
-      sidebarMinimized && "justify-center"
+      sidebarMinimized && "justify-center px-2"
     )}>
-      {icon}
+      {icon && <span className={sidebarMinimized ? "mx-auto" : ""}>{icon}</span>}
       {!sidebarMinimized && (
         <>
           <span className="truncate">{title}</span>
@@ -121,11 +121,11 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
               rel={external ? "noreferrer" : undefined}
               onClick={handleClick}
               className={({ isActive }) => cn(
-                "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
+                "flex items-center gap-2 px-2 py-2 rounded-md text-sm",
                 "transition-colors duration-200",
                 isActive ? activeClass : hoverClass,
                 disabled && "pointer-events-none opacity-60",
-                sidebarMinimized && "justify-center"
+                "justify-center"
               )}
             >
               {icon}

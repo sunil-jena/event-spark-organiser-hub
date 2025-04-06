@@ -90,6 +90,12 @@ const OrdersContent = () => {
     }
   };
 
+  // Handle page navigation
+  const handlePageClick = (pageNum: number, e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setCurrentPage(pageNum);
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Orders Statistics */}
@@ -197,10 +203,7 @@ const OrdersContent = () => {
                         <PaginationLink
                           href="#"
                           isActive={currentPage === pageNum}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage(pageNum);
-                          }}
+                          onClick={(e) => handlePageClick(pageNum, e)}
                         >
                           {pageNum}
                         </PaginationLink>
@@ -219,10 +222,7 @@ const OrdersContent = () => {
                       <PaginationLink
                         href="#"
                         isActive={currentPage === totalPages}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(totalPages);
-                        }}
+                        onClick={(e) => handlePageClick(totalPages, e)}
                       >
                         {totalPages}
                       </PaginationLink>
