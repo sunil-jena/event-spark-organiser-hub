@@ -42,36 +42,36 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
 }) => {
   const location = useLocation();
   const { sidebarMinimized, activeRoute, setActiveRoute, hasPermission } = useAppContext();
-  
+
   // Check if user has permission to view this item
   const canView = !moduleName || hasPermission(moduleName, 'view');
-  
+
   // If user doesn't have permission, don't render the item
   if (!canView) return null;
-  
+
   const hasChildren = children && children.length > 0;
-  
+
   // Check if this item or any of its children are active
   const isItemActive = href ? location.pathname === href || location.pathname.startsWith(`${href}/`) : false;
   const isChildActive = hasChildren && children?.some(
     child => (child.href && (location.pathname === child.href || location.pathname.startsWith(`${child.href}/`)))
   );
-  
+
   // Combine active states
   const isActive = isItemActive || isChildActive;
-  
+
   // Handle click events including updating active route
   const handleClick = () => {
     if (disabled) return;
-    
+
     if (hasChildren && onToggleExpand) {
       onToggleExpand();
     }
-    
+
     if (href) {
       setActiveRoute(href);
     }
-    
+
     if (onClick) {
       onClick();
     }
@@ -80,7 +80,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   // Classes for active and hover states
   const activeClass = "bg-white/20 font-medium";
   const hoverClass = "hover:bg-white/10";
-  
+
   // The content of the item
   const itemContent = (
     <div className={cn(
@@ -108,15 +108,15 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       )}
     </div>
   );
-  
+
   // Wrap with tooltip if sidebar is minimized
   const wrappedContent = sidebarMinimized ? (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
           {href ? (
-            <NavLink 
-              to={href} 
+            <NavLink
+              to={href}
               target={external ? "_blank" : undefined}
               rel={external ? "noreferrer" : undefined}
               onClick={handleClick}
@@ -131,7 +131,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
               {icon}
             </NavLink>
           ) : (
-            <button 
+            <button
               onClick={handleClick}
               disabled={disabled}
               className="w-full"
@@ -152,8 +152,8 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
     </TooltipProvider>
   ) : (
     href ? (
-      <NavLink 
-        to={href} 
+      <NavLink
+        to={href}
         target={external ? "_blank" : undefined}
         rel={external ? "noreferrer" : undefined}
         onClick={handleClick}
@@ -173,7 +173,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
         )}
       </NavLink>
     ) : (
-      <button 
+      <button
         onClick={handleClick}
         disabled={disabled}
         className="w-full"
@@ -182,6 +182,6 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       </button>
     )
   );
-  
+
   return wrappedContent;
 };

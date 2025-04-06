@@ -18,16 +18,16 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
   className = ""
 }) => {
   const { hasPermission, sidebarMinimized } = useAppContext();
-  
+
   // Filter items based on permissions
-  const filteredMainItems = mainItems.filter(item => 
+  const filteredMainItems = mainItems.filter(item =>
     !item.moduleName || hasPermission(item.moduleName, 'view')
   );
-  
-  const filteredSupportItems = supportItems.filter(item => 
+
+  const filteredSupportItems = supportItems.filter(item =>
     !item.moduleName || hasPermission(item.moduleName, 'view')
   );
-  
+
   return (
     <ScrollArea className="flex-1 h-full pr-2" type="auto" scrollHideDelay={400}>
       <div className={cn("space-y-6", className)}>
@@ -37,7 +37,7 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
           )}
           <SidebarList items={filteredMainItems} />
         </div>
-        
+
         <div>
           {!sidebarMinimized && (
             <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Support</h2>
