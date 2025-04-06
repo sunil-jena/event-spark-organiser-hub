@@ -1,0 +1,34 @@
+
+import React from 'react';
+import { cn } from '@/lib/utils';
+import { SidebarList } from './SidebarList';
+import { SidebarItemProps } from './SidebarItem';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+interface SidebarMenuProps {
+  mainItems: SidebarItemProps[];
+  supportItems: SidebarItemProps[];
+  className?: string;
+}
+
+export const SidebarMenu: React.FC<SidebarMenuProps> = ({
+  mainItems,
+  supportItems,
+  className = ""
+}) => {
+  return (
+    <ScrollArea className="flex-1 py-4 overflow-hidden">
+      <div className={cn("space-y-6", className)}>
+        <div>
+          <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Main</h2>
+          <SidebarList items={mainItems} />
+        </div>
+        
+        <div>
+          <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Support</h2>
+          <SidebarList items={supportItems} />
+        </div>
+      </div>
+    </ScrollArea>
+  );
+};

@@ -1,25 +1,51 @@
 
-import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useAppContext } from '@/contexts/AppContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { motion } from 'framer-motion';
+import { ChevronUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Layout = () => {
   const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [minimized, setMinimized] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const location = useLocation();
+  const { 
+    sidebarMinimized, 
+    toggleSidebar, 
+    scrollToTop, 
+    setActiveRoute 
+  } = useAppContext();
+  
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [searchOpen, setSearchOpen] = React.useState(false);
+  const [notificationsOpen, setNotificationsOpen] = React.useState(false);
+  const [datePickerOpen, setDatePickerOpen] = React.useState(false);
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
 
-  const toggleSidebar = () => {
+  // Update active route on location change
+  useEffect(() => {
+    setActiveRoute(location.pathname);
+  }, [location.pathname, setActiveRoute]);
+
+  // Add scroll to top functionality
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const toggleSidebarOpen = () => {
     setSidebarOpen(!sidebarOpen);
-  };
-
-  const toggleMinimize = () => {
-    setMinimized(!minimized);
   };
 
   const toggleSearch = () => {
@@ -68,7 +94,7 @@ const Layout = () => {
 
   // Calculate main content width based on sidebar state
   const mainContentStyle = {
-    width: isMobile ? '100%' : minimized ? 'calc(100% - 80px)' : 'calc(100% - 280px)',
+    width: isMobile ? '100%' : sidebarMinimized ? 'calc(100% - 80px)' : 'calc(100% - 280px)',
     transition: 'margin-left 0.3s ease, width 0.3s ease',
   };
 
@@ -78,8 +104,8 @@ const Layout = () => {
         isMobile={isMobile}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        minimized={minimized}
-        toggleMinimize={toggleMinimize}
+        minimized={sidebarMinimized}
+        toggleMinimize={toggleSidebar}
       />
 
       <div
@@ -87,9 +113,9 @@ const Layout = () => {
         style={!isMobile ? mainContentStyle : undefined}
       >
         <Header
-          onMenuClick={toggleSidebar}
-          minimized={minimized}
-          toggleMinimize={toggleMinimize}
+          onMenuClick={toggleSidebarOpen}
+          minimized={sidebarMinimized}
+          toggleMinimize={toggleSidebar}
           toggleSearch={toggleSearch}
           toggleNotifications={toggleNotifications}
           toggleDatePicker={toggleDatePicker}
@@ -105,6 +131,27 @@ const Layout = () => {
           transition={{ duration: 0.3 }}
         >
           <Outlet />
+          
+          {/* Scroll to top button */}
+          <AnimatePresence>
+            {showScrollTop && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="fixed bottom-8 right-8 z-50"
+              >
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full shadow-md"
+                  onClick={scrollToTop}
+                >
+                  <ChevronUp className="h-5 w-5" />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.main>
       </div>
     </div>

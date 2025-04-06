@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Calendar,
@@ -8,16 +8,12 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  ChevronRight,
-  ChevronLeft,
   Ticket,
   ShoppingCart,
   CreditCard,
   BarChart,
-  BarChart2,
   FileText,
   HelpCircle,
-  Star,
   MessageSquare,
   Music,
   Mic,
@@ -29,9 +25,11 @@ import {
   Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { NestedNavigation, NavItem } from './NestedNavigation';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { SidebarItemProps } from '@/components/sidebar/SidebarItem';
+import { SidebarMenu } from '@/components/sidebar/SidebarMenu';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface SidebarProps {
   isMobile: boolean;
@@ -41,7 +39,8 @@ interface SidebarProps {
   toggleMinimize: () => void;
 }
 
-const mainNavItems: NavItem[] = [
+// Define sidebar navigation items
+const mainNavItems: SidebarItemProps[] = [
   {
     title: 'Dashboard',
     href: '/',
@@ -85,7 +84,7 @@ const mainNavItems: NavItem[] = [
           {
             title: 'Dance',
             href: '/events/categories/dance',
-            icon: <Star className="h-4 w-4" />,
+            icon: <Award className="h-4 w-4" />,
           },
           {
             title: 'Comedy Shows',
@@ -191,7 +190,8 @@ const mainNavItems: NavItem[] = [
   }
 ];
 
-const secondaryNavItems: NavItem[] = [
+// Define secondary navigation items
+const secondaryNavItems: SidebarItemProps[] = [
   {
     title: 'Settings',
     href: '/settings',
@@ -223,8 +223,7 @@ const secondaryNavItems: NavItem[] = [
 ];
 
 const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: SidebarProps) => {
-  const location = useLocation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const sidebarClasses = cn(
     'flex flex-col h-screen bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',
@@ -247,28 +246,23 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
             <img src="/logo/sm_logo.png" alt="" />
           </div>}
         </div>
-
       </div>
-      {/* Nav sections */}
-      <div className="flex-1  py-4 px-3 ">
-        <nav className="space-y-6">
-          <div>
-            {!minimized && <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Main</h2>}
-            <NestedNavigation items={mainNavItems} minimized={minimized} className="text-white" />
-          </div>
-
-          <div>
-            {!minimized && <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Support</h2>}
-            <NestedNavigation items={secondaryNavItems} minimized={minimized} className="text-white" />
-          </div>
-        </nav>
+      
+      {/* Scrollable nav sections */}
+      <div className="flex-1 py-4 overflow-hidden">
+        <TooltipProvider delayDuration={200}>
+          <SidebarMenu
+            mainItems={mainNavItems}
+            supportItems={secondaryNavItems}
+          />
+        </TooltipProvider>
       </div>
 
       <div className="p-4 border-t border-primary-light/20">
         <Button
           variant="outline"
           className={cn(
-            "bg-transparent border-white/20 hover:bg-white/10  hover:text-white/90 flex items-center gap-2",
+            "bg-transparent border-white/20 hover:bg-white/10 hover:text-white/90 flex items-center gap-2",
             minimized ? "justify-center w-8 h-8 p-0 mx-auto" : "w-full"
           )}
           onClick={() => navigate('/login')}
@@ -277,6 +271,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
           {!minimized && <span>Logout</span>}
         </Button>
       </div>
+      
       {isMobile && (
         <Button
           onClick={onClose}
