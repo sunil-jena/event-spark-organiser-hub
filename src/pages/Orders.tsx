@@ -77,6 +77,19 @@ const OrdersContent = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Fixed handlers for pagination
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Orders Statistics */}
@@ -166,8 +179,13 @@ const OrdersContent = () => {
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious 
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePrevPage();
+                      }}
+                      aria-disabled={currentPage === 1}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
                   
@@ -177,8 +195,12 @@ const OrdersContent = () => {
                     return (
                       <PaginationItem key={pageNum}>
                         <PaginationLink
+                          href="#"
                           isActive={currentPage === pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(pageNum);
+                          }}
                         >
                           {pageNum}
                         </PaginationLink>
@@ -195,8 +217,12 @@ const OrdersContent = () => {
                   {totalPages > 5 && (
                     <PaginationItem>
                       <PaginationLink
+                        href="#"
                         isActive={currentPage === totalPages}
-                        onClick={() => setCurrentPage(totalPages)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(totalPages);
+                        }}
                       >
                         {totalPages}
                       </PaginationLink>
@@ -205,8 +231,13 @@ const OrdersContent = () => {
                   
                   <PaginationItem>
                     <PaginationNext 
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNextPage();
+                      }}
+                      aria-disabled={currentPage === totalPages}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
                 </PaginationContent>
