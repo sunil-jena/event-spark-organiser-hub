@@ -26,7 +26,9 @@ import {
   Film,
   Award,
   Tag,
-  Clock
+  Clock,
+  CalendarDays,
+  PlusCircleIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NestedNavigation, NavItem } from './NestedNavigation';
@@ -48,67 +50,73 @@ const mainNavItems: NavItem[] = [
     icon: <LayoutDashboard className="h-5 w-5" />,
   },
   {
+    title: 'Ceate Event',
+    href: '/events/create',
+    icon: <PlusCircleIcon className="h-5 w-5" />,
+  },
+  {
     title: 'Events',
-    icon: <Calendar className="h-5 w-5" />,
-    children: [
-      {
-        title: 'All Events',
-        href: '/events',
-      },
-      {
-        title: 'Event Details',
-        href: '/event-details',
-      },
-      {
-        title: 'Create Event',
-        href: '/events/create',
-      },
-      {
-        title: 'Categories',
-        href: '/events/categories',
-        children: [
-          {
-            title: 'Music & Concerts',
-            href: '/events/categories/music',
-            icon: <Music className="h-4 w-4" />,
-          },
-          {
-            title: 'Workshops',
-            href: '/events/categories/workshops',
-            icon: <Briefcase className="h-4 w-4" />,
-          },
-          {
-            title: 'Business',
-            href: '/events/categories/business',
-            icon: <Monitor className="h-4 w-4" />,
-          },
-          {
-            title: 'Dance',
-            href: '/events/categories/dance',
-            icon: <Star className="h-4 w-4" />,
-          },
-          {
-            title: 'Comedy Shows',
-            href: '/events/categories/comedy',
-            icon: <Mic className="h-4 w-4" />,
-          },
-          {
-            title: 'Film Screenings',
-            href: '/events/categories/film',
-            icon: <Film className="h-4 w-4" />,
-          },
-          {
-            title: 'Award Ceremonies',
-            href: '/events/categories/awards',
-            icon: <Award className="h-4 w-4" />,
-          }
-        ]
-      },
-      {
-        title: 'Venues',
-        href: '/events/venues',
-      }
-    ]
+    href: '/events',
+    icon: <CalendarDays className="h-5 w-5" />,
+    // children: [
+    //   {
+    //     title: 'All Events',
+    //     href: '/events',
+    //   },
+    //   {
+    //     title: 'Event Details',
+    //     href: '/event-details',
+    //   },
+    //   {
+    //     title: 'Create Event',
+    //     href: '/events/create',
+    //   },
+    //   {
+    //     title: 'Categories',
+    //     href: '/events/categories',
+    //     children: [
+    //       {
+    //         title: 'Music & Concerts',
+    //         href: '/events/categories/music',
+    //         icon: <Music className="h-4 w-4" />,
+    //       },
+    //       {
+    //         title: 'Workshops',
+    //         href: '/events/categories/workshops',
+    //         icon: <Briefcase className="h-4 w-4" />,
+    //       },
+    //       {
+    //         title: 'Business',
+    //         href: '/events/categories/business',
+    //         icon: <Monitor className="h-4 w-4" />,
+    //       },
+    //       {
+    //         title: 'Dance',
+    //         href: '/events/categories/dance',
+    //         icon: <Star className="h-4 w-4" />,
+    //       },
+    //       {
+    //         title: 'Comedy Shows',
+    //         href: '/events/categories/comedy',
+    //         icon: <Mic className="h-4 w-4" />,
+    //       },
+    //       {
+    //         title: 'Film Screenings',
+    //         href: '/events/categories/film',
+    //         icon: <Film className="h-4 w-4" />,
+    //       },
+    //       {
+    //         title: 'Award Ceremonies',
+    //         href: '/events/categories/awards',
+    //         icon: <Award className="h-4 w-4" />,
+    //       }
+    //     ]
+    //   },
+    //   {
+    //     title: 'Venues',
+    //     href: '/events/venues',
+    //   }
+    // ]
   },
   {
     title: 'Tickets',
@@ -227,7 +235,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
   const navigate = useNavigate()
 
   const sidebarClasses = cn(
-    'flex flex-col h-screen bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',
+    'flex flex-col bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',
     isMobile ? (isOpen ? 'fixed inset-0 z-50' : 'w-0') : minimized ? 'w-16' : 'w-64'
   );
 

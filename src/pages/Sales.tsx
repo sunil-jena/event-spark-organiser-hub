@@ -1,17 +1,17 @@
 
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
 } from '@/components/ui/card';
-import { 
-  Calendar, 
-  ChevronDown, 
-  Download, 
-  FilterIcon, 
+import {
+  Calendar,
+  ChevronDown,
+  Download,
+  FilterIcon,
   Printer,
   FileText,
   ArrowRight,
@@ -57,20 +57,20 @@ import { AdvancedSearch, Filter } from '@/components/ui/advanced-search';
 import { FilterDropdown, FilterGroup, FilterItem } from '@/components/ui/filter-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -123,7 +123,7 @@ interface Sale {
 const Sales: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
-  
+
   // Sample sales data for demonstration
   const salesData: Sale[] = [
     {
@@ -204,7 +204,7 @@ const Sales: React.FC = () => {
       trackingNumber: ""
     }
   ];
-  
+
   const getStatusColor = (status: Sale['status']) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -216,7 +216,7 @@ const Sales: React.FC = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
@@ -236,14 +236,14 @@ const Sales: React.FC = () => {
           </Button>
         </div>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
@@ -261,7 +261,7 @@ const Sales: React.FC = () => {
                 <p className="text-xs text-muted-foreground mt-1">+$3,234.89 from last month</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Order Count</CardTitle>
@@ -277,7 +277,7 @@ const Sales: React.FC = () => {
                 <p className="text-xs text-muted-foreground mt-1">+89 from last month</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
@@ -294,7 +294,7 @@ const Sales: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <Card className="lg:col-span-2">
               <CardHeader>
@@ -309,7 +309,7 @@ const Sales: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Top Selling Events</CardTitle>
@@ -351,7 +351,7 @@ const Sales: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <Card className="lg:col-span-2">
               <CardHeader>
@@ -411,7 +411,7 @@ const Sales: React.FC = () => {
                 </Table>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Payment Methods</CardTitle>
@@ -457,7 +457,7 @@ const Sales: React.FC = () => {
             </Card>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="sales" className="space-y-4 mt-4">
           <Card>
             <CardHeader>
@@ -504,7 +504,7 @@ const Sales: React.FC = () => {
                   <Plus className="mr-2 h-4 w-4" /> New Sale
                 </Button>
               </div>
-              
+
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -574,7 +574,7 @@ const Sales: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
-              
+
               <div className="mt-4 flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
                   Showing <span className="font-medium">1</span> to <span className="font-medium">10</span> of <span className="font-medium">42</span> results
@@ -591,7 +591,7 @@ const Sales: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="reports" className="space-y-4 mt-4">
           <Card>
             <CardHeader>
@@ -616,7 +616,7 @@ const Sales: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Time Period</Label>
                   <Select defaultValue="month">
@@ -634,7 +634,7 @@ const Sales: React.FC = () => {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="space-y-2">
                   <Label>Group By</Label>
@@ -652,7 +652,7 @@ const Sales: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Format</Label>
                   <Select defaultValue="chart">
@@ -667,7 +667,7 @@ const Sales: React.FC = () => {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="flex justify-end mb-6">
                 <Button className="mr-2">
                   <FileText className="mr-2 h-4 w-4" /> Generate Report
@@ -676,7 +676,7 @@ const Sales: React.FC = () => {
                   <Download className="mr-2 h-4 w-4" /> Export
                 </Button>
               </div>
-              
+
               <div className="h-80 flex items-center justify-center bg-muted/20 rounded-md">
                 <div className="text-center">
                   <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />

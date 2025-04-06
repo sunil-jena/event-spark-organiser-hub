@@ -4,10 +4,10 @@ import { StatsCard } from '@/components/ui/stats-card';
 import { SalesChart } from '@/components/ui/sales-chart';
 import { OrderStatistics, OrderStatus } from '@/components/ui/order-statistics';
 import { SalesStatistics } from '@/components/ui/sales-statistics';
-import { 
-  BarChart3, 
-  CalendarDays, 
-  Ticket, 
+import {
+  BarChart3,
+  CalendarDays,
+  Ticket,
   Users,
   Calendar,
   PieChartIcon, // Renamed to avoid conflict with recharts
@@ -110,7 +110,7 @@ const COLORS = ['#24005b', '#7b4ebc', '#9d7ad5', '#c3aae9'];
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
-  
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -134,41 +134,41 @@ const Analytics = () => {
           </Button>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard 
-          title="Total Revenue" 
-          value="$15,250" 
-          icon={<TrendingUp className="h-8 w-8" />} 
+        <StatsCard
+          title="Total Revenue"
+          value="$15,250"
+          icon={<TrendingUp className="h-8 w-8" />}
           trend={{ value: 12.5, isPositive: true }}
         />
-        <StatsCard 
-          title="Tickets Sold" 
-          value="1,520" 
-          icon={<Ticket className="h-8 w-8" />} 
+        <StatsCard
+          title="Tickets Sold"
+          value="1,520"
+          icon={<Ticket className="h-8 w-8" />}
           trend={{ value: 8.2, isPositive: true }}
         />
-        <StatsCard 
-          title="Active Events" 
-          value="5" 
-          icon={<CalendarDays className="h-8 w-8" />} 
+        <StatsCard
+          title="Active Events"
+          value="5"
+          icon={<CalendarDays className="h-8 w-8" />}
         />
-        <StatsCard 
-          title="Total Attendees" 
-          value="1,250" 
-          icon={<Users className="h-8 w-8" />} 
+        <StatsCard
+          title="Total Attendees"
+          value="1,250"
+          icon={<Users className="h-8 w-8" />}
           trend={{ value: 3.1, isPositive: false }}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SalesChart 
-          data={salesData} 
+        <SalesChart
+          data={salesData}
           title="Revenue Overview"
           description="Revenue analysis for the past 6 months"
           className="lg:col-span-2"
         />
-        
+
         <div className="space-y-6">
           <SalesStatistics
             data={[
@@ -183,7 +183,7 @@ const Analytics = () => {
             offlineSales={25000}
             percentageChange={12.5}
           />
-          
+
           <OrderStatistics
             title="Order Status"
             totalOrders={520}
@@ -229,7 +229,7 @@ const Analytics = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Audience Demographics</CardTitle>
@@ -296,8 +296,8 @@ const Analytics = () => {
               </thead>
               <tbody>
                 {eventPerformanceData.map((event, index) => (
-                  <tr 
-                    key={index} 
+                  <tr
+                    key={index}
                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <td className="px-6 py-4 font-medium">{event.name}</td>
@@ -306,8 +306,8 @@ const Analytics = () => {
                       <div className="flex items-center gap-2">
                         <span>{event.ticketsSold}/{event.totalTickets}</span>
                         <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-primary h-2 rounded-full" 
+                          <div
+                            className="bg-primary h-2 rounded-full"
                             style={{ width: `${(event.ticketsSold / event.totalTickets) * 100}%` }}
                           ></div>
                         </div>
@@ -318,12 +318,11 @@ const Analytics = () => {
                       <div className="flex items-center gap-2">
                         <span>{event.attendanceRate}%</span>
                         <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${
-                              event.attendanceRate >= 75 ? 'bg-green-500' : 
-                              event.attendanceRate >= 50 ? 'bg-amber-500' : 
-                              'bg-red-500'
-                            }`} 
+                          <div
+                            className={`h-2 rounded-full ${event.attendanceRate >= 75 ? 'bg-green-500' :
+                              event.attendanceRate >= 50 ? 'bg-amber-500' :
+                                'bg-red-500'
+                              }`}
                             style={{ width: `${event.attendanceRate}%` }}
                           ></div>
                         </div>

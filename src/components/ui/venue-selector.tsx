@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Input } from './input';
@@ -48,7 +49,7 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
   useEffect(() => {
     if (window.google && window.google.maps) {
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      
+
       // Create a dummy div for PlacesService (required by the API)
       if (mapRef.current) {
         const map = new window.google.maps.Map(mapRef.current, {
@@ -129,7 +130,7 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
   };
 
   return (
-    <div className="space-y-2 w-full">
+    <div className="space-y-2 w-5/6">
       <div className="flex items-center space-x-2">
         <div className="flex-1">
           <Input
@@ -150,11 +151,11 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
           <Search className="h-4 w-4" />
         </Button>
       </div>
-      
+
       {showPredictions && predictions.length > 0 && (
         <div className="absolute z-10 w-full bg-white rounded-md border shadow-lg max-h-60 overflow-auto mt-1">
           {predictions.map((prediction) => (
-            <div 
+            <div
               key={prediction.place_id}
               className="p-2 hover:bg-gray-100 cursor-pointer flex items-center"
               onClick={() => handleSelectPrediction(prediction.place_id)}
@@ -168,7 +169,7 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
           ))}
         </div>
       )}
-      
+
       {/* Hidden map div for PlacesService */}
       <div ref={mapRef} style={{ display: 'none' }}></div>
     </div>

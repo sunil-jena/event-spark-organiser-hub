@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 const Layout = () => {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -83,7 +83,7 @@ const Layout = () => {
       />
 
       <div
-        className="flex flex-col flex-1 overflow-hidden h-screen"
+        className="flex flex-col flex-1 overflow-hidden"
         style={!isMobile ? mainContentStyle : undefined}
       >
         <Header

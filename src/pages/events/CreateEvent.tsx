@@ -2,23 +2,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import {
   Tabs,
@@ -26,20 +26,20 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { 
-  Calendar as CalendarIcon, 
-  Check, 
-  ChevronRight, 
-  Clock, 
-  Globe, 
-  ImagePlus, 
-  Loader2, 
-  MapPin, 
-  Plus, 
-  Tags, 
-  Ticket, 
-  Trash2, 
-  Upload, 
+import {
+  Calendar as CalendarIcon,
+  Check,
+  ChevronRight,
+  Clock,
+  Globe,
+  ImagePlus,
+  Loader2,
+  MapPin,
+  Plus,
+  Tags,
+  Ticket,
+  Trash2,
+  Upload,
   Eye,
   X,
   Mic2,
@@ -227,7 +227,7 @@ const CreateEvent: React.FC = () => {
     updatedFaqItems[index][field] = value;
     setFaqItems(updatedFaqItems);
   };
-  
+
   const onSubmit = async (data: EventFormValues) => {
     setIsSubmitting(true);
     try {
@@ -243,15 +243,15 @@ const CreateEvent: React.FC = () => {
         prohibitedItems,
         faqItems: faqItems.filter(item => item.question.trim() !== "" && item.answer.trim() !== "")
       });
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       toast({
         title: "Event Created Successfully",
         description: "Your event has been created and is now visible to users.",
       });
-      
+
       setTimeout(() => {
         navigate('/events');
       }, 1000);
@@ -273,15 +273,15 @@ const CreateEvent: React.FC = () => {
   const isOnlineEvent = form.watch('isOnline');
 
   return (
-    <div className="container mx-auto py-6 mb-10">
+    <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Create New Event</h1>
           <p className="text-muted-foreground">Fill out the details to create your new event</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setPreviewMode(!previewMode)}
           >
             {previewMode ? (
@@ -294,8 +294,8 @@ const CreateEvent: React.FC = () => {
               </>
             )}
           </Button>
-          
-          <Button 
+
+          <Button
             onClick={form.handleSubmit(onSubmit)}
             disabled={isSubmitting}
           >
@@ -311,7 +311,6 @@ const CreateEvent: React.FC = () => {
           </Button>
         </div>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3">
           {previewMode ? (
@@ -320,10 +319,10 @@ const CreateEvent: React.FC = () => {
                 <div className="relative">
                   <div className="h-64 bg-gradient-to-r from-primary/20 to-primary/40 flex items-center justify-center">
                     {uploadedImages.find(img => img.type === 'banner') ? (
-                      <img 
-                        src={uploadedImages.find(img => img.type === 'banner')?.preview} 
-                        alt="Event banner" 
-                        className="h-full w-full object-cover" 
+                      <img
+                        src={uploadedImages.find(img => img.type === 'banner')?.preview}
+                        alt="Event banner"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
                       <div className="text-center">
@@ -348,7 +347,7 @@ const CreateEvent: React.FC = () => {
                   {form.watch('shortDescription') && (
                     <p className="text-muted-foreground mb-4">{form.watch('shortDescription')}</p>
                   )}
-                  
+
                   <div className="flex flex-wrap gap-4 mb-6">
                     {dateTimeSlots.length > 0 ? (
                       <div className="flex items-center">
@@ -366,7 +365,7 @@ const CreateEvent: React.FC = () => {
                         <span>No dates set</span>
                       </div>
                     )}
-                    
+
                     {isOnlineEvent ? (
                       <div className="flex items-center">
                         <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -388,15 +387,15 @@ const CreateEvent: React.FC = () => {
                         <span>No venue selected</span>
                       </div>
                     )}
-                    
+
                     {ticketTypes.length > 0 ? (
                       <div className="flex items-center">
                         <Ticket className="h-4 w-4 mr-2 text-muted-foreground" />
                         <div>
                           <div>
-                            {ticketTypes[0].type === 'free' ? 'Free' : 
-                             ticketTypes[0].type === 'donation' ? 'Donation' : 
-                             `₹${ticketTypes[0].price}`}
+                            {ticketTypes[0].type === 'free' ? 'Free' :
+                              ticketTypes[0].type === 'donation' ? 'Donation' :
+                                `₹${ticketTypes[0].price}`}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {ticketTypes.length > 1 ? `+${ticketTypes.length - 1} more ticket types` : ticketTypes[0].name}
@@ -410,19 +409,19 @@ const CreateEvent: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="prose max-w-none mb-6">
                     <h3 className="text-lg font-medium mb-2">About this event</h3>
                     <p>{form.watch('description') || 'Event description will appear here...'}</p>
                   </div>
-                  
+
                   {form.watch('whyAttend') && (
                     <div className="prose max-w-none mb-6">
                       <h3 className="text-lg font-medium mb-2">Why you should attend</h3>
                       <p>{form.watch('whyAttend')}</p>
                     </div>
                   )}
-                  
+
                   {uploadedImages.filter(img => img.type === 'gallery').length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-lg font-medium mb-2">Gallery</h3>
@@ -430,17 +429,17 @@ const CreateEvent: React.FC = () => {
                         {uploadedImages
                           .filter(img => img.type === 'gallery')
                           .map((image) => (
-                            <img 
+                            <img
                               key={image.id}
-                              src={image.preview} 
-                              alt="Gallery" 
+                              src={image.preview}
+                              alt="Gallery"
                               className="rounded-md object-cover h-32 w-full"
                             />
                           ))}
                       </div>
                     </div>
                   )}
-                  
+
                   {prohibitedItems.length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-lg font-medium mb-2">Prohibited Items</h3>
@@ -453,7 +452,7 @@ const CreateEvent: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex flex-wrap gap-2 mb-6">
                     {tags.length > 0 ? tags.map((tag, index) => (
                       <Badge key={index} variant="secondary">{tag}</Badge>
@@ -461,7 +460,7 @@ const CreateEvent: React.FC = () => {
                       <Badge variant="secondary">Example Tag</Badge>
                     )}
                   </div>
-                  
+
                   {faqItems.filter(item => item.question && item.answer).length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-lg font-medium mb-3">Frequently Asked Questions</h3>
@@ -477,7 +476,7 @@ const CreateEvent: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="border-t pt-4">
                     <h3 className="font-semibold mb-2">Organizers</h3>
                     <div className="flex flex-wrap gap-4">
@@ -522,7 +521,7 @@ const CreateEvent: React.FC = () => {
                         Additional Info
                       </TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="details" className="space-y-4 mt-4">
                       <Card>
                         <CardHeader>
@@ -545,7 +544,7 @@ const CreateEvent: React.FC = () => {
                               </FormItem>
                             )}
                           />
-                          
+
                           <FormField
                             control={form.control}
                             name="shortDescription"
@@ -553,9 +552,9 @@ const CreateEvent: React.FC = () => {
                               <FormItem>
                                 <FormLabel>Short Description</FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    placeholder="Brief description (150 chars max)" 
-                                    {...field} 
+                                  <Input
+                                    placeholder="Brief description (150 chars max)"
+                                    {...field}
                                     maxLength={150}
                                   />
                                 </FormControl>
@@ -566,7 +565,7 @@ const CreateEvent: React.FC = () => {
                               </FormItem>
                             )}
                           />
-                          
+
                           <FormField
                             control={form.control}
                             name="description"
@@ -574,25 +573,25 @@ const CreateEvent: React.FC = () => {
                               <FormItem>
                                 <FormLabel>Event Description</FormLabel>
                                 <FormControl>
-                                  <Textarea 
-                                    placeholder="Describe your event" 
-                                    className="min-h-32" 
-                                    {...field} 
+                                  <Textarea
+                                    placeholder="Describe your event"
+                                    className="min-h-32"
+                                    {...field}
                                   />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                          
+
                           <FormField
                             control={form.control}
                             name="category"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Category</FormLabel>
-                                <Select 
-                                  onValueChange={field.onChange} 
+                                <Select
+                                  onValueChange={field.onChange}
                                   defaultValue={field.value}
                                 >
                                   <FormControl>
@@ -612,7 +611,7 @@ const CreateEvent: React.FC = () => {
                               </FormItem>
                             )}
                           />
-                          
+
                           <div>
                             <Label>Event Tags</Label>
                             <div className="flex items-center mt-1.5 space-x-2">
@@ -631,21 +630,21 @@ const CreateEvent: React.FC = () => {
                             </div>
                             <div className="flex flex-wrap gap-2 mt-3">
                               {tags.map((tag, index) => (
-                                <Badge 
-                                  key={index} 
+                                <Badge
+                                  key={index}
                                   variant="secondary"
                                   className="flex items-center gap-1"
                                 >
                                   {tag}
-                                  <X 
-                                    className="h-3 w-3 cursor-pointer" 
+                                  <X
+                                    className="h-3 w-3 cursor-pointer"
                                     onClick={() => removeTag(tag)}
                                   />
                                 </Badge>
                               ))}
                             </div>
                           </div>
-                          
+
                           <FormField
                             control={form.control}
                             name="isOnline"
@@ -666,14 +665,14 @@ const CreateEvent: React.FC = () => {
                               </FormItem>
                             )}
                           />
-                          
+
                           {form.watch('isOnline') && (
                             <div className="space-y-4 p-4 border rounded-md">
                               <h3 className="font-medium">Online Event Details</h3>
-                              
+
                               <div>
                                 <Label htmlFor="videoProvider">Video Conference Provider</Label>
-                                <Select 
+                                <Select
                                   onValueChange={(value) => form.setValue('videoConferenceProvider', value)}
                                 >
                                   <SelectTrigger id="videoProvider">
@@ -688,10 +687,10 @@ const CreateEvent: React.FC = () => {
                                   </SelectContent>
                                 </Select>
                               </div>
-                              
+
                               <div>
                                 <Label htmlFor="videoUrl">Meeting URL</Label>
-                                <Input 
+                                <Input
                                   id="videoUrl"
                                   placeholder="https://..."
                                   onChange={(e) => form.setValue('videoConferenceUrl', e.target.value)}
@@ -700,10 +699,10 @@ const CreateEvent: React.FC = () => {
                                   This will be shared with attendees before the event
                                 </p>
                               </div>
-                              
+
                               <div>
                                 <Label htmlFor="videoPassword">Meeting Password (optional)</Label>
-                                <Input 
+                                <Input
                                   id="videoPassword"
                                   placeholder="Password"
                                   onChange={(e) => form.setValue('videoConferencePassword', e.target.value)}
@@ -722,7 +721,7 @@ const CreateEvent: React.FC = () => {
                         </CardFooter>
                       </Card>
                     </TabsContent>
-                    
+
                     <TabsContent value="dates" className="space-y-4 mt-4">
                       <Card>
                         <CardHeader>
@@ -732,20 +731,20 @@ const CreateEvent: React.FC = () => {
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <MultiDatePicker 
+                          <MultiDatePicker
                             value={dateTimeSlots}
                             onChange={setDateTimeSlots}
                           />
                         </CardContent>
                         <CardFooter className="flex justify-between">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             type="button"
                             onClick={() => setActiveTab("details")}
                           >
                             Previous
                           </Button>
-                          <Button 
+                          <Button
                             type="button"
                             onClick={() => setActiveTab("location")}
                           >
@@ -754,13 +753,13 @@ const CreateEvent: React.FC = () => {
                         </CardFooter>
                       </Card>
                     </TabsContent>
-                    
+
                     <TabsContent value="location" className="space-y-4 mt-4">
                       <Card>
                         <CardHeader>
                           <CardTitle>Event Location</CardTitle>
                           <CardDescription>
-                            {isOnlineEvent 
+                            {isOnlineEvent
                               ? "Online events don't need a physical location"
                               : "Specify where your event will take place"}
                           </CardDescription>
@@ -772,7 +771,7 @@ const CreateEvent: React.FC = () => {
                                 <Label>Search for a venue</Label>
                                 <VenueSelector onSelectVenue={(venue) => addVenue(venue)} />
                               </div>
-                              
+
                               {venues.length > 0 && (
                                 <div className="space-y-3 mt-4">
                                   <Label>Selected Venues</Label>
@@ -799,7 +798,7 @@ const CreateEvent: React.FC = () => {
                                   </div>
                                 </div>
                               )}
-                              
+
                               <FormField
                                 control={form.control}
                                 name="capacity"
@@ -807,10 +806,10 @@ const CreateEvent: React.FC = () => {
                                   <FormItem>
                                     <FormLabel>Venue Capacity</FormLabel>
                                     <FormControl>
-                                      <Input 
-                                        type="number" 
-                                        placeholder="Maximum attendees" 
-                                        {...field} 
+                                      <Input
+                                        type="number"
+                                        placeholder="Maximum attendees"
+                                        {...field}
                                       />
                                     </FormControl>
                                     <FormDescription>
@@ -822,7 +821,7 @@ const CreateEvent: React.FC = () => {
                               />
                             </>
                           )}
-                          
+
                           {isOnlineEvent && (
                             <div className="py-8 text-center">
                               <Globe className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
@@ -842,14 +841,14 @@ const CreateEvent: React.FC = () => {
                           )}
                         </CardContent>
                         <CardFooter className="flex justify-between">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             type="button"
                             onClick={() => setActiveTab("dates")}
                           >
                             Previous
                           </Button>
-                          <Button 
+                          <Button
                             type="button"
                             onClick={() => setActiveTab("media")}
                           >
@@ -858,7 +857,7 @@ const CreateEvent: React.FC = () => {
                         </CardFooter>
                       </Card>
                     </TabsContent>
-                    
+
                     <TabsContent value="media" className="space-y-4 mt-4">
                       <Card>
                         <CardHeader>
@@ -873,10 +872,10 @@ const CreateEvent: React.FC = () => {
                             onChange={setUploadedImages}
                             maxFiles={20}
                           />
-                          
+
                           <div className="mt-6 space-y-2">
                             <Label>Video URL (optional)</Label>
-                            <Input 
+                            <Input
                               placeholder="e.g. https://youtube.com/watch?v=..."
                             />
                             <p className="text-sm text-muted-foreground">
@@ -885,14 +884,14 @@ const CreateEvent: React.FC = () => {
                           </div>
                         </CardContent>
                         <CardFooter className="flex justify-between">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             type="button"
                             onClick={() => setActiveTab("location")}
                           >
                             Previous
                           </Button>
-                          <Button 
+                          <Button
                             type="button"
                             onClick={() => setActiveTab("tickets")}
                           >
@@ -901,7 +900,7 @@ const CreateEvent: React.FC = () => {
                         </CardFooter>
                       </Card>
                     </TabsContent>
-                    
+
                     <TabsContent value="tickets" className="space-y-4 mt-4">
                       <Card>
                         <CardHeader>
@@ -917,14 +916,14 @@ const CreateEvent: React.FC = () => {
                           />
                         </CardContent>
                         <CardFooter className="flex justify-between">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             type="button"
                             onClick={() => setActiveTab("media")}
                           >
                             Previous
                           </Button>
-                          <Button 
+                          <Button
                             type="button"
                             onClick={() => setActiveTab("additional")}
                           >
@@ -933,7 +932,7 @@ const CreateEvent: React.FC = () => {
                         </CardFooter>
                       </Card>
                     </TabsContent>
-                    
+
                     <TabsContent value="additional" className="space-y-4 mt-4">
                       <Card>
                         <CardHeader>
@@ -951,10 +950,10 @@ const CreateEvent: React.FC = () => {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
-                                    <Textarea 
-                                      placeholder="Explain why people should attend your event" 
-                                      className="min-h-24" 
-                                      {...field} 
+                                    <Textarea
+                                      placeholder="Explain why people should attend your event"
+                                      className="min-h-24"
+                                      {...field}
                                     />
                                   </FormControl>
                                   <FormDescription>
@@ -964,7 +963,7 @@ const CreateEvent: React.FC = () => {
                               )}
                             />
                           </div>
-                          
+
                           <div className="space-y-4">
                             <div className="flex justify-between items-center">
                               <h3 className="text-base font-medium">FAQ</h3>
@@ -977,7 +976,7 @@ const CreateEvent: React.FC = () => {
                                 <Plus className="h-4 w-4 mr-2" /> Add Question
                               </Button>
                             </div>
-                            
+
                             <div className="space-y-3">
                               {faqItems.map((faq, index) => (
                                 <div key={index} className="space-y-2 border rounded-md p-3">
@@ -994,7 +993,7 @@ const CreateEvent: React.FC = () => {
                                       </Button>
                                     )}
                                   </div>
-                                  
+
                                   <div>
                                     <Label htmlFor={`faq-question-${index}`}>Question</Label>
                                     <Input
@@ -1004,7 +1003,7 @@ const CreateEvent: React.FC = () => {
                                       placeholder="e.g. What should I bring?"
                                     />
                                   </div>
-                                  
+
                                   <div>
                                     <Label htmlFor={`faq-answer-${index}`}>Answer</Label>
                                     <Textarea
@@ -1019,12 +1018,12 @@ const CreateEvent: React.FC = () => {
                               ))}
                             </div>
                           </div>
-                          
+
                           <ProhibitedItems
                             selectedItems={prohibitedItems}
                             onChange={setProhibitedItems}
                           />
-                          
+
                           <div className="space-y-4">
                             <FormField
                               control={form.control}
@@ -1033,20 +1032,20 @@ const CreateEvent: React.FC = () => {
                                 <FormItem>
                                   <FormLabel>Terms & Conditions</FormLabel>
                                   <FormControl>
-                                    <Textarea 
-                                      placeholder="Enter terms and conditions for attendees" 
-                                      className="min-h-24" 
-                                      {...field} 
+                                    <Textarea
+                                      placeholder="Enter terms and conditions for attendees"
+                                      className="min-h-24"
+                                      {...field}
                                     />
                                   </FormControl>
                                 </FormItem>
                               )}
                             />
                           </div>
-                          
+
                           <div className="space-y-4">
                             <h3 className="text-base font-medium">Contact Information</h3>
-                            
+
                             <div className="space-y-4">
                               <FormField
                                 control={form.control}
@@ -1061,7 +1060,7 @@ const CreateEvent: React.FC = () => {
                                   </FormItem>
                                 )}
                               />
-                              
+
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                   control={form.control}
@@ -1079,7 +1078,7 @@ const CreateEvent: React.FC = () => {
                                     </FormItem>
                                   )}
                                 />
-                                
+
                                 <FormField
                                   control={form.control}
                                   name="contactPhone"
@@ -1098,20 +1097,20 @@ const CreateEvent: React.FC = () => {
                                 />
                               </div>
                             </div>
-                            
+
                             <div className="space-y-4">
                               <div className="flex justify-between items-center">
                                 <h3 className="text-sm font-medium">Additional Organizers</h3>
-                                <Button 
-                                  type="button" 
-                                  size="sm" 
+                                <Button
+                                  type="button"
+                                  size="sm"
                                   variant="outline"
                                   onClick={addOrganizer}
                                 >
                                   <Plus className="h-4 w-4 mr-1" /> Add Organizer
                                 </Button>
                               </div>
-                              
+
                               {organizers.map((organizer, index) => (
                                 <div key={index} className="border rounded-md p-4 space-y-3">
                                   <div className="flex justify-between items-start">
@@ -1119,17 +1118,17 @@ const CreateEvent: React.FC = () => {
                                       {index === 0 ? 'Primary Organizer' : `Co-Organizer ${index}`}
                                     </h4>
                                     {index !== 0 && (
-                                      <Button 
-                                        type="button" 
-                                        size="icon" 
-                                        variant="ghost" 
+                                      <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="ghost"
                                         onClick={() => removeOrganizer(index)}
                                       >
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                       </Button>
                                     )}
                                   </div>
-                                  
+
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
                                       <Label htmlFor={`organizer-name-${index}`}>Name</Label>
@@ -1152,7 +1151,7 @@ const CreateEvent: React.FC = () => {
                                       />
                                     </div>
                                   </div>
-                                  
+
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
                                       <Label htmlFor={`organizer-email-${index}`}>Email</Label>
@@ -1179,7 +1178,7 @@ const CreateEvent: React.FC = () => {
                               ))}
                             </div>
                           </div>
-                          
+
                           <FormField
                             control={form.control}
                             name="hasTermsAgreed"
@@ -1202,8 +1201,8 @@ const CreateEvent: React.FC = () => {
                           />
                         </CardContent>
                         <CardFooter className="flex justify-between">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             type="button"
                             onClick={() => setActiveTab("tickets")}
                           >
@@ -1229,7 +1228,6 @@ const CreateEvent: React.FC = () => {
             </Form>
           )}
         </div>
-        
         <div className="space-y-4">
           <Card>
             <CardHeader>
@@ -1247,7 +1245,7 @@ const CreateEvent: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-2">
                 <div className="bg-primary/10 p-2 rounded-full">
                   <MapPin className="h-4 w-4 text-primary" />
@@ -1259,7 +1257,7 @@ const CreateEvent: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-2">
                 <div className="bg-primary/10 p-2 rounded-full">
                   <Ticket className="h-4 w-4 text-primary" />
@@ -1271,7 +1269,7 @@ const CreateEvent: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-2">
                 <div className="bg-primary/10 p-2 rounded-full">
                   <ImagePlus className="h-4 w-4 text-primary" />
@@ -1283,7 +1281,7 @@ const CreateEvent: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-2">
                 <div className="bg-primary/10 p-2 rounded-full">
                   <AlertCircle className="h-4 w-4 text-primary" />
@@ -1295,7 +1293,7 @@ const CreateEvent: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-2">
                 <div className="bg-primary/10 p-2 rounded-full">
                   <FileText className="h-4 w-4 text-primary" />
@@ -1309,7 +1307,7 @@ const CreateEvent: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Need Help?</CardTitle>
@@ -1338,7 +1336,3 @@ const CreateEvent: React.FC = () => {
 };
 
 export default CreateEvent;
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
-}
