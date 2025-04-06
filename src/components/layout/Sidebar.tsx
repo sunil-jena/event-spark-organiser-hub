@@ -45,101 +45,122 @@ const mainNavItems: SidebarItemProps[] = [
     title: 'Dashboard',
     href: '/',
     icon: <LayoutDashboard className="h-5 w-5" />,
+    moduleName: 'dashboard'
   },
   {
     title: 'Events',
     icon: <Calendar className="h-5 w-5" />,
+    moduleName: 'events',
     children: [
       {
         title: 'All Events',
         href: '/events',
+        moduleName: 'events'
       },
       {
         title: 'Event Details',
         href: '/event-details',
+        moduleName: 'events'
       },
       {
         title: 'Create Event',
         href: '/events/create',
+        moduleName: 'events'
       },
       {
         title: 'Categories',
         href: '/events/categories',
+        moduleName: 'events',
         children: [
           {
             title: 'Music & Concerts',
             href: '/events/categories/music',
             icon: <Music className="h-4 w-4" />,
+            moduleName: 'events'
           },
           {
             title: 'Workshops',
             href: '/events/categories/workshops',
             icon: <Briefcase className="h-4 w-4" />,
+            moduleName: 'events'
           },
           {
             title: 'Business',
             href: '/events/categories/business',
             icon: <Monitor className="h-4 w-4" />,
+            moduleName: 'events'
           },
           {
             title: 'Dance',
             href: '/events/categories/dance',
             icon: <Award className="h-4 w-4" />,
+            moduleName: 'events'
           },
           {
             title: 'Comedy Shows',
             href: '/events/categories/comedy',
             icon: <Mic className="h-4 w-4" />,
+            moduleName: 'events'
           },
           {
             title: 'Film Screenings',
             href: '/events/categories/film',
             icon: <Film className="h-4 w-4" />,
+            moduleName: 'events'
           },
           {
             title: 'Award Ceremonies',
             href: '/events/categories/awards',
             icon: <Award className="h-4 w-4" />,
+            moduleName: 'events'
           }
         ]
       },
       {
         title: 'Venues',
         href: '/events/venues',
+        moduleName: 'events'
       }
     ]
   },
   {
     title: 'Tickets',
     icon: <Ticket className="h-5 w-5" />,
+    moduleName: 'tickets',
     children: [
       {
         title: 'Ticket Types',
         href: '/tickets/types',
+        moduleName: 'tickets'
       },
       {
         title: 'Pricing',
         href: '/tickets/pricing',
+        moduleName: 'tickets'
       },
       {
         title: 'Discounts',
         href: '/tickets/discounts',
         label: 'New',
+        moduleName: 'tickets',
         children: [
           {
             title: 'Promo Codes',
             href: '/tickets/discounts/promo-codes',
             icon: <Tag className="h-4 w-4" />,
+            moduleName: 'tickets'
           },
           {
             title: 'Early Bird',
             href: '/tickets/discounts/early-bird',
             icon: <Clock className="h-4 w-4" />,
+            moduleName: 'tickets'
           },
           {
             title: 'Group Discounts',
             href: '/tickets/discounts/group',
             icon: <Users className="h-4 w-4" />,
+            moduleName: 'tickets'
           },
         ]
       }
@@ -149,32 +170,39 @@ const mainNavItems: SidebarItemProps[] = [
     title: 'Orders',
     href: '/orders',
     icon: <ShoppingCart className="h-5 w-5" />,
+    moduleName: 'orders'
   },
   {
     title: 'Sales',
     href: '/sales',
     icon: <BarChart className="h-5 w-5" />,
+    moduleName: 'sales'
   },
   {
     title: 'Customers',
     href: '/customers',
     icon: <Users className="h-5 w-5" />,
+    moduleName: 'customers'
   },
   {
     title: 'Payments',
     icon: <CreditCard className="h-5 w-5" />,
+    moduleName: 'payments',
     children: [
       {
         title: 'Transactions',
         href: '/payments/transactions',
+        moduleName: 'payments'
       },
       {
         title: 'Payouts',
         href: '/payouts',
+        moduleName: 'payments'
       },
       {
         title: 'Settings',
         href: '/payments/settings',
+        moduleName: 'payments'
       }
     ]
   },
@@ -182,11 +210,13 @@ const mainNavItems: SidebarItemProps[] = [
     title: 'Reports',
     href: '/reports',
     icon: <FileText className="h-5 w-5" />,
+    moduleName: 'reports'
   },
   {
     title: 'Analytics',
     href: '/analytics',
     icon: <BarChart3 className="h-5 w-5" />,
+    moduleName: 'analytics'
   }
 ];
 
@@ -196,6 +226,7 @@ const secondaryNavItems: SidebarItemProps[] = [
     title: 'Settings',
     href: '/settings',
     icon: <Settings className="h-5 w-5" />,
+    moduleName: 'settings'
   },
   {
     title: 'Support',

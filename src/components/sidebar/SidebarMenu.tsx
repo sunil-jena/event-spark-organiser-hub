@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { SidebarList } from './SidebarList';
 import { SidebarItemProps } from './SidebarItem';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAppContext } from '@/contexts/AppContext';
 
 interface SidebarMenuProps {
   mainItems: SidebarItemProps[];
@@ -16,17 +17,28 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
   supportItems,
   className = ""
 }) => {
+  const { hasPermission } = useAppContext();
+  
+  // Filter items based on permissions
+  const filteredMainItems = mainItems.filter(item => 
+    !item.moduleName || hasPermission(item.moduleName, 'view')
+  );
+  
+  const filteredSupportItems = supportItems.filter(item => 
+    !item.moduleName || hasPermission(item.moduleName, 'view')
+  );
+  
   return (
     <ScrollArea className="flex-1 py-4 overflow-hidden">
       <div className={cn("space-y-6", className)}>
         <div>
           <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Main</h2>
-          <SidebarList items={mainItems} />
+          <SidebarList items={filteredMainItems} />
         </div>
         
         <div>
           <h2 className="mb-2 px-4 text-xs font-semibold text-white/80">Support</h2>
-          <SidebarList items={supportItems} />
+          <SidebarList items={filteredSupportItems} />
         </div>
       </div>
     </ScrollArea>

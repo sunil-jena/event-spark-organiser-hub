@@ -23,6 +23,7 @@ export interface SidebarItemProps {
   expanded?: boolean;
   onToggleExpand?: () => void;
   depth?: number;
+  moduleName?: string; // Associated module name for permissions
 }
 
 export const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -36,10 +37,17 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   onClick,
   expanded = false,
   onToggleExpand,
-  depth = 0
+  depth = 0,
+  moduleName
 }) => {
   const location = useLocation();
-  const { sidebarMinimized, activeRoute, setActiveRoute } = useAppContext();
+  const { sidebarMinimized, activeRoute, setActiveRoute, hasPermission } = useAppContext();
+  
+  // Check if user has permission to view this item
+  const canView = !moduleName || hasPermission(moduleName, 'view');
+  
+  // If user doesn't have permission, don't render the item
+  if (!canView) return null;
   
   const hasChildren = children && children.length > 0;
   
