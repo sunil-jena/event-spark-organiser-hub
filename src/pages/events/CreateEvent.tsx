@@ -5,35 +5,18 @@ import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useEventContext } from '@/contexts/EventContext';
 
-// Import the sidebar and step components
+// Import the step components
 import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
-import { BasicDetailsStep, BasicDetailsFormValues } from '@/components/events/steps/BasicDetailsStep';
-import { VenueStep, VenueFormValues } from '@/components/events/steps/VenueStep';
-import { DateStep, DateFormValues } from '@/components/events/steps/DateStep';
-import { TimeSlotStep, TimeSlotFormValues } from '@/components/events/steps/TimeSlotStep';
-import { TicketStep, TicketFormValues } from '@/components/events/steps/TicketStep';
-import { MediaStep, MediaFormValues } from '@/components/events/steps/MediaStep';
-import { AdditionalInfoStep, AdditionalInfoFormValues } from '@/components/events/steps/AdditionalInfoStep';
+import { BasicDetailsStep } from '@/components/events/steps/BasicDetailsStep';
+import { VenueStep } from '@/components/events/steps/VenueStep';
+import { DateStep } from '@/components/events/steps/DateStep';
+import { TimeSlotStep } from '@/components/events/steps/TimeSlotStep';
+import { TicketStep } from '@/components/events/steps/TicketStep';
+import { MediaStep } from '@/components/events/steps/MediaStep';
+import { AdditionalInfoStep } from '@/components/events/steps/AdditionalInfoStep';
 import { ReviewStep } from '@/components/events/steps/ReviewStep';
-
-// Initialize default form values
-const initialBasicDetails: BasicDetailsFormValues = {
-  title: '',
-  category: '',
-  description: '',
-  organizerName: '',
-  organizerEmail: '',
-  organizerPhone: '',
-  additionalInfo: '',
-  terms: '',
-};
-
-const initialMedia: MediaFormValues = {
-  galleryImages: [],
-};
-
-const initialAdditionalInfo: AdditionalInfoFormValues = {};
 
 const CreateEvent = () => {
   const { 
@@ -43,8 +26,39 @@ const CreateEvent = () => {
     setEventStepStatuses,
     setIsEditingEvent
   } = useAppContext();
+  
+  const {
+    basicDetails,
+    setBasicDetails,
+    venues,
+    setVenues,
+    dates,
+    setDates,
+    timeSlots,
+    setTimeSlots,
+    tickets,
+    setTickets,
+    media,
+    setMedia,
+    additionalInfo,
+    setAdditionalInfo,
+    currentStep: eventContextCurrentStep,
+    setCurrentStep: setEventContextCurrentStep,
+  } = useEventContext();
+  
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Show scroll top button state
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  
+  // Current step tracking (synced with EventContext)
+  const [currentStep, setCurrentStep] = useState<EventCreationStep>(eventContextCurrentStep);
+  
+  // Update EventContext currentStep when local state changes
+  useEffect(() => {
+    setEventContextCurrentStep(currentStep);
+  }, [currentStep, setEventContextCurrentStep]);
   
   // Set active route and extract hash for step navigation
   useEffect(() => {
@@ -59,19 +73,15 @@ const CreateEvent = () => {
     }
   }, [location.hash, setActiveRoute, eventStepStatuses]);
   
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  
-  // Current step tracking
-  const [currentStep, setCurrentStep] = useState<EventCreationStep>('basicDetails');
-  
-  // Form data for each step
-  const [basicDetails, setBasicDetails] = useState<BasicDetailsFormValues>(initialBasicDetails);
-  const [venues, setVenues] = useState<VenueFormValues[]>([]);
-  const [dates, setDates] = useState<DateFormValues[]>([]);
-  const [timeSlots, setTimeSlots] = useState<TimeSlotFormValues[]>([]);
-  const [tickets, setTickets] = useState<TicketFormValues[]>([]);
-  const [media, setMedia] = useState<MediaFormValues>(initialMedia);
-  const [additionalInfo, setAdditionalInfo] = useState<AdditionalInfoFormValues>(initialAdditionalInfo);
+  // Handle scroll to detect when to show the scroll-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   // Handle step change
   const handleStepClick = (step: EventCreationStep) => {
@@ -82,7 +92,7 @@ const CreateEvent = () => {
       window.history.pushState(null, '', `#${step}`);
       
       // Mark clicked step as current and others based on their status
-      setEventStepStatuses(prev => {
+      setEventStepStatuses((prev) => {
         const newStatuses = { ...prev };
         
         Object.keys(newStatuses).forEach(key => {
@@ -103,7 +113,7 @@ const CreateEvent = () => {
   
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
-    setEventStepStatuses(prev => ({
+    setEventStepStatuses((prev) => ({
       ...prev,
       [currentStep]: { ...prev[currentStep], status: 'complete' },
       [nextStep]: { ...prev[nextStep], status: 'current', isClickable: true }
@@ -118,7 +128,7 @@ const CreateEvent = () => {
   
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
-    setEventStepStatuses(prev => {
+    setEventStepStatuses((prev) => {
       const newStatuses = { ...prev };
       
       Object.keys(newStatuses).forEach(key => {
@@ -136,37 +146,37 @@ const CreateEvent = () => {
   };
   
   // Handle form submissions for each step
-  const handleBasicDetailsSubmit = (values: BasicDetailsFormValues) => {
+  const handleBasicDetailsSubmit = (values: any) => {
     setBasicDetails(values);
     completeStep('venues');
   };
   
-  const handleVenuesSubmit = (values: VenueFormValues[]) => {
+  const handleVenuesSubmit = (values: any) => {
     setVenues(values);
     completeStep('dates');
   };
   
-  const handleDatesSubmit = (values: DateFormValues[]) => {
+  const handleDatesSubmit = (values: any) => {
     setDates(values);
     completeStep('times');
   };
   
-  const handleTimeSlotSubmit = (values: TimeSlotFormValues[]) => {
+  const handleTimeSlotSubmit = (values: any) => {
     setTimeSlots(values);
     completeStep('tickets');
   };
   
-  const handleTicketSubmit = (values: TicketFormValues[]) => {
+  const handleTicketSubmit = (values: any) => {
     setTickets(values);
     completeStep('media');
   };
   
-  const handleMediaSubmit = (values: MediaFormValues) => {
+  const handleMediaSubmit = (values: any) => {
     setMedia(values);
     completeStep('additionalInfo');
   };
   
-  const handleAdditionalInfoSubmit = (values: AdditionalInfoFormValues) => {
+  const handleAdditionalInfoSubmit = (values: any) => {
     setAdditionalInfo(values);
     completeStep('review');
   };
@@ -199,16 +209,6 @@ const CreateEvent = () => {
       // navigate(`/events/${eventId}`);
     }, 1500);
   };
-  
-  // Handle scroll to detect when to show the scroll-to-top button
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
   
   // Render the current step content
   const renderStepContent = () => {
