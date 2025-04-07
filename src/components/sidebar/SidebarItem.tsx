@@ -92,7 +92,8 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
     )}>
       {icon && (
         <span className={cn(
-          sidebarMinimized ? "mx-auto flex items-center justify-center" : ""
+          "flex items-center justify-center",
+          sidebarMinimized && "mx-auto"
         )}>
           {icon}
         </span>
@@ -169,7 +170,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
           disabled && "pointer-events-none opacity-60"
         )}
       >
-        {icon}
+        {icon && <span className="flex items-center justify-center">{icon}</span>}
         <span className="truncate">{title}</span>
         {label && (
           <span className="ml-auto text-xs font-medium bg-white/20 px-1.5 py-0.5 rounded">

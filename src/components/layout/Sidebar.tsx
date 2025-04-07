@@ -265,31 +265,42 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
 
   return (
     <div className={sidebarClasses}>
-      <div className="p-4 border-b border-primary-light/20 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          {
-            minimized &&
-            <div className="w-7 h-8 p-1 mx-auto">
-              <img src="/logo/logo1.png" alt="" />
+      <div className={cn(
+        "border-b border-primary-light/20 flex items-center",
+        minimized ? "justify-center p-2" : "justify-between p-4"
+      )}>
+        <div className={cn(
+          "flex items-center",
+          minimized ? "justify-center" : "space-x-2"
+        )}>
+          {minimized ? (
+            <div className="w-7 h-8 p-1 flex items-center justify-center">
+              <img src="/logo/logo1.png" alt="Logo" className="max-w-full max-h-full" />
             </div>
-          }
-          {!minimized && <div className="w-30 h-8 p-0">
-            <img src="/logo/sm_logo.png" alt="" />
-          </div>}
+          ) : (
+            <div className="w-30 h-8 p-0">
+              <img src="/logo/sm_logo.png" alt="Logo" className="max-w-full max-h-full" />
+            </div>
+          )}
         </div>
       </div>
       
       {/* Scrollable nav sections */}
       <div className="flex-1 py-4 overflow-hidden">
-        <TooltipProvider delayDuration={200}>
-          <SidebarMenu
-            mainItems={mainNavItems}
-            supportItems={secondaryNavItems}
-          />
-        </TooltipProvider>
+        <ScrollArea className="h-full px-1">
+          <TooltipProvider delayDuration={200}>
+            <SidebarMenu
+              mainItems={mainNavItems}
+              supportItems={secondaryNavItems}
+            />
+          </TooltipProvider>
+        </ScrollArea>
       </div>
 
-      <div className="p-4 border-t border-primary-light/20">
+      <div className={cn(
+        "border-t border-primary-light/20",
+        minimized ? "p-2" : "p-4"
+      )}>
         <Button
           variant="outline"
           className={cn(

@@ -1,14 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Calendar, Plus, Trash2, RotateCcw, CalendarRange } from 'lucide-react';
+import { ChevronRight, Calendar, Plus, Trash2, Repeat } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { v4 as uuidv4 } from 'uuid';
-import { format, addDays, isBefore, isAfter, eachDayOfInterval } from 'date-fns';
 import {
   Select,
   SelectContent,
@@ -16,11 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { v4 as uuidv4 } from 'uuid';
+import { format, addDays, isAfter, isBefore, addWeeks } from 'date-fns';
+import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { VenueFormValues } from './VenueStep';
 
 export interface DateFormValues {
@@ -28,13 +29,11 @@ export interface DateFormValues {
   type: 'single' | 'range' | 'recurring';
   startDate: Date;
   endDate?: Date;
-  recurringPattern?: {
-    frequency: 'daily' | 'weekly' | 'monthly';
-    interval: number;
-    endDate: Date;
-    daysOfWeek?: number[]; // 0 = Sunday, 1 = Monday, etc.
-  };
-  venueId: string;
+  recurringType?: 'daily' | 'weekly' | 'monthly';
+  recurringUntil?: Date;
+  recurringDays?: number[]; // 0 = Sunday, 1 = Monday, etc.
+  venueId?: string;
+  notes?: string;
 }
 
 interface DateStepProps {
@@ -44,137 +43,69 @@ interface DateStepProps {
   onBack: () => void;
 }
 
-// Days of the week for recurring options
-const DAYS_OF_WEEK = [
-  { value: 0, label: 'Sunday' },
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' }
-];
-
 export const DateStep: React.FC<DateStepProps> = ({ dates, venues, onSubmit, onBack }) => {
   const [dateList, setDateList] = useState<DateFormValues[]>(dates);
   const [dateType, setDateType] = useState<'single' | 'range' | 'recurring'>('single');
-  
-  // Single date
-  const [singleDate, setSingleDate] = useState<Date | undefined>(new Date());
-  const [singleVenueId, setSingleVenueId] = useState<string>(venues.length > 0 ? venues[0].id : '');
-  
-  // Date range
-  const [rangeStartDate, setRangeStartDate] = useState<Date | undefined>(new Date());
-  const [rangeEndDate, setRangeEndDate] = useState<Date | undefined>(addDays(new Date(), 3));
-  const [rangeVenueId, setRangeVenueId] = useState<string>(venues.length > 0 ? venues[0].id : '');
-  
-  // Recurring dates
-  const [recurringStartDate, setRecurringStartDate] = useState<Date | undefined>(new Date());
-  const [recurringEndDate, setRecurringEndDate] = useState<Date | undefined>(addDays(new Date(), 30));
-  const [recurringFrequency, setRecurringFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
-  const [recurringInterval, setRecurringInterval] = useState<number>(1);
-  const [recurringDaysOfWeek, setRecurringDaysOfWeek] = useState<number[]>([]);
-  const [recurringVenueId, setRecurringVenueId] = useState<string>(venues.length > 0 ? venues[0].id : '');
+  const [newDate, setNewDate] = useState<DateFormValues>({
+    id: uuidv4(),
+    type: 'single',
+    startDate: new Date(),
+    venueId: venues.length > 0 ? venues[0].id : undefined
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validateSingleDate = () => {
-    if (!singleDate) return "Please select a date";
-    if (!singleVenueId) return "Please select a venue";
-    return null;
-  };
-
-  const validateDateRange = () => {
-    if (!rangeStartDate) return "Please select a start date";
-    if (!rangeEndDate) return "Please select an end date";
-    if (isBefore(rangeEndDate, rangeStartDate)) return "End date must be after start date";
-    if (!rangeVenueId) return "Please select a venue";
-    return null;
-  };
-
-  const validateRecurringDate = () => {
-    if (!recurringStartDate) return "Please select a start date";
-    if (!recurringEndDate) return "Please select an end date";
-    if (isBefore(recurringEndDate, recurringStartDate)) return "End date must be after start date";
-    if (recurringFrequency === 'weekly' && recurringDaysOfWeek.length === 0) {
-      return "Please select at least one day of the week";
+  const validateDate = (date: DateFormValues) => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!date.startDate) {
+      newErrors.startDate = 'Start date is required';
     }
-    if (!recurringVenueId) return "Please select a venue";
-    return null;
+    
+    if (date.type === 'range' && !date.endDate) {
+      newErrors.endDate = 'End date is required for date range';
+    }
+    
+    if (date.type === 'range' && date.startDate && date.endDate && 
+        isAfter(date.startDate, date.endDate)) {
+      newErrors.endDate = 'End date must be after start date';
+    }
+    
+    if (date.type === 'recurring' && !date.recurringType) {
+      newErrors.recurringType = 'Please select how often the event repeats';
+    }
+    
+    if (date.type === 'recurring' && !date.recurringUntil) {
+      newErrors.recurringUntil = 'Please specify when the recurring event ends';
+    }
+    
+    return newErrors;
   };
 
   const handleAddDate = () => {
-    let error = null;
-    let newDate: DateFormValues | null = null;
+    // Make sure the date type matches the currently selected tab
+    const dateToAdd = { ...newDate, type: dateType };
     
-    if (dateType === 'single') {
-      error = validateSingleDate();
-      if (!error && singleDate) {
-        newDate = {
-          id: uuidv4(),
-          type: 'single',
-          startDate: singleDate,
-          venueId: singleVenueId
-        };
-      }
-    } else if (dateType === 'range') {
-      error = validateDateRange();
-      if (!error && rangeStartDate && rangeEndDate) {
-        newDate = {
-          id: uuidv4(),
-          type: 'range',
-          startDate: rangeStartDate,
-          endDate: rangeEndDate,
-          venueId: rangeVenueId
-        };
-      }
-    } else if (dateType === 'recurring') {
-      error = validateRecurringDate();
-      if (!error && recurringStartDate && recurringEndDate) {
-        newDate = {
-          id: uuidv4(),
-          type: 'recurring',
-          startDate: recurringStartDate,
-          endDate: recurringEndDate,
-          recurringPattern: {
-            frequency: recurringFrequency,
-            interval: recurringInterval,
-            endDate: recurringEndDate,
-            ...(recurringFrequency === 'weekly' && { daysOfWeek: recurringDaysOfWeek })
-          },
-          venueId: recurringVenueId
-        };
-      }
-    }
+    const validationErrors = validateDate(dateToAdd);
     
-    if (error) {
-      toast({
-        title: "Validation Error",
-        description: error,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (newDate) {
-      setDateList([...dateList, newDate]);
+    if (Object.keys(validationErrors).length === 0) {
+      setDateList([...dateList, dateToAdd]);
       
-      // Reset form after adding
-      if (dateType === 'single') {
-        setSingleDate(new Date());
-      } else if (dateType === 'range') {
-        setRangeStartDate(new Date());
-        setRangeEndDate(addDays(new Date(), 3));
-      } else if (dateType === 'recurring') {
-        setRecurringStartDate(new Date());
-        setRecurringEndDate(addDays(new Date(), 30));
-        setRecurringFrequency('weekly');
-        setRecurringInterval(1);
-        setRecurringDaysOfWeek([]);
-      }
+      // Reset form but keep venue selection
+      setNewDate({
+        id: uuidv4(),
+        type: dateType,
+        startDate: new Date(),
+        venueId: dateToAdd.venueId
+      });
+      
+      setErrors({});
       
       toast({
         title: "Date added",
-        description: "The date has been added to your event."
+        description: "Your event date has been added."
       });
+    } else {
+      setErrors(validationErrors);
     }
   };
 
@@ -200,284 +131,336 @@ export const DateStep: React.FC<DateStepProps> = ({ dates, venues, onSubmit, onB
     onSubmit(dateList);
   };
 
-  const formatDateRange = (date: DateFormValues) => {
-    if (date.type === 'single') {
-      return format(date.startDate, 'PPP');
-    } else if (date.type === 'range') {
-      return `${format(date.startDate, 'PPP')} to ${format(date.endDate!, 'PPP')}`;
-    } else if (date.type === 'recurring') {
-      const pattern = date.recurringPattern!;
-      let recurrenceText = '';
-      
-      if (pattern.frequency === 'daily') {
-        recurrenceText = pattern.interval === 1 ? 'Daily' : `Every ${pattern.interval} days`;
-      } else if (pattern.frequency === 'weekly') {
-        if (pattern.daysOfWeek && pattern.daysOfWeek.length > 0) {
-          const days = pattern.daysOfWeek.map(day => DAYS_OF_WEEK.find(d => d.value === day)?.label).join(', ');
-          recurrenceText = pattern.interval === 1 
-            ? `Weekly on ${days}` 
-            : `Every ${pattern.interval} weeks on ${days}`;
-        } else {
-          recurrenceText = pattern.interval === 1 ? 'Weekly' : `Every ${pattern.interval} weeks`;
-        }
-      } else if (pattern.frequency === 'monthly') {
-        recurrenceText = pattern.interval === 1 ? 'Monthly' : `Every ${pattern.interval} months`;
-      }
-      
-      return `${recurrenceText} from ${format(date.startDate, 'PPP')} until ${format(pattern.endDate, 'PPP')}`;
-    }
+  const handleDateTypeChange = (value: string) => {
+    const newType = value as 'single' | 'range' | 'recurring';
+    setDateType(newType);
     
-    return '';
+    // Reset the date object to match the new type
+    setNewDate({
+      id: uuidv4(),
+      type: newType,
+      startDate: new Date(),
+      endDate: newType === 'range' ? addDays(new Date(), 3) : undefined,
+      recurringType: newType === 'recurring' ? 'weekly' : undefined,
+      recurringUntil: newType === 'recurring' ? addWeeks(new Date(), 8) : undefined,
+      recurringDays: newType === 'recurring' ? [1, 3, 5] : undefined, // Mon, Wed, Fri
+      venueId: newDate.venueId
+    });
+    
+    // Clear errors
+    setErrors({});
   };
 
-  const getVenueName = (venueId: string) => {
-    const venue = venues.find(v => v.id === venueId);
-    return venue ? venue.name : 'Unknown venue';
+  const formatDateDisplay = (date: DateFormValues) => {
+    const venueName = venues.find(v => v.id === date.venueId)?.name || 'No venue selected';
+    
+    switch (date.type) {
+      case 'single':
+        return `${format(date.startDate, 'MMMM d, yyyy')} at ${venueName}`;
+      case 'range':
+        return `${format(date.startDate, 'MMM d')} - ${format(date.endDate!, 'MMM d, yyyy')} at ${venueName}`;
+      case 'recurring':
+        const frequencyText = date.recurringType === 'daily' ? 'Daily' : 
+                              date.recurringType === 'weekly' ? 'Weekly' : 'Monthly';
+        return `${frequencyText} from ${format(date.startDate, 'MMM d')} until ${format(date.recurringUntil!, 'MMM d, yyyy')} at ${venueName}`;
+      default:
+        return 'Unknown date format';
+    }
   };
+
+  const weekDays = [
+    { value: '0', label: 'Sun' },
+    { value: '1', label: 'Mon' },
+    { value: '2', label: 'Tue' },
+    { value: '3', label: 'Wed' },
+    { value: '4', label: 'Thu' },
+    { value: '5', label: 'Fri' },
+    { value: '6', label: 'Sat' },
+  ];
 
   return (
     <Card>
       <CardContent className="pt-6">
         <h2 className="text-xl font-semibold mb-4">Event Dates</h2>
         
-        <Tabs defaultValue="single" value={dateType} onValueChange={(v) => setDateType(v as any)}>
+        <Tabs defaultValue="single" onValueChange={handleDateTypeChange}>
           <TabsList className="mb-4">
-            <TabsTrigger value="single" className="flex items-center">
-              <Calendar className="h-4 w-4 mr-2" />
-              Single Date
-            </TabsTrigger>
-            <TabsTrigger value="range" className="flex items-center">
-              <CalendarRange className="h-4 w-4 mr-2" />
-              Date Range
-            </TabsTrigger>
-            <TabsTrigger value="recurring" className="flex items-center">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Recurring
-            </TabsTrigger>
+            <TabsTrigger value="single">Single Date</TabsTrigger>
+            <TabsTrigger value="range">Date Range</TabsTrigger>
+            <TabsTrigger value="recurring">Recurring Dates</TabsTrigger>
           </TabsList>
           
-          <div className="border rounded-lg p-4 bg-gray-50 mb-6">
-            <TabsContent value="single">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Date</Label>
-                  <div className="border rounded-md bg-white">
-                    <CalendarComponent
-                      mode="single"
-                      selected={singleDate}
-                      onSelect={setSingleDate}
-                      className="rounded-md"
-                      disabled={(date) => isBefore(date, new Date())}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="singleVenue">Venue</Label>
-                  <Select value={singleVenueId} onValueChange={setSingleVenueId}>
-                    <SelectTrigger id="singleVenue">
-                      <SelectValue placeholder="Select venue" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {venues.map((venue) => (
-                        <SelectItem key={venue.id} value={venue.id}>
-                          {venue.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </TabsContent>
+          <TabsContent value="single" className="border rounded-lg p-4 bg-gray-50">
+            <h3 className="font-medium mb-3 flex items-center">
+              <Calendar className="h-4 w-4 mr-2" />
+              Add Single Date
+            </h3>
             
-            <TabsContent value="range">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Date Range</Label>
-                  <div className="border rounded-md bg-white">
-                    <CalendarComponent
-                      mode="range"
-                      selected={{
-                        from: rangeStartDate,
-                        to: rangeEndDate
-                      }}
-                      onSelect={(range) => {
-                        setRangeStartDate(range?.from);
-                        setRangeEndDate(range?.to);
-                      }}
-                      className="rounded-md"
-                      disabled={(date) => isBefore(date, new Date())}
-                      numberOfMonths={2}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="rangeVenue">Venue</Label>
-                  <Select value={rangeVenueId} onValueChange={setRangeVenueId}>
-                    <SelectTrigger id="rangeVenue">
-                      <SelectValue placeholder="Select venue" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {venues.map((venue) => (
-                        <SelectItem key={venue.id} value={venue.id}>
-                          {venue.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Event Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={format(newDate.startDate, 'yyyy-MM-dd')}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setNewDate({...newDate, startDate: new Date(e.target.value)});
+                    }
+                  }}
+                  className={errors.startDate ? "border-red-500" : ""}
+                />
+                {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate}</p>}
               </div>
-            </TabsContent>
+              
+              <div className="space-y-2">
+                <Label htmlFor="venueId">Venue</Label>
+                <Select
+                  value={newDate.venueId}
+                  onValueChange={(value) => setNewDate({...newDate, venueId: value})}
+                >
+                  <SelectTrigger id="venueId">
+                    <SelectValue placeholder="Select venue" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {venues.map((venue) => (
+                      <SelectItem key={venue.id} value={venue.id}>
+                        {venue.tbd ? `TBD Venue in ${venue.city}` : venue.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Input
+                  id="notes"
+                  value={newDate.notes || ''}
+                  onChange={(e) => setNewDate({...newDate, notes: e.target.value})}
+                  placeholder="Add any notes about this date"
+                />
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="range" className="border rounded-lg p-4 bg-gray-50">
+            <h3 className="font-medium mb-3 flex items-center">
+              <Calendar className="h-4 w-4 mr-2" />
+              Add Date Range
+            </h3>
             
-            <TabsContent value="recurring">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="recurringStart">Start Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        {recurringStartDate ? format(recurringStartDate, 'PPP') : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <CalendarComponent
-                        mode="single"
-                        selected={recurringStartDate}
-                        onSelect={setRecurringStartDate}
-                        initialFocus
-                        disabled={(date) => isBefore(date, new Date())}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="recurringEnd">End Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        {recurringEndDate ? format(recurringEndDate, 'PPP') : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <CalendarComponent
-                        mode="single"
-                        selected={recurringEndDate}
-                        onSelect={setRecurringEndDate}
-                        initialFocus
-                        disabled={(date) => recurringStartDate ? isBefore(date, recurringStartDate) : false}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="recurringFrequency">Frequency</Label>
-                  <Select value={recurringFrequency} onValueChange={(value) => setRecurringFrequency(value as any)}>
-                    <SelectTrigger id="recurringFrequency">
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="recurringInterval">Every</Label>
-                  <Select
-                    value={recurringInterval.toString()}
-                    onValueChange={(value) => setRecurringInterval(parseInt(value))}
-                  >
-                    <SelectTrigger id="recurringInterval">
-                      <SelectValue placeholder="Select interval" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5, 6].map((interval) => (
-                        <SelectItem key={interval} value={interval.toString()}>
-                          {interval} {recurringFrequency === 'daily' ? 'day(s)' : 
-                                      recurringFrequency === 'weekly' ? 'week(s)' : 'month(s)'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {recurringFrequency === 'weekly' && (
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label>Days of Week</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {DAYS_OF_WEEK.map((day) => (
-                        <Button
-                          key={day.value}
-                          type="button"
-                          variant={recurringDaysOfWeek.includes(day.value) ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => {
-                            if (recurringDaysOfWeek.includes(day.value)) {
-                              setRecurringDaysOfWeek(recurringDaysOfWeek.filter(d => d !== day.value));
-                            } else {
-                              setRecurringDaysOfWeek([...recurringDaysOfWeek, day.value]);
-                            }
-                          }}
-                        >
-                          {day.label.substring(0, 3)}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="recurringVenue">Venue</Label>
-                  <Select value={recurringVenueId} onValueChange={setRecurringVenueId}>
-                    <SelectTrigger id="recurringVenue">
-                      <SelectValue placeholder="Select venue" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {venues.map((venue) => (
-                        <SelectItem key={venue.id} value={venue.id}>
-                          {venue.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="rangeStartDate">Start Date</Label>
+                <Input
+                  id="rangeStartDate"
+                  type="date"
+                  value={format(newDate.startDate, 'yyyy-MM-dd')}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const newStartDate = new Date(e.target.value);
+                      setNewDate({
+                        ...newDate, 
+                        startDate: newStartDate,
+                        // If end date exists and is before the new start date, update it
+                        endDate: newDate.endDate && isBefore(newDate.endDate, newStartDate) ? 
+                                addDays(newStartDate, 1) : newDate.endDate
+                      });
+                    }
+                  }}
+                  className={errors.startDate ? "border-red-500" : ""}
+                />
+                {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate}</p>}
               </div>
-            </TabsContent>
-
-            <Button
-              onClick={handleAddDate}
-              className="mt-4 flex items-center"
-              variant="secondary"
-            >
-              <Plus className="h-4 w-4 mr-2" /> Add Date
-            </Button>
-          </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="rangeEndDate">End Date</Label>
+                <Input
+                  id="rangeEndDate"
+                  type="date"
+                  value={newDate.endDate ? format(newDate.endDate, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setNewDate({...newDate, endDate: new Date(e.target.value)});
+                    }
+                  }}
+                  className={errors.endDate ? "border-red-500" : ""}
+                />
+                {errors.endDate && <p className="text-red-500 text-sm">{errors.endDate}</p>}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="rangeVenueId">Venue</Label>
+                <Select
+                  value={newDate.venueId}
+                  onValueChange={(value) => setNewDate({...newDate, venueId: value})}
+                >
+                  <SelectTrigger id="rangeVenueId">
+                    <SelectValue placeholder="Select venue" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {venues.map((venue) => (
+                      <SelectItem key={venue.id} value={venue.id}>
+                        {venue.tbd ? `TBD Venue in ${venue.city}` : venue.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="rangeNotes">Notes (Optional)</Label>
+                <Input
+                  id="rangeNotes"
+                  value={newDate.notes || ''}
+                  onChange={(e) => setNewDate({...newDate, notes: e.target.value})}
+                  placeholder="Add any notes about this date range"
+                />
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="recurring" className="border rounded-lg p-4 bg-gray-50">
+            <h3 className="font-medium mb-3 flex items-center">
+              <Repeat className="h-4 w-4 mr-2" />
+              Add Recurring Dates
+            </h3>
+            
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="recurringStartDate">First Event Date</Label>
+                <Input
+                  id="recurringStartDate"
+                  type="date"
+                  value={format(newDate.startDate, 'yyyy-MM-dd')}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setNewDate({...newDate, startDate: new Date(e.target.value)});
+                    }
+                  }}
+                  className={errors.startDate ? "border-red-500" : ""}
+                />
+                {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate}</p>}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="recurringType">Repeats</Label>
+                <Select
+                  value={newDate.recurringType}
+                  onValueChange={(value: any) => setNewDate({...newDate, recurringType: value})}
+                >
+                  <SelectTrigger id="recurringType" className={errors.recurringType ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.recurringType && <p className="text-red-500 text-sm">{errors.recurringType}</p>}
+              </div>
+              
+              {newDate.recurringType === 'weekly' && (
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Repeats On</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {weekDays.map((day) => (
+                      <Button
+                        key={day.value}
+                        type="button"
+                        variant={newDate.recurringDays?.includes(parseInt(day.value)) ? "default" : "outline"}
+                        className="h-10 w-10 p-0 rounded-full"
+                        onClick={() => {
+                          const dayNum = parseInt(day.value);
+                          const currentDays = newDate.recurringDays || [];
+                          
+                          if (currentDays.includes(dayNum)) {
+                            setNewDate({
+                              ...newDate, 
+                              recurringDays: currentDays.filter(d => d !== dayNum)
+                            });
+                          } else {
+                            setNewDate({
+                              ...newDate,
+                              recurringDays: [...currentDays, dayNum].sort()
+                            });
+                          }
+                        }}
+                      >
+                        {day.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="recurringUntil">Repeats Until</Label>
+                <Input
+                  id="recurringUntil"
+                  type="date"
+                  value={newDate.recurringUntil ? format(newDate.recurringUntil, 'yyyy-MM-dd') : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setNewDate({...newDate, recurringUntil: new Date(e.target.value)});
+                    }
+                  }}
+                  className={errors.recurringUntil ? "border-red-500" : ""}
+                />
+                {errors.recurringUntil && <p className="text-red-500 text-sm">{errors.recurringUntil}</p>}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="recurringVenueId">Venue</Label>
+                <Select
+                  value={newDate.venueId}
+                  onValueChange={(value) => setNewDate({...newDate, venueId: value})}
+                >
+                  <SelectTrigger id="recurringVenueId">
+                    <SelectValue placeholder="Select venue" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {venues.map((venue) => (
+                      <SelectItem key={venue.id} value={venue.id}>
+                        {venue.tbd ? `TBD Venue in ${venue.city}` : venue.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="recurringNotes">Notes (Optional)</Label>
+                <Input
+                  id="recurringNotes"
+                  value={newDate.notes || ''}
+                  onChange={(e) => setNewDate({...newDate, notes: e.target.value})}
+                  placeholder="Add any notes about these recurring dates"
+                />
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
         
+        <Button
+          onClick={handleAddDate}
+          className="mt-4 flex items-center"
+          variant="secondary"
+        >
+          <Plus className="h-4 w-4 mr-2" /> Add Date
+        </Button>
+        
         {dateList.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-6 mt-6">
             <h3 className="font-medium mb-3">Added Dates</h3>
             <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
               {dateList.map((date) => (
                 <div key={date.id} className="border rounded-lg p-3 bg-white flex justify-between items-start">
                   <div>
-                    <h4 className="font-medium">{date.type === 'single' ? 'Single Date' : 
-                                                date.type === 'range' ? 'Date Range' : 'Recurring'}</h4>
-                    <p className="text-sm text-gray-600">{formatDateRange(date)}</p>
-                    <p className="text-xs text-gray-500">Venue: {getVenueName(date.venueId)}</p>
+                    <h4 className="font-medium">{formatDateDisplay(date)}</h4>
+                    {date.notes && <p className="text-sm text-gray-600">{date.notes}</p>}
                   </div>
                   <Button
                     variant="ghost"

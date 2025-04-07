@@ -32,6 +32,7 @@ interface CreateEventSidebarProps {
   currentStep: EventCreationStep;
   stepStatuses: Record<EventCreationStep, StepStatus>;
   onStepClick: (step: EventCreationStep) => void;
+  minimized?: boolean;
 }
 
 export const stepConfig: Record<EventCreationStep, { label: string; icon: React.ReactNode }> = {
@@ -72,7 +73,8 @@ export const stepConfig: Record<EventCreationStep, { label: string; icon: React.
 export const CreateEventSidebar: React.FC<CreateEventSidebarProps> = ({ 
   currentStep, 
   stepStatuses, 
-  onStepClick 
+  onStepClick,
+  minimized = false
 }) => {
   const steps: EventCreationStep[] = [
     'basicDetails',
@@ -93,8 +95,16 @@ export const CreateEventSidebar: React.FC<CreateEventSidebarProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 w-64 shadow-md">
-      <h2 className="text-lg font-semibold mb-4 text-gray-800">Create Event</h2>
+    <div className={cn(
+      "bg-white rounded-lg border border-gray-200 shadow-md transition-all duration-300",
+      minimized ? "w-16 p-2" : "w-64 p-4"
+    )}>
+      <h2 className={cn(
+        "font-semibold text-gray-800 mb-4",
+        minimized ? "text-center text-sm" : "text-lg"
+      )}>
+        {minimized ? "Steps" : "Create Event"}
+      </h2>
       <div className="space-y-1">
         {steps.map((step) => {
           const status = stepStatuses[step];
@@ -105,7 +115,8 @@ export const CreateEventSidebar: React.FC<CreateEventSidebarProps> = ({
               onClick={() => status.isClickable && onStepClick(step)}
               disabled={!status.isClickable}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                "flex items-center gap-3 rounded-md text-sm transition-colors w-full",
+                minimized ? "justify-center py-3 px-2" : "px-3 py-2",
                 status.isClickable ? "cursor-pointer" : "cursor-not-allowed opacity-70",
                 status.status === 'current' && "bg-primary text-white",
                 status.status === 'complete' && "bg-green-50 text-green-700",
@@ -113,14 +124,20 @@ export const CreateEventSidebar: React.FC<CreateEventSidebarProps> = ({
                 status.status === 'incomplete' && status.isClickable && "hover:bg-gray-100 text-gray-700",
                 status.status === 'incomplete' && !status.isClickable && "text-gray-400"
               )}
+              title={minimized ? stepConfig[step].label : undefined}
             >
               <div className="flex-shrink-0">
                 {getStepIcon(step, status.status)}
               </div>
-              <span className="truncate">{stepConfig[step].label}</span>
               
-              {status.status === 'complete' && (
-                <CheckCircle className="h-4 w-4 ml-auto text-green-500" />
+              {!minimized && (
+                <>
+                  <span className="truncate">{stepConfig[step].label}</span>
+                  
+                  {status.status === 'complete' && (
+                    <CheckCircle className="h-4 w-4 ml-auto text-green-500" />
+                  )}
+                </>
               )}
             </button>
           );
