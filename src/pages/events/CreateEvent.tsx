@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 // Import the sidebar and step components
-import { CreateEventSidebar, EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
+import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
 import { BasicDetailsStep, BasicDetailsFormValues } from '@/components/events/steps/BasicDetailsStep';
 import { VenueStep, VenueFormValues } from '@/components/events/steps/VenueStep';
 import { DateStep, DateFormValues } from '@/components/events/steps/DateStep';
@@ -36,30 +36,33 @@ const initialMedia: MediaFormValues = {
 const initialAdditionalInfo: AdditionalInfoFormValues = {};
 
 const CreateEvent = () => {
-  const { scrollToTop, setActiveRoute } = useAppContext();
+  const { 
+    scrollToTop, 
+    setActiveRoute, 
+    eventStepStatuses, 
+    setEventStepStatuses,
+    setIsEditingEvent
+  } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Set active route when the component mounts
+  // Set active route and extract hash for step navigation
   useEffect(() => {
     setActiveRoute('/events/create');
-  }, [setActiveRoute]);
+    
+    // Get the current step from URL hash if available
+    const hash = location.hash.substring(1) as EventCreationStep;
+    if (hash && Object.keys(eventStepStatuses).includes(hash)) {
+      if (eventStepStatuses[hash].isClickable) {
+        setCurrentStep(hash);
+      }
+    }
+  }, [location.hash, setActiveRoute, eventStepStatuses]);
   
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [sidebarMinimized, setSidebarMinimized] = useState(false);
   
-  // Current step and completed steps tracking
+  // Current step tracking
   const [currentStep, setCurrentStep] = useState<EventCreationStep>('basicDetails');
-  const [stepStatuses, setStepStatuses] = useState<Record<EventCreationStep, StepStatus>>({
-    basicDetails: { status: 'current', isClickable: true },
-    venues: { status: 'incomplete', isClickable: false },
-    dates: { status: 'incomplete', isClickable: false },
-    times: { status: 'incomplete', isClickable: false },
-    tickets: { status: 'incomplete', isClickable: false },
-    media: { status: 'incomplete', isClickable: false },
-    additionalInfo: { status: 'incomplete', isClickable: false },
-    review: { status: 'incomplete', isClickable: false },
-  });
   
   // Form data for each step
   const [basicDetails, setBasicDetails] = useState<BasicDetailsFormValues>(initialBasicDetails);
@@ -72,11 +75,14 @@ const CreateEvent = () => {
   
   // Handle step change
   const handleStepClick = (step: EventCreationStep) => {
-    if (stepStatuses[step].isClickable) {
+    if (eventStepStatuses[step].isClickable) {
       setCurrentStep(step);
       
+      // Update URL hash without page reload
+      window.history.pushState(null, '', `#${step}`);
+      
       // Mark clicked step as current and others based on their status
-      setStepStatuses(prev => {
+      setEventStepStatuses(prev => {
         const newStatuses = { ...prev };
         
         Object.keys(newStatuses).forEach(key => {
@@ -97,11 +103,14 @@ const CreateEvent = () => {
   
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
-    setStepStatuses(prev => ({
+    setEventStepStatuses(prev => ({
       ...prev,
       [currentStep]: { ...prev[currentStep], status: 'complete' },
       [nextStep]: { ...prev[nextStep], status: 'current', isClickable: true }
     }));
+    
+    // Update URL hash
+    window.history.pushState(null, '', `#${nextStep}`);
     
     setCurrentStep(nextStep);
     scrollToTop();
@@ -109,7 +118,7 @@ const CreateEvent = () => {
   
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
-    setStepStatuses(prev => {
+    setEventStepStatuses(prev => {
       const newStatuses = { ...prev };
       
       Object.keys(newStatuses).forEach(key => {
@@ -121,6 +130,9 @@ const CreateEvent = () => {
       
       return newStatuses;
     });
+    
+    // Set editing mode to true so all steps are accessible
+    setIsEditingEvent(true);
   };
   
   // Handle form submissions for each step
@@ -197,11 +209,6 @@ const CreateEvent = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
-  // Toggle sidebar minimize
-  const toggleSidebarMinimize = () => {
-    setSidebarMinimized(!sidebarMinimized);
-  };
   
   // Render the current step content
   const renderStepContent = () => {
@@ -293,26 +300,6 @@ const CreateEvent = () => {
       <h1 className="text-3xl font-bold mb-6">Create Event</h1>
       
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Step Sidebar */}
-        <div className="md:w-64 flex-shrink-0">
-          <div className="sticky top-24">
-            <CreateEventSidebar
-              currentStep={currentStep}
-              stepStatuses={stepStatuses}
-              onStepClick={handleStepClick}
-              minimized={sidebarMinimized}
-            />
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={toggleSidebarMinimize} 
-              className="mt-2 w-full text-primary"
-            >
-              {sidebarMinimized ? "Expand" : "Minimize"}
-            </Button>
-          </div>
-        </div>
-        
         {/* Step Content */}
         <div className="flex-1">
           {renderStepContent()}
@@ -322,8 +309,8 @@ const CreateEvent = () => {
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
               <h3 className="text-lg font-medium mb-2">Notes</h3>
               <p className="text-sm text-gray-600">
-                Make sure to complete all required fields before proceeding to the next step.
-                You can always come back to edit your information later.
+                Complete each step to create your event. Make sure all required fields are filled out.
+                You can navigate between steps using the sidebar once they're unlocked.
               </p>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -337,7 +324,7 @@ const CreateEvent = () => {
                 size="sm" 
                 className="mt-2"
                 onClick={() => handleStepClick('review')}
-                disabled={!stepStatuses.review.isClickable}
+                disabled={!eventStepStatuses.review.isClickable}
               >
                 View Full Preview
               </Button>

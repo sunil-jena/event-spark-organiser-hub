@@ -24,6 +24,7 @@ export interface SidebarItemProps {
   onToggleExpand?: () => void;
   depth?: number;
   moduleName?: string; // Associated module name for permissions
+  isEventStep?: boolean; // Flag to indicate if this is an event creation step
 }
 
 export const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -38,10 +39,18 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   expanded = false,
   onToggleExpand,
   depth = 0,
-  moduleName
+  moduleName,
+  isEventStep = false
 }) => {
   const location = useLocation();
-  const { sidebarMinimized, activeRoute, setActiveRoute, hasPermission } = useAppContext();
+  const { 
+    sidebarMinimized, 
+    activeRoute, 
+    setActiveRoute, 
+    hasPermission,
+    eventStepStatuses, // Get event step statuses from AppContext
+    isEditingEvent // Flag to check if user is editing an event
+  } = useAppContext();
 
   // Check if user has permission to view this item
   const canView = !moduleName || hasPermission(moduleName, 'view');
@@ -60,9 +69,20 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   // Combine active states
   const isActive = isItemActive || isChildActive;
 
+  // Determine if this step is clickable based on the event context
+  let isClickable = !disabled;
+  
+  // If this is an event creation step, check its clickable status
+  if (isEventStep && href) {
+    const stepId = href.split('#')[1] as any;
+    if (stepId && eventStepStatuses[stepId]) {
+      isClickable = eventStepStatuses[stepId].isClickable || isEditingEvent;
+    }
+  }
+
   // Handle click events including updating active route
   const handleClick = () => {
-    if (disabled) return;
+    if (!isClickable) return;
 
     if (hasChildren && onToggleExpand) {
       onToggleExpand();
@@ -87,7 +107,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       "flex items-center w-full gap-2 px-3 py-2 rounded-md text-sm",
       "transition-colors duration-200",
       isActive ? activeClass : hoverClass,
-      disabled && "pointer-events-none opacity-60",
+      !isClickable && "pointer-events-none opacity-60",
       sidebarMinimized && "justify-center px-2"
     )}>
       {icon && (
@@ -131,7 +151,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
                 "flex items-center justify-center gap-2 px-2 py-2 rounded-md text-sm",
                 "transition-colors duration-200",
                 isActive ? activeClass : hoverClass,
-                disabled && "pointer-events-none opacity-60",
+                !isClickable && "pointer-events-none opacity-60",
               )}
             >
               {icon}
@@ -139,7 +159,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
           ) : (
             <button
               onClick={handleClick}
-              disabled={disabled}
+              disabled={!isClickable}
               className="w-full flex items-center justify-center"
             >
               {itemContent}
@@ -167,7 +187,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
           "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
           "transition-colors duration-200",
           (linkActive || isActive) ? activeClass : hoverClass,
-          disabled && "pointer-events-none opacity-60"
+          !isClickable && "pointer-events-none opacity-60"
         )}
       >
         {icon && <span className="flex items-center justify-center">{icon}</span>}
@@ -181,7 +201,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
     ) : (
       <button
         onClick={handleClick}
-        disabled={disabled}
+        disabled={!isClickable}
         className="w-full"
       >
         {itemContent}

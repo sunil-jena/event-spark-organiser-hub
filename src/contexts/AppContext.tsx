@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
 
 // Define the user permission types
 export type ModulePermission = {
@@ -29,6 +30,12 @@ interface AppContextState {
   
   // Check if user has specific permission
   hasPermission: (moduleName: string, permissionType: 'view' | 'edit' | 'delete' | 'create') => boolean;
+  
+  // Event creation state
+  eventStepStatuses: Record<EventCreationStep, StepStatus>;
+  setEventStepStatuses: (statuses: Record<EventCreationStep, StepStatus>) => void;
+  isEditingEvent: boolean;
+  setIsEditingEvent: (isEditing: boolean) => void;
 }
 
 // Default permissions
@@ -65,6 +72,18 @@ const defaultPermissions: UserPermissions = {
   ]
 };
 
+// Default event step statuses
+const defaultEventStepStatuses: Record<EventCreationStep, StepStatus> = {
+  basicDetails: { status: 'current', isClickable: true },
+  venues: { status: 'incomplete', isClickable: false },
+  dates: { status: 'incomplete', isClickable: false },
+  times: { status: 'incomplete', isClickable: false },
+  tickets: { status: 'incomplete', isClickable: false },
+  media: { status: 'incomplete', isClickable: false },
+  additionalInfo: { status: 'incomplete', isClickable: false },
+  review: { status: 'incomplete', isClickable: false },
+};
+
 // Create the context with a default value
 const AppContext = createContext<AppContextState | undefined>(undefined);
 
@@ -73,6 +92,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
   const [activeRoute, setActiveRoute] = useState('/');
   const [userPermissions, setUserPermissions] = useState<UserPermissions>(defaultPermissions);
+  const [eventStepStatuses, setEventStepStatuses] = useState<Record<EventCreationStep, StepStatus>>(defaultEventStepStatuses);
+  const [isEditingEvent, setIsEditingEvent] = useState(false);
 
   // Function to toggle the sidebar
   const toggleSidebar = () => {
@@ -110,8 +131,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     setActiveRoute,
     userPermissions,
     setUserPermissions,
-    hasPermission
-  }), [sidebarMinimized, activeRoute, userPermissions]);
+    hasPermission,
+    eventStepStatuses,
+    setEventStepStatuses,
+    isEditingEvent,
+    setIsEditingEvent
+  }), [sidebarMinimized, activeRoute, userPermissions, eventStepStatuses, isEditingEvent]);
 
   return (
     <AppContext.Provider value={contextValue}>

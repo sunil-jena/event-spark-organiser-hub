@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Calendar,
@@ -23,7 +23,12 @@ import {
   Award,
   Tag,
   Clock,
-  PlusCircle
+  PlusCircle,
+  User,
+  MapPin,
+  FileImage,
+  Info,
+  CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,6 +36,8 @@ import { cn } from '@/lib/utils';
 import { SidebarItemProps } from '@/components/sidebar/SidebarItem';
 import { SidebarMenu } from '@/components/sidebar/SidebarMenu';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
+import { useAppContext } from '@/contexts/AppContext';
 
 interface SidebarProps {
   isMobile: boolean;
@@ -39,6 +46,42 @@ interface SidebarProps {
   minimized: boolean;
   toggleMinimize: () => void;
 }
+
+// Define the event creation step configuration
+const eventStepConfig: Record<EventCreationStep, { label: string; icon: React.ReactNode }> = {
+  basicDetails: {
+    label: 'Basic Details',
+    icon: <User className="h-5 w-5" />
+  },
+  venues: {
+    label: 'Venues',
+    icon: <MapPin className="h-5 w-5" />
+  },
+  dates: {
+    label: 'Dates',
+    icon: <Calendar className="h-5 w-5" />
+  },
+  times: {
+    label: 'Time Slots',
+    icon: <Clock className="h-5 w-5" />
+  },
+  tickets: {
+    label: 'Tickets',
+    icon: <Ticket className="h-5 w-5" />
+  },
+  media: {
+    label: 'Media',
+    icon: <FileImage className="h-5 w-5" />
+  },
+  additionalInfo: {
+    label: 'Additional Info',
+    icon: <Info className="h-5 w-5" />
+  },
+  review: {
+    label: 'Review',
+    icon: <CheckCircle className="h-5 w-5" />
+  }
+};
 
 // Define sidebar navigation items
 const mainNavItems: SidebarItemProps[] = [
@@ -67,7 +110,57 @@ const mainNavItems: SidebarItemProps[] = [
         title: 'Create Event',
         href: '/events/create',
         icon: <PlusCircle className="h-4 w-4" />,
-        moduleName: 'events'
+        moduleName: 'events',
+        children: [
+          {
+            title: 'Basic Details',
+            href: '/events/create#basicDetails',
+            icon: <User className="h-4 w-4" />,
+            moduleName: 'events'
+          },
+          {
+            title: 'Venues',
+            href: '/events/create#venues',
+            icon: <MapPin className="h-4 w-4" />,
+            moduleName: 'events'
+          },
+          {
+            title: 'Dates',
+            href: '/events/create#dates',
+            icon: <Calendar className="h-4 w-4" />,
+            moduleName: 'events'
+          },
+          {
+            title: 'Time Slots',
+            href: '/events/create#times',
+            icon: <Clock className="h-4 w-4" />,
+            moduleName: 'events'
+          },
+          {
+            title: 'Tickets',
+            href: '/events/create#tickets',
+            icon: <Ticket className="h-4 w-4" />,
+            moduleName: 'events'
+          },
+          {
+            title: 'Media',
+            href: '/events/create#media',
+            icon: <FileImage className="h-4 w-4" />,
+            moduleName: 'events'
+          },
+          {
+            title: 'Additional Info',
+            href: '/events/create#additionalInfo',
+            icon: <Info className="h-4 w-4" />,
+            moduleName: 'events'
+          },
+          {
+            title: 'Review',
+            href: '/events/create#review',
+            icon: <CheckCircle className="h-4 w-4" />,
+            moduleName: 'events'
+          }
+        ]
       },
       {
         title: 'Categories',
@@ -257,6 +350,8 @@ const secondaryNavItems: SidebarItemProps[] = [
 
 const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: SidebarProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { activeRoute } = useAppContext();
 
   const sidebarClasses = cn(
     'flex flex-col h-screen bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',

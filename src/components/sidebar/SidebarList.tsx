@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { SidebarItem, SidebarItemProps } from './SidebarItem';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/contexts/AppContext';
+import { useLocation } from 'react-router-dom';
 
 interface SidebarListProps {
   items: SidebarItemProps[];
@@ -17,12 +18,43 @@ export const SidebarList: React.FC<SidebarListProps> = ({
 }) => {
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const { sidebarMinimized } = useAppContext();
+  const location = useLocation();
+
+  // Auto-expand items based on current route
+  React.useEffect(() => {
+    const currentPath = location.pathname;
+    const currentHash = location.hash.substring(1); // Remove the '#' character
+
+    // Check if any item matches the current path or has a matching child
+    items.forEach(item => {
+      if (item.children) {
+        // Check if this item should be expanded
+        const shouldExpand = item.href === currentPath || 
+                            item.children.some(child => 
+                              child.href === currentPath || 
+                              (child.href && child.href.includes(currentHash))
+                            );
+        
+        if (shouldExpand) {
+          setExpandedItems(prev => ({
+            ...prev,
+            [item.title]: true
+          }));
+        }
+      }
+    });
+  }, [location.pathname, location.hash, items]);
 
   const toggleExpand = (title: string) => {
     setExpandedItems(prev => ({
       ...prev,
       [title]: !prev[title]
     }));
+  };
+
+  // Check if item is an event creation step
+  const isEventStep = (item: SidebarItemProps): boolean => {
+    return item.href?.includes('/events/create#') || false;
   };
 
   // Filter items based on user permissions
@@ -38,6 +70,7 @@ export const SidebarList: React.FC<SidebarListProps> = ({
               depth={depth}
               expanded={isExpanded}
               onToggleExpand={() => toggleExpand(item.title)}
+              isEventStep={isEventStep(item)}
             />
             
             {!sidebarMinimized && item.children && (
