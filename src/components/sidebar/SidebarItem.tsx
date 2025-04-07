@@ -52,9 +52,9 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   const hasChildren = children && children.length > 0;
 
   // Check if this item or any of its children are active
-  const isItemActive = href ? location.pathname === href || location.pathname.startsWith(`${href}/`) : false;
+  const isItemActive = href ? (location.pathname === href || activeRoute === href) : false;
   const isChildActive = hasChildren && children?.some(
-    child => (child.href && (location.pathname === child.href || location.pathname.startsWith(`${child.href}/`)))
+    child => (child.href && (location.pathname === child.href || activeRoute === child.href || location.pathname.startsWith(`${child.href}/`)))
   );
 
   // Combine active states
@@ -127,7 +127,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
               target={external ? "_blank" : undefined}
               rel={external ? "noreferrer" : undefined}
               onClick={handleClick}
-              className={({ isActive }) => cn(
+              className={cn(
                 "flex items-center justify-center gap-2 px-2 py-2 rounded-md text-sm",
                 "transition-colors duration-200",
                 isActive ? activeClass : hoverClass,
@@ -163,10 +163,10 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
         target={external ? "_blank" : undefined}
         rel={external ? "noreferrer" : undefined}
         onClick={handleClick}
-        className={({ isActive }) => cn(
+        className={({ isActive: linkActive }) => cn(
           "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
           "transition-colors duration-200",
-          isActive ? activeClass : hoverClass,
+          (linkActive || isActive) ? activeClass : hoverClass,
           disabled && "pointer-events-none opacity-60"
         )}
       >

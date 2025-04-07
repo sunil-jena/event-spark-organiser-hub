@@ -3,13 +3,14 @@ import React from 'react';
 import {
   CheckCircle,
   CircleAlert,
-  Clock,
+  Calendar,
   FileImage,
   Info,
   MapPin,
   Settings,
   Ticket,
-  User
+  User,
+  Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -46,7 +47,7 @@ export const stepConfig: Record<EventCreationStep, { label: string; icon: React.
   },
   dates: {
     label: 'Dates',
-    icon: <Settings className="h-5 w-5" />
+    icon: <Calendar className="h-5 w-5" />
   },
   times: {
     label: 'Time Slots',
@@ -97,7 +98,7 @@ export const CreateEventSidebar: React.FC<CreateEventSidebarProps> = ({
   return (
     <div className={cn(
       "bg-white rounded-lg border border-gray-200 shadow-md transition-all duration-300",
-      minimized ? "w-16 p-2" : "w-64 p-4"
+      minimized ? "w-16 p-2" : "w-full md:w-64 p-4"
     )}>
       <h2 className={cn(
         "font-semibold text-gray-800 mb-4",

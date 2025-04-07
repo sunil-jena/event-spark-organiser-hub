@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Import the sidebar and step components
 import { CreateEventSidebar, EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
@@ -35,8 +36,17 @@ const initialMedia: MediaFormValues = {
 const initialAdditionalInfo: AdditionalInfoFormValues = {};
 
 const CreateEvent = () => {
-  const { scrollToTop } = useAppContext();
+  const { scrollToTop, setActiveRoute } = useAppContext();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Set active route when the component mounts
+  useEffect(() => {
+    setActiveRoute('/events/create');
+  }, [setActiveRoute]);
+  
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [sidebarMinimized, setSidebarMinimized] = useState(false);
   
   // Current step and completed steps tracking
   const [currentStep, setCurrentStep] = useState<EventCreationStep>('basicDetails');
@@ -188,6 +198,11 @@ const CreateEvent = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
+  // Toggle sidebar minimize
+  const toggleSidebarMinimize = () => {
+    setSidebarMinimized(!sidebarMinimized);
+  };
+  
   // Render the current step content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -278,20 +293,56 @@ const CreateEvent = () => {
       <h1 className="text-3xl font-bold mb-6">Create Event</h1>
       
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Step Sidebar (Hidden on mobile) */}
-        <div className="hidden md:block">
+        {/* Step Sidebar */}
+        <div className="md:w-64 flex-shrink-0">
           <div className="sticky top-24">
             <CreateEventSidebar
               currentStep={currentStep}
               stepStatuses={stepStatuses}
               onStepClick={handleStepClick}
+              minimized={sidebarMinimized}
             />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={toggleSidebarMinimize} 
+              className="mt-2 w-full text-primary"
+            >
+              {sidebarMinimized ? "Expand" : "Minimize"}
+            </Button>
           </div>
         </div>
         
         {/* Step Content */}
         <div className="flex-1">
           {renderStepContent()}
+          
+          {/* Preview & Notes Section */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <h3 className="text-lg font-medium mb-2">Notes</h3>
+              <p className="text-sm text-gray-600">
+                Make sure to complete all required fields before proceeding to the next step.
+                You can always come back to edit your information later.
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <h3 className="text-lg font-medium mb-2">Preview</h3>
+              <p className="text-sm text-gray-600">
+                This is a preview of how your event will appear to attendees.
+                Complete all steps to see a full preview on the Review page.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+                onClick={() => handleStepClick('review')}
+                disabled={!stepStatuses.review.isClickable}
+              >
+                View Full Preview
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
       

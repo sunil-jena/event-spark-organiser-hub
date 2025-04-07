@@ -22,7 +22,8 @@ import {
   Film,
   Award,
   Tag,
-  Clock
+  Clock,
+  PlusCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -65,6 +66,7 @@ const mainNavItems: SidebarItemProps[] = [
       {
         title: 'Create Event',
         href: '/events/create',
+        icon: <PlusCircle className="h-4 w-4" />,
         moduleName: 'events'
       },
       {
@@ -283,6 +285,17 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
             </div>
           )}
         </div>
+        
+        {!minimized && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-white hover:bg-white/10"
+            onClick={toggleMinimize}
+          >
+            <Users className="h-4 w-4" />
+          </Button>
+        )}
       </div>
       
       {/* Scrollable nav sections */}
