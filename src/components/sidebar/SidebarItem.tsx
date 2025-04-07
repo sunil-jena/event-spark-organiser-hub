@@ -90,7 +90,13 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       disabled && "pointer-events-none opacity-60",
       sidebarMinimized && "justify-center px-2"
     )}>
-      {icon && <span className={sidebarMinimized ? "mx-auto" : ""}>{icon}</span>}
+      {icon && (
+        <span className={cn(
+          sidebarMinimized ? "mx-auto flex items-center justify-center" : ""
+        )}>
+          {icon}
+        </span>
+      )}
       {!sidebarMinimized && (
         <>
           <span className="truncate">{title}</span>
@@ -121,11 +127,10 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
               rel={external ? "noreferrer" : undefined}
               onClick={handleClick}
               className={({ isActive }) => cn(
-                "flex items-center gap-2 px-2 py-2 rounded-md text-sm",
+                "flex items-center justify-center gap-2 px-2 py-2 rounded-md text-sm",
                 "transition-colors duration-200",
                 isActive ? activeClass : hoverClass,
                 disabled && "pointer-events-none opacity-60",
-                "justify-center"
               )}
             >
               {icon}
@@ -134,7 +139,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
             <button
               onClick={handleClick}
               disabled={disabled}
-              className="w-full"
+              className="w-full flex items-center justify-center"
             >
               {itemContent}
             </button>
