@@ -6,7 +6,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEventContext } from '@/contexts/EventContext';
-import { EventCreationStep, StepStatus, CreateEventSidebar } from '@/components/events/CreateEventSidebar';
+import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
 
 // Import the step components
 import { BasicDetailsStep } from '@/components/events/steps/BasicDetailsStep';
@@ -94,8 +94,8 @@ const CreateEvent = () => {
       // Update URL hash without page reload
       window.history.pushState(null, '', `#${step}`);
       
-      // Update step statuses - Fixed type error here
-      setEventStepStatuses((prevStatuses) => {
+      // Update step statuses - Fixed type error by using a dispatch function
+      setEventStepStatuses((prevStatuses: Record<EventCreationStep, StepStatus>) => {
         const newStatuses = { ...prevStatuses };
         
         Object.keys(newStatuses).forEach(key => {
@@ -118,7 +118,7 @@ const CreateEvent = () => {
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
     // Update step statuses - Fixed type error here
-    setEventStepStatuses((prevStatuses) => {
+    setEventStepStatuses((prevStatuses: Record<EventCreationStep, StepStatus>) => {
       const newStatuses = { ...prevStatuses };
       newStatuses[currentStep] = { ...prevStatuses[currentStep], status: 'complete' };
       newStatuses[nextStep] = { ...prevStatuses[nextStep], status: 'current', isClickable: true };
@@ -135,7 +135,7 @@ const CreateEvent = () => {
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
     // Update step statuses - Fixed type error here
-    setEventStepStatuses((prevStatuses) => {
+    setEventStepStatuses((prevStatuses: Record<EventCreationStep, StepStatus>) => {
       const newStatuses = { ...prevStatuses };
       
       Object.keys(newStatuses).forEach(key => {
@@ -165,10 +165,10 @@ const CreateEvent = () => {
   };
   
   const handleDatesSubmit = (values: any) => {
-    // Add the required 'type' property to match the DateStep component's expectations
+    // Map to the expected type
     const updatedValues = values.map((date: any) => ({
       ...date,
-      type: date.dateType // Ensure 'type' is set from dateType
+      type: date.dateType === 'multiple' ? 'single' : date.dateType // Map 'multiple' to 'single' for compatibility
     }));
     setDates(updatedValues);
     completeStep('times');
@@ -187,7 +187,8 @@ const CreateEvent = () => {
       isAllDates: ticket.isAllDates || false,
       availableDateIds: ticket.availableDateIds || [],
       isAllTimeSlots: ticket.isAllTimeSlots || false,
-      availableTimeSlotIds: ticket.availableTimeSlotIds || []
+      availableTimeSlotIds: ticket.availableTimeSlotIds || [],
+      isLimited: ticket.isLimited || false // Add the required isLimited property
     }));
     setTickets(updatedValues);
     completeStep('media');
@@ -213,11 +214,25 @@ const CreateEvent = () => {
     const eventData = {
       basicDetails,
       venues,
-      dates,
+      dates: dates.map(d => ({
+        ...d,
+        type: d.dateType === 'multiple' ? 'single' : d.dateType // Map 'multiple' to 'single' for compatibility
+      })),
       timeSlots,
-      tickets,
+      tickets: tickets.map(t => ({
+        ...t,
+        ticketType: t.ticketType || 'standard',
+        isAllDates: t.isAllDates || false,
+        availableDateIds: t.availableDateIds || [],
+        isAllTimeSlots: t.isAllTimeSlots || false,
+        availableTimeSlotIds: t.availableTimeSlotIds || [],
+        isLimited: t.isLimited || false // Add the required isLimited property
+      })),
       media,
-      additionalInfo,
+      additionalInfo: {
+        ...additionalInfo,
+        faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
+      },
       artists
     };
     
@@ -259,7 +274,10 @@ const CreateEvent = () => {
       case 'dates':
         return (
           <DateStep 
-            dates={dates.map(d => ({ ...d, type: d.dateType }))} // Fixed type error
+            dates={dates.map(d => ({ 
+              ...d, 
+              type: d.dateType === 'multiple' ? 'single' : d.dateType // Map 'multiple' to 'single' for compatibility 
+            }))} 
             venues={venues}
             onSubmit={handleDatesSubmit}
             onBack={() => handleStepClick('venues')}
@@ -269,7 +287,10 @@ const CreateEvent = () => {
         return (
           <TimeSlotStep 
             timeSlots={timeSlots} 
-            dates={dates.map(d => ({ ...d, type: d.dateType }))} // Fixed type error
+            dates={dates.map(d => ({ 
+              ...d, 
+              type: d.dateType === 'multiple' ? 'single' : d.dateType // Map 'multiple' to 'single' for compatibility
+            }))}
             venues={venues}
             artists={artists}
             onSubmit={handleTimeSlotSubmit}
@@ -285,9 +306,13 @@ const CreateEvent = () => {
               isAllDates: t.isAllDates || false,
               availableDateIds: t.availableDateIds || [],
               isAllTimeSlots: t.isAllTimeSlots || false,
-              availableTimeSlotIds: t.availableTimeSlotIds || []
-            }))} // Fixed type error
-            dates={dates.map(d => ({ ...d, type: d.dateType }))} // Fixed type error
+              availableTimeSlotIds: t.availableTimeSlotIds || [],
+              isLimited: t.isLimited || false // Add the required isLimited property
+            }))}
+            dates={dates.map(d => ({ 
+              ...d, 
+              type: d.dateType === 'multiple' ? 'single' : d.dateType // Map 'multiple' to 'single' for compatibility
+            }))}
             timeSlots={timeSlots}
             venues={venues}
             onSubmit={handleTicketSubmit}
@@ -299,9 +324,9 @@ const CreateEvent = () => {
           <MediaStep 
             media={{
               ...media,
-              bannerImage: media.bannerImage as File, // Type casting to match component's expectation
-              verticalBannerImage: media.verticalBannerImage as File,
-              cardImage: media.cardImage as File
+              bannerImage: media.bannerImage || null,
+              verticalBannerImage: media.verticalBannerImage || null,
+              cardImage: media.cardImage || null
             }} 
             onSubmit={handleMediaSubmit}
             onBack={() => handleStepClick('tickets')}
@@ -324,7 +349,10 @@ const CreateEvent = () => {
             eventData={{
               basicDetails,
               venues,
-              dates: dates.map(d => ({ ...d, type: d.dateType })), // Fixed type error
+              dates: dates.map(d => ({ 
+                ...d, 
+                type: d.dateType === 'multiple' ? 'single' : d.dateType 
+              })),
               timeSlots,
               tickets: tickets.map(t => ({
                 ...t,
@@ -332,11 +360,12 @@ const CreateEvent = () => {
                 isAllDates: t.isAllDates || false,
                 availableDateIds: t.availableDateIds || [],
                 isAllTimeSlots: t.isAllTimeSlots || false,
-                availableTimeSlotIds: t.availableTimeSlotIds || []
-              })), // Fixed type error
+                availableTimeSlotIds: t.availableTimeSlotIds || [],
+                isLimited: t.isLimited || false
+              })),
               media: {
                 ...media,
-                bannerImage: media.bannerImage as File, // Type casting to match component's expectation
+                bannerImage: media.bannerImage || null,
               },
               additionalInfo: {
                 ...additionalInfo,
@@ -357,46 +386,10 @@ const CreateEvent = () => {
     <div className="max-w-7xl mx-auto pb-20 px-4 sm:px-6">
       <h1 className="text-3xl font-bold mb-6">Create Event</h1>
       
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar */}
-        <div className="md:w-64 flex-shrink-0">
-          <CreateEventSidebar
-            currentStep={currentStep}
-            stepStatuses={eventStepStatuses}
-            onStepClick={handleStepClick}
-          />
-        </div>
-        
+      <div className="flex flex-col gap-6">
         {/* Step Content */}
         <div className="flex-1">
           {renderStepContent()}
-          
-          {/* Preview & Notes Section */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-medium mb-2">Notes</h3>
-              <p className="text-sm text-gray-600">
-                Complete each step to create your event. Make sure all required fields are filled out.
-                You can navigate between steps using the sidebar once they're unlocked.
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-medium mb-2">Preview</h3>
-              <p className="text-sm text-gray-600">
-                This is a preview of how your event will appear to attendees.
-                Complete all steps to see a full preview on the Review page.
-              </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-2"
-                onClick={() => handleStepClick('review')}
-                disabled={!eventStepStatuses.review.isClickable}
-              >
-                View Full Preview
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
       
