@@ -43,7 +43,7 @@ export interface VenueFormValues {
 export interface DateFormValues {
   id: string;
   venueId: string;
-  type: 'single' | 'range' | 'recurring';
+  type: 'single' | 'range' | 'recurring'; // Required by DateStep.tsx
   dateType: 'single' | 'multiple' | 'range' | 'recurring';
   dates: Date[];
   startDate: Date;
@@ -84,7 +84,7 @@ export interface TicketFormValues {
   description: string;
   price: number;
   quantity: number;
-  ticketType: 'standard' | 'early-bird' | 'vip' | 'season-pass' | string;
+  ticketType: 'standard' | 'early-bird' | 'vip' | 'season-pass' | string; // Allow broader string type
   isAllDates: boolean;
   availableDateIds: string[];
   isAllTimeSlots: boolean;
@@ -118,7 +118,7 @@ export interface MediaFormValues {
 
 export interface AdditionalInfoFormValues {
   eventRules?: string;
-  faq?: string;
+  faq?: string; // Changed to string to match component expectations
   terms?: string;
   refundPolicy?: string;
   ageRestriction?: string;
@@ -152,4 +152,16 @@ export interface ArtistFormValues {
     platform: string;
     url: string;
   }[];
+}
+
+// Define an event data interface to include all form values
+export interface EventData {
+  basicDetails: BasicDetailsFormValues;
+  venues: VenueFormValues[];
+  dates: DateFormValues[];
+  timeSlots: TimeSlotFormValues[];
+  tickets: TicketFormValues[];
+  media: MediaFormValues;
+  additionalInfo: AdditionalInfoFormValues;
+  artists?: ArtistFormValues[];
 }

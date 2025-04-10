@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEventContext } from '@/contexts/EventContext';
 import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
+import { EventData } from '@/components/events/steps/types';
 
 // Import the step components
 import { BasicDetailsStep } from '@/components/events/steps/BasicDetailsStep';
@@ -94,7 +95,7 @@ const CreateEvent = () => {
       // Update URL hash without page reload
       window.history.pushState(null, '', `#${step}`);
       
-      // Update step statuses
+      // Update step statuses - using a function that returns the new value
       setEventStepStatuses((prevStatuses) => {
         const newStatuses = { ...prevStatuses };
         
@@ -117,7 +118,7 @@ const CreateEvent = () => {
   
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
-    // Update step statuses
+    // Update step statuses - using a function that returns the new value
     setEventStepStatuses((prevStatuses) => {
       const newStatuses = { ...prevStatuses };
       newStatuses[currentStep] = { ...prevStatuses[currentStep], status: 'complete' };
@@ -134,7 +135,7 @@ const CreateEvent = () => {
   
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
-    // Update step statuses
+    // Update step statuses - using a function that returns the new value
     setEventStepStatuses((prevStatuses) => {
       const newStatuses = { ...prevStatuses };
       
@@ -155,6 +156,7 @@ const CreateEvent = () => {
   
   // Handle form submissions for each step
   const handleBasicDetailsSubmit = (values: any) => {
+    console.log("Basic details submitted:", values);
     setBasicDetails(values);
     completeStep('venues');
   };
@@ -214,7 +216,7 @@ const CreateEvent = () => {
   
   const handleFinalSubmit = () => {
     // Prepare event data for submission
-    const eventData = {
+    const eventData: EventData = {
       basicDetails,
       venues,
       dates: dates.map(d => ({
@@ -223,13 +225,13 @@ const CreateEvent = () => {
       })),
       timeSlots,
       tickets: tickets.map(t => ({
-        ...t,
-        ticketType: t.ticketType || 'standard',
-        isAllDates: t.isAllDates || false,
-        availableDateIds: t.availableDateIds || [],
-        isAllTimeSlots: t.isAllTimeSlots || false,
-        availableTimeSlotIds: t.availableTimeSlotIds || [],
-        isLimited: t.isLimited || false
+        ...ticket,
+        ticketType: ticket.ticketType || 'standard',
+        isAllDates: ticket.isAllDates || false,
+        availableDateIds: ticket.availableDateIds || [],
+        isAllTimeSlots: ticket.isAllTimeSlots || false,
+        availableTimeSlotIds: ticket.availableTimeSlotIds || [],
+        isLimited: ticket.isLimited || false
       })),
       media,
       additionalInfo: {
@@ -363,7 +365,7 @@ const CreateEvent = () => {
                 ...additionalInfo,
                 faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
               },
-              artists
+              artists: artists
             }} 
             onSubmit={handleFinalSubmit}
             onBack={() => handleStepClick('additionalInfo')}

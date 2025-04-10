@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/accordion";
 import { AdditionalInfoFormValues } from './types';
 
-export { AdditionalInfoFormValues };
+// Use 'export type' for re-exporting types when isolatedModules is enabled
+export type { AdditionalInfoFormValues };
 
 const AdditionalInfoSchema = Yup.object().shape({
   eventRules: Yup.string(),
