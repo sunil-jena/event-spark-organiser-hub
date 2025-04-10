@@ -14,20 +14,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DateFormValues } from './DateStep';
-import { VenueFormValues } from './VenueStep';
+import { Checkbox } from "@/components/ui/checkbox";
+import { DateFormValues } from './types';
+import { VenueFormValues } from './types';
+import { ArtistFormValues } from './types';
+import { Input } from '@/components/ui/input';
 
 export interface TimeSlotFormValues {
   id: string;
   startTime: string;
   endTime: string;
   dateId: string;
+  venueId: string;
+  gateOpensBeforeStart: boolean;
+  gateOpenType?: 'minute' | 'hour';
+  gateOpenDuration?: number;
+  artists?: {
+    artistId: string;
+    bannerImage: string;
+  }[];
 }
 
 interface TimeSlotStepProps {
   timeSlots: TimeSlotFormValues[];
   dates: DateFormValues[];
   venues: VenueFormValues[];
+  artists: ArtistFormValues[];
   onSubmit: (timeSlots: TimeSlotFormValues[]) => void;
   onBack: () => void;
 }
@@ -59,6 +71,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
   timeSlots, 
   dates,
   venues,
+  artists,
   onSubmit, 
   onBack 
 }) => {
@@ -67,7 +80,10 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
     id: uuidv4(),
     startTime: '09:00',
     endTime: '17:00',
-    dateId: dates.length > 0 ? dates[0].id : ''
+    dateId: dates.length > 0 ? dates[0].id : '',
+    venueId: venues.length > 0 ? venues[0].id : '',
+    gateOpensBeforeStart: false,
+    artists: []
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -78,6 +94,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
     if (!timeSlot.startTime) newErrors.startTime = 'Start time is required';
     if (!timeSlot.endTime) newErrors.endTime = 'End time is required';
     if (!timeSlot.dateId) newErrors.dateId = 'Date is required';
+    if (!timeSlot.venueId) newErrors.venueId = 'Venue is required';
     
     // Check if end time is after start time
     if (timeSlot.startTime && timeSlot.endTime) {
@@ -104,7 +121,10 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
         id: uuidv4(),
         startTime: '09:00',
         endTime: '17:00',
-        dateId: dates.length > 0 ? dates[0].id : ''
+        dateId: dates.length > 0 ? dates[0].id : '',
+        venueId: venues.length > 0 ? venues[0].id : '',
+        gateOpensBeforeStart: false,
+        artists: []
       });
       setErrors({});
       
@@ -143,12 +163,10 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
     const date = dates.find(d => d.id === dateId);
     if (!date) return 'Unknown date';
     
-    if (date.type === 'single') {
+    if (date.isSingleDay) {
       return format(date.startDate, 'PPP');
-    } else if (date.type === 'range') {
+    } else if (date.isDateRange) {
       return `${format(date.startDate, 'PPP')} to ${format(date.endDate!, 'PPP')}`;
-    } else if (date.type === 'recurring') {
-      return `Recurring: ${format(date.startDate, 'PPP')} to ${format(date.endDate!, 'PPP')}`;
     }
     
     return '';
@@ -160,6 +178,16 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
     
     const venue = venues.find(v => v.id === date.venueId);
     return venue ? venue.name : 'Unknown venue';
+  };
+
+  // Helper to toggle gate opens before start
+  const handleGateOpensChange = (checked: boolean) => {
+    setNewTimeSlot({
+      ...newTimeSlot,
+      gateOpensBeforeStart: checked,
+      gateOpenType: checked ? 'hour' : undefined,
+      gateOpenDuration: checked ? 1 : undefined
+    });
   };
 
   return (
@@ -226,8 +254,8 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
                 <SelectContent className="max-h-60">
                   {dates.map((date) => (
                     <SelectItem key={date.id} value={date.id}>
-                      {date.type === 'single' ? 'Single: ' : 
-                       date.type === 'range' ? 'Range: ' : 'Recurring: '}
+                      {date.isSingleDay ? 'Single: ' : 
+                       date.isDateRange ? 'Range: ' : ''}
                       {format(date.startDate, 'M/d/yyyy')}
                     </SelectItem>
                   ))}
@@ -235,6 +263,52 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
               </Select>
               {errors.dateId && <p className="text-red-500 text-sm">{errors.dateId}</p>}
             </div>
+          </div>
+          
+          <div className="mt-4 space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="gateOpens" 
+                checked={newTimeSlot.gateOpensBeforeStart}
+                onCheckedChange={handleGateOpensChange}
+              />
+              <Label htmlFor="gateOpens">Gate opens before start time</Label>
+            </div>
+            
+            {newTimeSlot.gateOpensBeforeStart && (
+              <div className="grid grid-cols-2 gap-4 pl-6">
+                <div className="space-y-2">
+                  <Label htmlFor="gateOpenType">Time Unit</Label>
+                  <Select
+                    value={newTimeSlot.gateOpenType}
+                    onValueChange={(value: 'minute' | 'hour') => 
+                      setNewTimeSlot({...newTimeSlot, gateOpenType: value})}
+                  >
+                    <SelectTrigger id="gateOpenType">
+                      <SelectValue placeholder="Select time unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="minute">Minutes</SelectItem>
+                      <SelectItem value="hour">Hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="gateOpenDuration">Duration</Label>
+                  <Input
+                    id="gateOpenDuration"
+                    type="number"
+                    min="1"
+                    value={newTimeSlot.gateOpenDuration || 1}
+                    onChange={(e) => setNewTimeSlot({
+                      ...newTimeSlot, 
+                      gateOpenDuration: parseInt(e.target.value) || 0
+                    })}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           
           <Button
@@ -268,6 +342,11 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
                       </h4>
                       <p className="text-sm text-gray-600">{getDateDisplay(slot.dateId)}</p>
                       <p className="text-xs text-gray-500">Venue: {getVenueForDate(slot.dateId)}</p>
+                      {slot.gateOpensBeforeStart && (
+                        <p className="text-xs text-gray-500">
+                          Gate opens {slot.gateOpenDuration} {slot.gateOpenType === 'hour' ? 'hour(s)' : 'minute(s)'} before start
+                        </p>
+                      )}
                     </div>
                     <Button
                       variant="ghost"

@@ -7,7 +7,8 @@ import {
   TimeSlotFormValues,
   TicketFormValues,
   MediaFormValues,
-  AdditionalInfoFormValues
+  AdditionalInfoFormValues,
+  ArtistFormValues
 } from '@/components/events/steps/types';
 import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
 
@@ -21,13 +22,40 @@ const initialBasicDetails: BasicDetailsFormValues = {
   organizerPhone: '',
   additionalInfo: '',
   terms: '',
+  eventType: 'public',
+  aboutMessage: '',
+  eventHighlights: [],
+  tags: [],
+  language: ['English'],
+  ageGroup: 5,
+  ticketNeededForAges: 5,
+  layout: 'outdoor',
+  seatingArrangementOption: 'standing',
+  kidFriendly: 'Yes',
+  petFriendly: 'No',
+  termsAndConditions: '',
 };
 
 const initialMedia: MediaFormValues = {
   galleryImages: [],
+  eventBannerImage: [],
+  eventVerticalBannerImage: [],
 };
 
-const initialAdditionalInfo: AdditionalInfoFormValues = {};
+const initialAdditionalInfo: AdditionalInfoFormValues = {
+  tags: [],
+  sponsor: [],
+  isPromoted: {
+    isActive: false,
+    priority: 1,
+  },
+  trendingShow: {
+    isTrending: false,
+    priority: 0,
+  },
+  bookingStatus: 'open',
+  isFillingFast: false,
+};
 
 // Define default step statuses
 const defaultEventStepStatuses: Record<EventCreationStep, StepStatus> = {
@@ -58,6 +86,8 @@ interface EventContextState {
   setMedia: (data: MediaFormValues) => void;
   additionalInfo: AdditionalInfoFormValues;
   setAdditionalInfo: (data: AdditionalInfoFormValues) => void;
+  artists: ArtistFormValues[];
+  setArtists: (data: ArtistFormValues[]) => void;
   
   // Helper functions
   resetEventData: () => void;
@@ -108,6 +138,11 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     const saved = localStorage.getItem('event_additionalInfo');
     return saved ? JSON.parse(saved) : initialAdditionalInfo;
   });
+
+  const [artists, setArtists] = useState<ArtistFormValues[]>(() => {
+    const saved = localStorage.getItem('event_artists');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   // Current step state
   const [currentStep, setCurrentStep] = useState<EventCreationStep>(() => {
@@ -143,6 +178,10 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem('event_additionalInfo', JSON.stringify(additionalInfo));
   }, [additionalInfo]);
+
+  useEffect(() => {
+    localStorage.setItem('event_artists', JSON.stringify(artists));
+  }, [artists]);
   
   useEffect(() => {
     localStorage.setItem('event_currentStep', currentStep);
@@ -157,6 +196,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     setTickets([]);
     setMedia(initialMedia);
     setAdditionalInfo(initialAdditionalInfo);
+    setArtists([]);
     setCurrentStep('basicDetails');
     
     // Clear localStorage
@@ -167,6 +207,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('event_tickets');
     localStorage.removeItem('event_media');
     localStorage.removeItem('event_additionalInfo');
+    localStorage.removeItem('event_artists');
     localStorage.removeItem('event_currentStep');
   };
   
@@ -179,7 +220,8 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
       timeSlots,
       tickets,
       media,
-      additionalInfo
+      additionalInfo,
+      artists
     };
   };
   
@@ -199,6 +241,8 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     setMedia,
     additionalInfo,
     setAdditionalInfo,
+    artists,
+    setArtists,
     resetEventData,
     getEventData,
     currentStep,
@@ -229,5 +273,6 @@ export type {
   TimeSlotFormValues,
   TicketFormValues,
   MediaFormValues,
-  AdditionalInfoFormValues
+  AdditionalInfoFormValues,
+  ArtistFormValues
 };
