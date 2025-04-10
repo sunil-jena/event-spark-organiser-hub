@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
@@ -60,10 +59,34 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
 
   const hasChildren = children && children.length > 0;
 
-  // Check if this item or any of its children are active
-  const isItemActive = href ? (location.pathname === href || activeRoute === href) : false;
+  // Check if current path exactly matches this item's href
+  const isExactPathMatch = href && location.pathname === href;
+  
+  // For event creation steps, check if the hash matches
+  const isHashMatch = href && href.includes('#') && location.hash === href.substring(href.indexOf('#'));
+  
+  // Check if the item represents the current active route
+  const isActiveRoute = href ? (activeRoute === href) : false;
+  
+  // Special case for event steps - only consider active if hash matches
+  const isEventStepActive = isEventStep && isHashMatch;
+  
+  // If this is an event step, only consider it active if the hash matches
+  // Otherwise, use the normal active route logic
+  const isItemActive = isEventStep 
+    ? isEventStepActive
+    : (isExactPathMatch || isActiveRoute);
+  
+  // For parent items, check if any child is active
   const isChildActive = hasChildren && children?.some(
-    child => (child.href && (location.pathname === child.href || activeRoute === child.href || location.pathname.startsWith(`${child.href}/`)))
+    child => {
+      if (child.isEventStep) {
+        // For event step children, check hash match
+        return child.href && location.hash === child.href.substring(child.href.indexOf('#'));
+      }
+      // For regular children, check path match
+      return child.href && (location.pathname === child.href || activeRoute === child.href);
+    }
   );
 
   // Combine active states
@@ -183,12 +206,26 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
         target={external ? "_blank" : undefined}
         rel={external ? "noreferrer" : undefined}
         onClick={handleClick}
-        className={({ isActive: linkActive }) => cn(
-          "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
-          "transition-colors duration-200",
-          (linkActive || isActive) ? activeClass : hoverClass,
-          !isClickable && "pointer-events-none opacity-60"
-        )}
+        className={({ isActive: linkActive }) => {
+          // For event steps, only use hash-based activation
+          if (isEventStep) {
+            const stepMatch = href && href.includes('#') && location.hash === href.substring(href.indexOf('#'));
+            return cn(
+              "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
+              "transition-colors duration-200",
+              stepMatch ? activeClass : hoverClass,
+              !isClickable && "pointer-events-none opacity-60"
+            );
+          }
+          
+          // Normal activation for other items
+          return cn(
+            "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
+            "transition-colors duration-200",
+            (linkActive || isActive) ? activeClass : hoverClass,
+            !isClickable && "pointer-events-none opacity-60"
+          );
+        }}
       >
         {icon && <span className="flex items-center justify-center">{icon}</span>}
         <span className="truncate">{title}</span>

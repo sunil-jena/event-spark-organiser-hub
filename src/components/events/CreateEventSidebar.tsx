@@ -4,6 +4,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CircleCheck, CircleDashed, CircleDot } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
+import { Menu } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Define step types
 export type EventCreationStep = 
@@ -34,6 +38,8 @@ export const CreateEventSidebar: React.FC<CreateEventSidebarProps> = ({
   stepStatuses,
   onStepClick
 }) => {
+  const isMobile = useIsMobile();
+
   // Status icon mapping
   const getStepIcon = (status: 'incomplete' | 'current' | 'complete') => {
     switch (status) {
@@ -58,7 +64,7 @@ export const CreateEventSidebar: React.FC<CreateEventSidebarProps> = ({
     { id: 'review', title: 'Review' },
   ];
 
-  return (
+  const sidebarContent = (
     <Card className="h-full">
       <CardContent className="p-4">
         <h3 className="text-lg font-semibold mb-4">Create Event</h3>
@@ -93,4 +99,26 @@ export const CreateEventSidebar: React.FC<CreateEventSidebarProps> = ({
       </CardContent>
     </Card>
   );
+
+  // For mobile, use a drawer that can be toggled
+  if (isMobile) {
+    return (
+      <Drawer>
+        <DrawerTrigger asChild>
+          <Button variant="outline" size="sm" className="mb-4">
+            <Menu className="h-4 w-4 mr-2" />
+            Event Steps
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <div className="p-4 max-h-[80vh]">
+            {sidebarContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // For desktop, render the sidebar directly
+  return sidebarContent;
 };

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Menu, Bell, Search, User, Calendar, X, IndianRupee, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,10 +33,46 @@ const Header = ({
   const [internalSearchOpen, setInternalSearchOpen] = useState(false);
   const [internalCalendarOpen, setInternalCalendarOpen] = useState(false);
   const [internalNotificationsOpen, setInternalNotificationsOpen] = useState(false);
+  
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
 
   const searchOpen = externalSearchOpen !== undefined ? externalSearchOpen : internalSearchOpen;
   const calendarOpen = externalDatePickerOpen !== undefined ? externalDatePickerOpen : internalCalendarOpen;
   const notificationsOpen = externalNotificationsOpen !== undefined ? externalNotificationsOpen : internalNotificationsOpen;
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        calendarOpen && 
+        calendarRef.current && 
+        !calendarRef.current.contains(event.target as Node)
+      ) {
+        if (externalToggleDatePicker) {
+          externalToggleDatePicker();
+        } else {
+          setInternalCalendarOpen(false);
+        }
+      }
+      
+      if (
+        notificationsOpen && 
+        notificationsRef.current && 
+        !notificationsRef.current.contains(event.target as Node)
+      ) {
+        if (externalToggleNotifications) {
+          externalToggleNotifications();
+        } else {
+          setInternalNotificationsOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [calendarOpen, notificationsOpen, externalToggleDatePicker, externalToggleNotifications]);
 
   const toggleSearch = () => {
     if (externalToggleSearch) {
@@ -152,13 +187,14 @@ const Header = ({
       <AnimatePresence>
         {calendarOpen && (
           <motion.div
+            ref={calendarRef}
             className="absolute top-16 right-24 z-20"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="w-80 shadow-lg">
+            <Card className="w-96 shadow-lg">
               <CardContent className="p-4">
                 <h3 className="font-medium mb-2">Upcoming Events</h3>
                 <div className="space-y-3">
@@ -203,6 +239,7 @@ const Header = ({
       <AnimatePresence>
         {notificationsOpen && (
           <motion.div
+            ref={notificationsRef}
             className="absolute top-16 right-16 z-20"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
