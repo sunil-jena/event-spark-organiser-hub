@@ -7,7 +7,8 @@ import { useAppContext } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEventContext } from '@/contexts/EventContext';
-import { EventCreationStep, StepStatus, CreateEventSidebar } from '@/components/events/CreateEventSidebar';
+import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
+import { EventData } from '@/components/events/steps/types';
 
 // Import the step components
 import { BasicDetailsStep } from '@/components/events/steps/BasicDetailsStep';
@@ -44,6 +45,8 @@ const CreateEvent = () => {
     setMedia,
     additionalInfo,
     setAdditionalInfo,
+    artists,
+    setArtists,
     currentStep: eventContextCurrentStep,
     setCurrentStep: setEventContextCurrentStep,
   } = useEventContext();
@@ -94,8 +97,8 @@ const CreateEvent = () => {
       // Update URL hash without page reload
       window.history.pushState(null, '', `#${step}`);
 
-      // Fix TypeScript error by using the correct setState callback type
-      setEventStepStatuses((prevStatuses: any) => {
+      // Update step statuses - using a function that returns the new value
+      setEventStepStatuses((prevStatuses) => {
         const newStatuses = { ...prevStatuses };
 
         Object.keys(newStatuses).forEach(key => {
@@ -117,7 +120,7 @@ const CreateEvent = () => {
 
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
-    // Fix TypeScript error by using the correct setState callback type
+    // Update step statuses - using a function that returns the new value
     setEventStepStatuses((prevStatuses) => {
       const newStatuses = { ...prevStatuses };
       newStatuses[currentStep] = { ...prevStatuses[currentStep], status: 'complete' };
@@ -134,8 +137,8 @@ const CreateEvent = () => {
 
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
-    // Fix TypeScript error by using the correct setState callback type
-    setEventStepStatuses((prevStatuses: any) => {
+    // Update step statuses - using a function that returns the new value
+    setEventStepStatuses((prevStatuses) => {
       const newStatuses = { ...prevStatuses };
 
       Object.keys(newStatuses).forEach(key => {
@@ -155,6 +158,7 @@ const CreateEvent = () => {
 
   // Handle form submissions for each step
   const handleBasicDetailsSubmit = (values: any) => {
+    console.log("Basic details submitted:", values);
     setBasicDetails(values);
     completeStep('venues');
   };
@@ -165,8 +169,13 @@ const CreateEvent = () => {
   };
 
   const handleDatesSubmit = (values: any) => {
-    // Convert values to the format expected by DateStep if needed
-    setDates(values);
+    // Make sure the type property is set correctly for compatibility
+    const updatedValues = values.map((date: any) => ({
+      ...date,
+      type: date.dateType === 'multiple' ? 'single' : date.dateType
+    }));
+
+    setDates(updatedValues);
     completeStep('times');
   };
 
@@ -176,7 +185,18 @@ const CreateEvent = () => {
   };
 
   const handleTicketSubmit = (values: any) => {
-    setTickets(values);
+    // Add the required properties to match the TicketStep component's expectations
+    const updatedValues = values.map((ticket: any) => ({
+      ...ticket,
+      ticketType: ticket.ticketType || 'standard',
+      isAllDates: ticket.isAllDates || false,
+      availableDateIds: ticket.availableDateIds || [],
+      isAllTimeSlots: ticket.isAllTimeSlots || false,
+      availableTimeSlotIds: ticket.availableTimeSlotIds || [],
+      isLimited: ticket.isLimited || false
+    }));
+
+    setTickets(updatedValues);
     completeStep('media');
   };
 
@@ -186,20 +206,41 @@ const CreateEvent = () => {
   };
 
   const handleAdditionalInfoSubmit = (values: any) => {
-    setAdditionalInfo(values);
+    // Ensure faq is a string if needed
+    const updatedValues = {
+      ...values,
+      faq: typeof values.faq === 'object' ? JSON.stringify(values.faq) : values.faq
+    };
+
+    setAdditionalInfo(updatedValues);
     completeStep('review');
   };
 
   const handleFinalSubmit = () => {
     // Prepare event data for submission
-    const eventData = {
+    const eventData: EventData = {
       basicDetails,
       venues,
-      dates,
+      dates: dates.map(d => ({
+        ...d,
+        type: d.dateType === 'multiple' ? 'single' : d.dateType
+      })),
       timeSlots,
-      tickets,
+      tickets: tickets.map(t => ({
+        ...ticket,
+        ticketType: ticket.ticketType || 'standard',
+        isAllDates: ticket.isAllDates || false,
+        availableDateIds: ticket.availableDateIds || [],
+        isAllTimeSlots: ticket.isAllTimeSlots || false,
+        availableTimeSlotIds: ticket.availableTimeSlotIds || [],
+        isLimited: ticket.isLimited || false
+      })),
       media,
-      additionalInfo
+      additionalInfo: {
+        ...additionalInfo,
+        faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
+      },
+      artists
     };
 
     // Simulate API call
@@ -240,7 +281,10 @@ const CreateEvent = () => {
       case 'dates':
         return (
           <DateStep
-            dates={dates as any} // Cast to any to work around type mismatch
+            dates={dates.map(d => ({
+              ...d,
+              type: d.dateType === 'multiple' ? 'single' : d.dateType
+            }))}
             venues={venues}
             onSubmit={handleDatesSubmit}
             onBack={() => handleStepClick('venues')}
@@ -250,8 +294,12 @@ const CreateEvent = () => {
         return (
           <TimeSlotStep
             timeSlots={timeSlots}
-            dates={dates as any} // Cast to any to work around type mismatch
+            dates={dates.map(d => ({
+              ...d,
+              type: d.dateType === 'multiple' ? 'single' : d.dateType
+            }))}
             venues={venues}
+            artists={artists}
             onSubmit={handleTimeSlotSubmit}
             onBack={() => handleStepClick('dates')}
           />
@@ -259,8 +307,19 @@ const CreateEvent = () => {
       case 'tickets':
         return (
           <TicketStep
-            tickets={tickets as any} // Cast to any to work around type mismatch
-            dates={dates as any} // Cast to any to work around type mismatch
+            tickets={tickets.map(t => ({
+              ...t,
+              ticketType: t.ticketType || 'standard',
+              isAllDates: t.isAllDates || false,
+              availableDateIds: t.availableDateIds || [],
+              isAllTimeSlots: t.isAllTimeSlots || false,
+              availableTimeSlotIds: t.availableTimeSlotIds || [],
+              isLimited: t.isLimited || false
+            }))}
+            dates={dates.map(d => ({
+              ...d,
+              type: d.dateType === 'multiple' ? 'single' : d.dateType
+            }))}
             timeSlots={timeSlots}
             venues={venues}
             onSubmit={handleTicketSubmit}
@@ -270,7 +329,7 @@ const CreateEvent = () => {
       case 'media':
         return (
           <MediaStep
-            media={media as any} // Cast to any to work around type mismatch
+            media={media}
             onSubmit={handleMediaSubmit}
             onBack={() => handleStepClick('tickets')}
           />
@@ -278,7 +337,7 @@ const CreateEvent = () => {
       case 'additionalInfo':
         return (
           <AdditionalInfoStep
-            additionalInfo={additionalInfo as any} // Cast to any to work around type mismatch
+            additionalInfo={additionalInfo}
             onSubmit={handleAdditionalInfoSubmit}
             onBack={() => handleStepClick('media')}
           />
@@ -289,11 +348,26 @@ const CreateEvent = () => {
             eventData={{
               basicDetails,
               venues,
-              dates: dates as any, // Cast to any to work around type mismatch
+              dates: dates.map(d => ({
+                ...d,
+                type: d.dateType === 'multiple' ? 'single' : d.dateType
+              })),
               timeSlots,
-              tickets: tickets as any, // Cast to any to work around type mismatch
-              media: media as any, // Cast to any to work around type mismatch
-              additionalInfo: additionalInfo as any // Cast to any to work around type mismatch
+              tickets: tickets.map(t => ({
+                ...t,
+                ticketType: t.ticketType || 'standard',
+                isAllDates: t.isAllDates || false,
+                availableDateIds: t.availableDateIds || [],
+                isAllTimeSlots: t.isAllTimeSlots || false,
+                availableTimeSlotIds: t.availableTimeSlotIds || [],
+                isLimited: t.isLimited || false
+              })),
+              media,
+              additionalInfo: {
+                ...additionalInfo,
+                faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
+              },
+              // artists: artists
             }}
             onSubmit={handleFinalSubmit}
             onBack={() => handleStepClick('additionalInfo')}

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -38,6 +37,7 @@ import { SidebarMenu } from '@/components/sidebar/SidebarMenu';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
 import { useAppContext } from '@/contexts/AppContext';
+import { useEventContext } from '@/contexts/EventContext';
 
 interface SidebarProps {
   isMobile: boolean;
@@ -351,7 +351,17 @@ const secondaryNavItems: SidebarItemProps[] = [
 const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { activeRoute } = useAppContext();
+  const { activeRoute, eventStepStatuses } = useAppContext();
+  const { currentStep, setCurrentStep } = useEventContext();
+
+  const hash = location.hash.substring(1);
+
+  const handleEventStepClick = (step: EventCreationStep) => {
+    if (eventStepStatuses[step].isClickable) {
+      setCurrentStep(step);
+      navigate(`/events/create#${step}`);
+    }
+  };
 
   const sidebarClasses = cn(
     'flex flex-col h-screen bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',
@@ -393,7 +403,6 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
         )} */}
       </div>
       
-      {/* Scrollable nav sections */}
       <div className="flex-1 py-4 overflow-hidden">
         <ScrollArea className="h-full px-1">
           <TooltipProvider delayDuration={200}>
