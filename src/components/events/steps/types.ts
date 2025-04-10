@@ -43,6 +43,7 @@ export interface VenueFormValues {
 export interface DateFormValues {
   id: string;
   venueId: string;
+  type: 'single' | 'multiple' | 'range' | 'recurring';  // Added this required property
   dateType: 'single' | 'multiple' | 'range' | 'recurring';
   dates: Date[];
   startDate: Date;
@@ -83,6 +84,12 @@ export interface TicketFormValues {
   description: string;
   price: number;
   quantity: number;
+  // Adding required properties based on error messages
+  ticketType: string;
+  isAllDates: boolean;
+  availableDateIds: string[];
+  isAllTimeSlots: boolean;
+  availableTimeSlotIds: string[];
   dateIds: string[]; // Associated dates
   timeSlotIds?: string[]; // Optional associated time slots
   promoCodes?: {
@@ -94,18 +101,24 @@ export interface TicketFormValues {
 }
 
 export interface MediaFormValues {
-  galleryImages: string[] | File[];
+  galleryImages: (string | File)[];
+  cardImage?: File;
   coverImage?: string | File;
-  bannerImage?: string | File;
+  bannerImage?: File; // Changed to match component's expectation
+  verticalBannerImage?: File;
   eventVerticalCardImage?: string | File;
   eventBannerImage?: (string | File)[];
   eventVerticalBannerImage?: (string | File)[];
   eventVerticalVideo?: string;
   eventMediaLink?: string;
+  youtubeLink?: string;
 }
 
 export interface AdditionalInfoFormValues {
-  faq?: { question: string; answer: string }[];
+  eventRules?: string;
+  faq?: string; // Changed to match component's expectation
+  terms?: string;
+  refundPolicy?: string;
   ageRestriction?: string;
   accessibility?: string[];
   tags?: string[];

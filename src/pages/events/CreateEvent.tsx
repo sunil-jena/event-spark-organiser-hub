@@ -94,8 +94,8 @@ const CreateEvent = () => {
       // Update URL hash without page reload
       window.history.pushState(null, '', `#${step}`);
       
-      // Update step statuses
-      setEventStepStatuses((prevStatuses: Record<EventCreationStep, StepStatus>) => {
+      // Update step statuses - Fixed type error here
+      setEventStepStatuses((prevStatuses) => {
         const newStatuses = { ...prevStatuses };
         
         Object.keys(newStatuses).forEach(key => {
@@ -117,8 +117,8 @@ const CreateEvent = () => {
   
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
-    // Update step statuses
-    setEventStepStatuses((prevStatuses: Record<EventCreationStep, StepStatus>) => {
+    // Update step statuses - Fixed type error here
+    setEventStepStatuses((prevStatuses) => {
       const newStatuses = { ...prevStatuses };
       newStatuses[currentStep] = { ...prevStatuses[currentStep], status: 'complete' };
       newStatuses[nextStep] = { ...prevStatuses[nextStep], status: 'current', isClickable: true };
@@ -134,8 +134,8 @@ const CreateEvent = () => {
   
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
-    // Update step statuses
-    setEventStepStatuses((prevStatuses: Record<EventCreationStep, StepStatus>) => {
+    // Update step statuses - Fixed type error here
+    setEventStepStatuses((prevStatuses) => {
       const newStatuses = { ...prevStatuses };
       
       Object.keys(newStatuses).forEach(key => {
@@ -165,8 +165,12 @@ const CreateEvent = () => {
   };
   
   const handleDatesSubmit = (values: any) => {
-    // Convert values to the format expected by DateStep if needed
-    setDates(values);
+    // Add the required 'type' property to match the DateStep component's expectations
+    const updatedValues = values.map((date: any) => ({
+      ...date,
+      type: date.dateType // Ensure 'type' is set from dateType
+    }));
+    setDates(updatedValues);
     completeStep('times');
   };
   
@@ -176,7 +180,16 @@ const CreateEvent = () => {
   };
   
   const handleTicketSubmit = (values: any) => {
-    setTickets(values);
+    // Add the required properties to match the TicketStep component's expectations
+    const updatedValues = values.map((ticket: any) => ({
+      ...ticket,
+      ticketType: ticket.ticketType || 'standard',
+      isAllDates: ticket.isAllDates || false,
+      availableDateIds: ticket.availableDateIds || [],
+      isAllTimeSlots: ticket.isAllTimeSlots || false,
+      availableTimeSlotIds: ticket.availableTimeSlotIds || []
+    }));
+    setTickets(updatedValues);
     completeStep('media');
   };
   
@@ -186,7 +199,12 @@ const CreateEvent = () => {
   };
   
   const handleAdditionalInfoSubmit = (values: any) => {
-    setAdditionalInfo(values);
+    // Convert faq object array to string if needed
+    const updatedValues = {
+      ...values,
+      faq: typeof values.faq === 'object' ? JSON.stringify(values.faq) : values.faq
+    };
+    setAdditionalInfo(updatedValues);
     completeStep('review');
   };
   
@@ -241,7 +259,7 @@ const CreateEvent = () => {
       case 'dates':
         return (
           <DateStep 
-            dates={dates} 
+            dates={dates.map(d => ({ ...d, type: d.dateType }))} // Fixed type error
             venues={venues}
             onSubmit={handleDatesSubmit}
             onBack={() => handleStepClick('venues')}
@@ -251,7 +269,7 @@ const CreateEvent = () => {
         return (
           <TimeSlotStep 
             timeSlots={timeSlots} 
-            dates={dates} 
+            dates={dates.map(d => ({ ...d, type: d.dateType }))} // Fixed type error
             venues={venues}
             artists={artists}
             onSubmit={handleTimeSlotSubmit}
@@ -261,8 +279,15 @@ const CreateEvent = () => {
       case 'tickets':
         return (
           <TicketStep 
-            tickets={tickets} 
-            dates={dates} 
+            tickets={tickets.map(t => ({
+              ...t,
+              ticketType: t.ticketType || 'standard',
+              isAllDates: t.isAllDates || false,
+              availableDateIds: t.availableDateIds || [],
+              isAllTimeSlots: t.isAllTimeSlots || false,
+              availableTimeSlotIds: t.availableTimeSlotIds || []
+            }))} // Fixed type error
+            dates={dates.map(d => ({ ...d, type: d.dateType }))} // Fixed type error
             timeSlots={timeSlots}
             venues={venues}
             onSubmit={handleTicketSubmit}
@@ -272,7 +297,12 @@ const CreateEvent = () => {
       case 'media':
         return (
           <MediaStep 
-            media={media} 
+            media={{
+              ...media,
+              bannerImage: media.bannerImage as File, // Type casting to match component's expectation
+              verticalBannerImage: media.verticalBannerImage as File,
+              cardImage: media.cardImage as File
+            }} 
             onSubmit={handleMediaSubmit}
             onBack={() => handleStepClick('tickets')}
           />
@@ -280,7 +310,10 @@ const CreateEvent = () => {
       case 'additionalInfo':
         return (
           <AdditionalInfoStep 
-            additionalInfo={additionalInfo} 
+            additionalInfo={{
+              ...additionalInfo,
+              faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
+            }} 
             onSubmit={handleAdditionalInfoSubmit}
             onBack={() => handleStepClick('media')}
           />
@@ -291,11 +324,24 @@ const CreateEvent = () => {
             eventData={{
               basicDetails,
               venues,
-              dates,
+              dates: dates.map(d => ({ ...d, type: d.dateType })), // Fixed type error
               timeSlots,
-              tickets,
-              media,
-              additionalInfo,
+              tickets: tickets.map(t => ({
+                ...t,
+                ticketType: t.ticketType || 'standard',
+                isAllDates: t.isAllDates || false,
+                availableDateIds: t.availableDateIds || [],
+                isAllTimeSlots: t.isAllTimeSlots || false,
+                availableTimeSlotIds: t.availableTimeSlotIds || []
+              })), // Fixed type error
+              media: {
+                ...media,
+                bannerImage: media.bannerImage as File, // Type casting to match component's expectation
+              },
+              additionalInfo: {
+                ...additionalInfo,
+                faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
+              },
               artists
             }} 
             onSubmit={handleFinalSubmit}

@@ -9,10 +9,10 @@ import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface MediaFormValues {
+  galleryImages: (string | File)[];
   cardImage?: File;
-  bannerImage?: File;
+  bannerImage?: File; // Changed to match expected type
   verticalBannerImage?: File;
-  galleryImages: File[];
   youtubeLink?: string;
 }
 

@@ -14,7 +14,7 @@ import {
 
 export interface AdditionalInfoFormValues {
   eventRules?: string;
-  faq?: string;
+  faq?: string; // Changed from array to string to match context
   terms?: string;
   refundPolicy?: string;
 }
