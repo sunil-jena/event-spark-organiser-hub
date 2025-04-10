@@ -29,11 +29,20 @@ export const SidebarList: React.FC<SidebarListProps> = ({
     items.forEach(item => {
       if (item.children) {
         // Check if this item should be expanded
-        const shouldExpand = item.href === currentPath || 
-                            item.children.some(child => 
-                              child.href === currentPath || 
-                              (child.href && child.href.includes(currentHash))
-                            );
+        const shouldExpand = 
+          // For event steps, only check if the pathname matches the base path (like /events/create)
+          (item.href && item.href.includes('#') && item.href.split('#')[0] === currentPath) ||
+          // For regular items, check exact path match
+          item.href === currentPath || 
+          // Or if any child has a matching href or hash
+          item.children.some(child => 
+            // Check exact path match for regular items
+            child.href === currentPath || 
+            // For event steps with hash, check if the hash part matches
+            (child.href && child.href.includes('#') && 
+             child.href.split('#')[0] === currentPath && 
+             (currentHash ? child.href.includes(currentHash) : false))
+          );
         
         if (shouldExpand) {
           setExpandedItems(prev => ({

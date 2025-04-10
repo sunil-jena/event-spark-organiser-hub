@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
@@ -65,39 +66,33 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   // For event creation steps, check if the hash matches
   const isHashMatch = href && href.includes('#') && location.hash === href.substring(href.indexOf('#'));
   
-  // Check if the item represents the current active route
-  const isActiveRoute = href ? (activeRoute === href) : false;
-  
-  // Special case for event steps - only consider active if hash matches
-  const isEventStepActive = isEventStep && isHashMatch;
-  
-  // If this is an event step, only consider it active if the hash matches
-  // Otherwise, use the normal active route logic
-  const isItemActive = isEventStep 
-    ? isEventStepActive
-    : (isExactPathMatch || isActiveRoute);
+  // Only consider "active" based on EXACT path matches, not partial ones
+  // For event steps, we ONLY use hash-based activation
+  const isActiveRoute = isEventStep 
+    ? isHashMatch 
+    : isExactPathMatch;
   
   // For parent items, check if any child is active
   const isChildActive = hasChildren && children?.some(
     child => {
       if (child.isEventStep) {
-        // For event step children, check hash match
+        // For event step children, only check hash match
         return child.href && location.hash === child.href.substring(child.href.indexOf('#'));
       }
-      // For regular children, check path match
-      return child.href && (location.pathname === child.href || activeRoute === child.href);
+      // For regular children, check EXACT path match only
+      return child.href && location.pathname === child.href;
     }
   );
 
   // Combine active states
-  const isActive = isItemActive || isChildActive;
+  const isActive = isActiveRoute || isChildActive;
 
   // Determine if this step is clickable based on the event context
   let isClickable = !disabled;
   
   // If this is an event creation step, check its clickable status
   if (isEventStep && href) {
-    const stepId = href.split('#')[1] as any;
+    const stepId = href.split('#')[1] as keyof typeof eventStepStatuses;
     if (stepId && eventStepStatuses[stepId]) {
       isClickable = eventStepStatuses[stepId].isClickable || isEditingEvent;
     }
@@ -112,7 +107,13 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
     }
 
     if (href) {
-      setActiveRoute(href);
+      // For event steps, only set the main route, let the hash be managed separately
+      if (isEventStep && href.includes('#')) {
+        const mainRoute = href.split('#')[0];
+        setActiveRoute(mainRoute);
+      } else {
+        setActiveRoute(href);
+      }
     }
 
     if (onClick) {
@@ -218,11 +219,11 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
             );
           }
           
-          // Normal activation for other items
+          // For regular items, use exact path match only
           return cn(
             "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
             "transition-colors duration-200",
-            (linkActive || isActive) ? activeClass : hoverClass,
+            (linkActive && isExactPathMatch) ? activeClass : hoverClass,
             !isClickable && "pointer-events-none opacity-60"
           );
         }}

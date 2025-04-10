@@ -62,6 +62,7 @@ const CreateEvent = () => {
   
   // Set active route and extract hash for step navigation
   useEffect(() => {
+    // Only set active route to /events/create, not any deeper
     setActiveRoute('/events/create');
     
     // Get the current step from URL hash if available
@@ -91,15 +92,16 @@ const CreateEvent = () => {
       // Update URL hash without page reload
       window.history.pushState(null, '', `#${step}`);
       
-      // Mark clicked step as current and others based on their status
-      setEventStepStatuses((prev: Record<EventCreationStep, StepStatus>) => {
-        const newStatuses = { ...prev };
+      // Fix TypeScript error by using the correct setState callback type
+      setEventStepStatuses((prevStatuses) => {
+        const newStatuses = { ...prevStatuses };
         
         Object.keys(newStatuses).forEach(key => {
-          if (key === step) {
-            newStatuses[key as EventCreationStep].status = 'current';
-          } else if (newStatuses[key as EventCreationStep].status === 'current') {
-            newStatuses[key as EventCreationStep].status = 'complete';
+          const stepKey = key as EventCreationStep;
+          if (stepKey === step) {
+            newStatuses[stepKey].status = 'current';
+          } else if (newStatuses[stepKey].status === 'current') {
+            newStatuses[stepKey].status = 'complete';
           }
         });
         
@@ -113,11 +115,13 @@ const CreateEvent = () => {
   
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
-    setEventStepStatuses((prev: Record<EventCreationStep, StepStatus>) => ({
-      ...prev,
-      [currentStep]: { ...prev[currentStep], status: 'complete' },
-      [nextStep]: { ...prev[nextStep], status: 'current', isClickable: true }
-    }));
+    // Fix TypeScript error by using the correct setState callback type
+    setEventStepStatuses((prevStatuses) => {
+      const newStatuses = { ...prevStatuses };
+      newStatuses[currentStep] = { ...prevStatuses[currentStep], status: 'complete' };
+      newStatuses[nextStep] = { ...prevStatuses[nextStep], status: 'current', isClickable: true };
+      return newStatuses;
+    });
     
     // Update URL hash
     window.history.pushState(null, '', `#${nextStep}`);
@@ -128,13 +132,15 @@ const CreateEvent = () => {
   
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
-    setEventStepStatuses((prev: Record<EventCreationStep, StepStatus>) => {
-      const newStatuses = { ...prev };
+    // Fix TypeScript error by using the correct setState callback type
+    setEventStepStatuses((prevStatuses) => {
+      const newStatuses = { ...prevStatuses };
       
       Object.keys(newStatuses).forEach(key => {
-        newStatuses[key as EventCreationStep].isClickable = true;
-        if (newStatuses[key as EventCreationStep].status === 'incomplete') {
-          newStatuses[key as EventCreationStep].status = 'complete';
+        const stepKey = key as EventCreationStep;
+        newStatuses[stepKey].isClickable = true;
+        if (newStatuses[stepKey].status === 'incomplete') {
+          newStatuses[stepKey].status = 'complete';
         }
       });
       
@@ -301,6 +307,15 @@ const CreateEvent = () => {
       <h1 className="text-3xl font-bold mb-6">Create Event</h1>
       
       <div className="flex flex-col md:flex-row gap-6">
+        {/* Sidebar */}
+        <div className="md:w-64 flex-shrink-0">
+          <CreateEventSidebar
+            currentStep={currentStep}
+            stepStatuses={eventStepStatuses}
+            onStepClick={handleStepClick}
+          />
+        </div>
+        
         {/* Step Content */}
         <div className="flex-1">
           {renderStepContent()}
@@ -334,7 +349,7 @@ const CreateEvent = () => {
         </div>
       </div>
       
-      {/* Scroll to top button - Fixed visibility issue */}
+      {/* Scroll to top button */}
       <Button
         variant="outline"
         size="icon"
