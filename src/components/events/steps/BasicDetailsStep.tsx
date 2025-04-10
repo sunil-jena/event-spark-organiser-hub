@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from '@/components/ui/badge';
 
 // Define the event categories
 const EVENT_CATEGORIES = [
@@ -38,23 +40,13 @@ export const BasicDetailsSchema = Yup.object().shape({
   description: Yup.string()
     .min(20, 'Description must be at least 20 characters')
     .required('Description is required'),
-  organizerName: Yup.string()
-    .required('Organizer name is required'),
-  organizerEmail: Yup.string()
-    .email('Invalid email address')
-    .required('Organizer email is required'),
-  organizerPhone: Yup.string()
-    .matches(/^[0-9\+\-\(\) ]+$/, 'Invalid phone number')
-    .required('Organizer phone is required'),
 });
 
 export interface BasicDetailsFormValues {
   title: string;
   category: string;
   description: string;
-  organizerName: string;
-  organizerEmail: string;
-  organizerPhone: string;
+  tga?: any[]
   additionalInfo?: string;
   terms?: string;
 }
@@ -65,6 +57,21 @@ interface BasicDetailsStepProps {
 }
 
 export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValues, onSubmit }) => {
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState<string>("");
+
+  const addTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -76,7 +83,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
           {(formik) => (
             <Form>
               <h2 className="text-xl font-semibold mb-4">Event Details</h2>
-              
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="title">Event Title</Label>
@@ -89,7 +96,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                   />
                   <ErrorMessage name="title" component="div" className="text-red-500 text-sm" />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
                   <Select
@@ -109,7 +116,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                   </Select>
                   <ErrorMessage name="category" component="div" className="text-red-500 text-sm" />
                 </div>
-                
+
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="description">Description</Label>
                   <Field
@@ -121,52 +128,44 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                     className={formik.errors.description && formik.touched.description ? "border-red-500" : ""}
                   />
                   <ErrorMessage name="description" component="div" className="text-red-500 text-sm" />
-                </div>
-              </div>
 
-              <h2 className="text-xl font-semibold mb-4 mt-6">Organizer Information</h2>
-              
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="organizerName">Organizer Name</Label>
-                  <Field
-                    as={Input}
-                    id="organizerName"
-                    name="organizerName"
-                    placeholder="Enter organizer name"
-                    className={formik.errors.organizerName && formik.touched.organizerName ? "border-red-500" : ""}
-                  />
-                  <ErrorMessage name="organizerName" component="div" className="text-red-500 text-sm" />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="organizerEmail">Email</Label>
-                  <Field
-                    as={Input}
-                    id="organizerEmail"
-                    name="organizerEmail"
-                    placeholder="Enter email address"
-                    type="email"
-                    className={formik.errors.organizerEmail && formik.touched.organizerEmail ? "border-red-500" : ""}
-                  />
-                  <ErrorMessage name="organizerEmail" component="div" className="text-red-500 text-sm" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="organizerPhone">Phone</Label>
-                  <Field
-                    as={Input}
-                    id="organizerPhone"
-                    name="organizerPhone"
-                    placeholder="Enter phone number"
-                    className={formik.errors.organizerPhone && formik.touched.organizerPhone ? "border-red-500" : ""}
-                  />
-                  <ErrorMessage name="organizerPhone" component="div" className="text-red-500 text-sm" />
+                <div >
+                  <Label>Event Tags</Label>
+                  <div className="flex items-center mt-1.5 space-x-2">
+                    <Input
+                      value={tagInput}
+                      onChange={e => setTagInput(e.target.value)}
+                      placeholder="Add tags (press Enter)"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addTag();
+                        }
+                      }}
+                    />
+                    <Button type="button" onClick={addTag} size="sm">Add</Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {tags.map((tag, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                      >
+                        {tag}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => removeTag(tag)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               </div>
 
               <div className="flex justify-end mt-6">
-                <Button 
+                <Button
                   type="submit"
                   className="flex items-center"
                   disabled={!formik.isValid || formik.isSubmitting}

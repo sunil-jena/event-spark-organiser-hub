@@ -101,11 +101,11 @@ const mainNavItems: SidebarItemProps[] = [
         href: '/events',
         moduleName: 'events'
       },
-      {
-        title: 'Event Details',
-        href: '/event-details',
-        moduleName: 'events'
-      },
+      // {
+      //   title: 'Event Details',
+      //   href: '/event-details',
+      //   moduleName: 'events'
+      // },
       {
         title: 'Create Event',
         href: '/events/create',
@@ -162,105 +162,105 @@ const mainNavItems: SidebarItemProps[] = [
           }
         ]
       },
-      {
-        title: 'Categories',
-        href: '/events/categories',
-        moduleName: 'events',
-        children: [
-          {
-            title: 'Music & Concerts',
-            href: '/events/categories/music',
-            icon: <Music className="h-4 w-4" />,
-            moduleName: 'events'
-          },
-          {
-            title: 'Workshops',
-            href: '/events/categories/workshops',
-            icon: <Briefcase className="h-4 w-4" />,
-            moduleName: 'events'
-          },
-          {
-            title: 'Business',
-            href: '/events/categories/business',
-            icon: <Monitor className="h-4 w-4" />,
-            moduleName: 'events'
-          },
-          {
-            title: 'Dance',
-            href: '/events/categories/dance',
-            icon: <Award className="h-4 w-4" />,
-            moduleName: 'events'
-          },
-          {
-            title: 'Comedy Shows',
-            href: '/events/categories/comedy',
-            icon: <Mic className="h-4 w-4" />,
-            moduleName: 'events'
-          },
-          {
-            title: 'Film Screenings',
-            href: '/events/categories/film',
-            icon: <Film className="h-4 w-4" />,
-            moduleName: 'events'
-          },
-          {
-            title: 'Award Ceremonies',
-            href: '/events/categories/awards',
-            icon: <Award className="h-4 w-4" />,
-            moduleName: 'events'
-          }
-        ]
-      },
-      {
-        title: 'Venues',
-        href: '/events/venues',
-        moduleName: 'events'
-      }
+      // {
+      //   title: 'Categories',
+      //   href: '/events/categories',
+      //   moduleName: 'events',
+      //   children: [
+      //     {
+      //       title: 'Music & Concerts',
+      //       href: '/events/categories/music',
+      //       icon: <Music className="h-4 w-4" />,
+      //       moduleName: 'events'
+      //     },
+      //     {
+      //       title: 'Workshops',
+      //       href: '/events/categories/workshops',
+      //       icon: <Briefcase className="h-4 w-4" />,
+      //       moduleName: 'events'
+      //     },
+      //     {
+      //       title: 'Business',
+      //       href: '/events/categories/business',
+      //       icon: <Monitor className="h-4 w-4" />,
+      //       moduleName: 'events'
+      //     },
+      //     {
+      //       title: 'Dance',
+      //       href: '/events/categories/dance',
+      //       icon: <Award className="h-4 w-4" />,
+      //       moduleName: 'events'
+      //     },
+      //     {
+      //       title: 'Comedy Shows',
+      //       href: '/events/categories/comedy',
+      //       icon: <Mic className="h-4 w-4" />,
+      //       moduleName: 'events'
+      //     },
+      //     {
+      //       title: 'Film Screenings',
+      //       href: '/events/categories/film',
+      //       icon: <Film className="h-4 w-4" />,
+      //       moduleName: 'events'
+      //     },
+      //     {
+      //       title: 'Award Ceremonies',
+      //       href: '/events/categories/awards',
+      //       icon: <Award className="h-4 w-4" />,
+      //       moduleName: 'events'
+      //     }
+      //   ]
+      // },
+      // {
+      //   title: 'Venues',
+      //   href: '/events/venues',
+      //   moduleName: 'events'
+      // }
     ]
   },
-  {
-    title: 'Tickets',
-    icon: <Ticket className="h-5 w-5" />,
-    moduleName: 'tickets',
-    children: [
-      {
-        title: 'Ticket Types',
-        href: '/tickets/types',
-        moduleName: 'tickets'
-      },
-      {
-        title: 'Pricing',
-        href: '/tickets/pricing',
-        moduleName: 'tickets'
-      },
-      {
-        title: 'Discounts',
-        href: '/tickets/discounts',
-        label: 'New',
-        moduleName: 'tickets',
-        children: [
-          {
-            title: 'Promo Codes',
-            href: '/tickets/discounts/promo-codes',
-            icon: <Tag className="h-4 w-4" />,
-            moduleName: 'tickets'
-          },
-          {
-            title: 'Early Bird',
-            href: '/tickets/discounts/early-bird',
-            icon: <Clock className="h-4 w-4" />,
-            moduleName: 'tickets'
-          },
-          {
-            title: 'Group Discounts',
-            href: '/tickets/discounts/group',
-            icon: <Users className="h-4 w-4" />,
-            moduleName: 'tickets'
-          },
-        ]
-      }
-    ]
-  },
+  // {
+  //   title: 'Tickets',
+  //   icon: <Ticket className="h-5 w-5" />,
+  //   moduleName: 'tickets',
+  //   children: [
+  //     {
+  //       title: 'Ticket Types',
+  //       href: '/tickets/types',
+  //       moduleName: 'tickets'
+  //     },
+  //     {
+  //       title: 'Pricing',
+  //       href: '/tickets/pricing',
+  //       moduleName: 'tickets'
+  //     },
+  //     {
+  //       title: 'Discounts',
+  //       href: '/tickets/discounts',
+  //       label: 'New',
+  //       moduleName: 'tickets',
+  //       children: [
+  //         {
+  //           title: 'Promo Codes',
+  //           href: '/tickets/discounts/promo-codes',
+  //           icon: <Tag className="h-4 w-4" />,
+  //           moduleName: 'tickets'
+  //         },
+  //         {
+  //           title: 'Early Bird',
+  //           href: '/tickets/discounts/early-bird',
+  //           icon: <Clock className="h-4 w-4" />,
+  //           moduleName: 'tickets'
+  //         },
+  //         {
+  //           title: 'Group Discounts',
+  //           href: '/tickets/discounts/group',
+  //           icon: <Users className="h-4 w-4" />,
+  //           moduleName: 'tickets'
+  //         },
+  //       ]
+  //     }
+  //   ]
+  // },
   {
     title: 'Orders',
     href: '/orders',
@@ -381,7 +381,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
           )}
         </div>
         
-        {!minimized && (
+        {/* {!minimized && (
           <Button 
             variant="ghost" 
             size="icon" 
@@ -390,7 +390,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
           >
             <Users className="h-4 w-4" />
           </Button>
-        )}
+        )} */}
       </div>
       
       {/* Scrollable nav sections */}
