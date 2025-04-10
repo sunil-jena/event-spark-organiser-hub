@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/dialog';
 import { Ticket, CreditCard, Trash2, Edit2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { EventLocation } from './CreateEventForm';
 import { EventDateTime } from './EventDateTimeSelector';
+import { VenueFormValues } from './steps/VenueStep';
 
 export interface TicketType {
   id: string;
@@ -50,7 +50,7 @@ interface TicketTypeSelectorProps {
   value: TicketType[];
   onChange: (tickets: TicketType[]) => void;
   dateTimeList?: EventDateTime[];
-  locations?: EventLocation[];
+  locations?: VenueFormValues[];
 }
 
 const initialTicketState: TicketType = {

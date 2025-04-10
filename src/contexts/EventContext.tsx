@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { 
+import {
   BasicDetailsFormValues,
   VenueFormValues,
   DateFormValues,
@@ -17,11 +18,6 @@ const initialBasicDetails: BasicDetailsFormValues = {
   title: '',
   category: '',
   description: '',
-  organizerName: '',
-  organizerEmail: '',
-  organizerPhone: '',
-  additionalInfo: '',
-  terms: '',
   eventType: 'public',
   aboutMessage: '',
   eventHighlights: [],
@@ -30,10 +26,13 @@ const initialBasicDetails: BasicDetailsFormValues = {
   ageGroup: 5,
   ticketNeededForAges: 5,
   layout: 'outdoor',
-  seatingArrangementOption: 'standing',
-  kidFriendly: 'Yes',
-  petFriendly: 'No',
-  termsAndConditions: '',
+  seatingArrangementOption: '',
+  kidFriendly: '',
+  petFriendly: '',
+  isOnline: false,
+  videoConferenceProvider: '',
+  videoConferenceUrl: '',
+  videoConferencePassword: '',
 };
 
 const initialMedia: MediaFormValues = {
@@ -88,11 +87,9 @@ interface EventContextState {
   setAdditionalInfo: (data: AdditionalInfoFormValues) => void;
   artists: ArtistFormValues[];
   setArtists: (data: ArtistFormValues[]) => void;
-  
   // Helper functions
   resetEventData: () => void;
-  getEventData: () => any;
-  
+  getEventData: () => void;
   // Current step
   currentStep: EventCreationStep;
   setCurrentStep: (step: EventCreationStep) => void;
@@ -108,32 +105,32 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     const saved = localStorage.getItem('event_basicDetails');
     return saved ? JSON.parse(saved) : initialBasicDetails;
   });
-  
+
   const [venues, setVenues] = useState<VenueFormValues[]>(() => {
     const saved = localStorage.getItem('event_venues');
     return saved ? JSON.parse(saved) : [];
   });
-  
+
   const [dates, setDates] = useState<DateFormValues[]>(() => {
     const saved = localStorage.getItem('event_dates');
     return saved ? JSON.parse(saved) : [];
   });
-  
+
   const [timeSlots, setTimeSlots] = useState<TimeSlotFormValues[]>(() => {
     const saved = localStorage.getItem('event_timeSlots');
     return saved ? JSON.parse(saved) : [];
   });
-  
+
   const [tickets, setTickets] = useState<TicketFormValues[]>(() => {
     const saved = localStorage.getItem('event_tickets');
     return saved ? JSON.parse(saved) : [];
   });
-  
+
   const [media, setMedia] = useState<MediaFormValues>(() => {
     const saved = localStorage.getItem('event_media');
     return saved ? JSON.parse(saved) : initialMedia;
   });
-  
+
   const [additionalInfo, setAdditionalInfo] = useState<AdditionalInfoFormValues>(() => {
     const saved = localStorage.getItem('event_additionalInfo');
     return saved ? JSON.parse(saved) : initialAdditionalInfo;
@@ -143,38 +140,38 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     const saved = localStorage.getItem('event_artists');
     return saved ? JSON.parse(saved) : [];
   });
-  
+
   // Current step state
   const [currentStep, setCurrentStep] = useState<EventCreationStep>(() => {
     const saved = localStorage.getItem('event_currentStep');
     return saved ? saved as EventCreationStep : 'basicDetails';
   });
-  
+
   // Persist state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('event_basicDetails', JSON.stringify(basicDetails));
   }, [basicDetails]);
-  
+
   useEffect(() => {
     localStorage.setItem('event_venues', JSON.stringify(venues));
   }, [venues]);
-  
+
   useEffect(() => {
     localStorage.setItem('event_dates', JSON.stringify(dates));
   }, [dates]);
-  
+
   useEffect(() => {
     localStorage.setItem('event_timeSlots', JSON.stringify(timeSlots));
   }, [timeSlots]);
-  
+
   useEffect(() => {
     localStorage.setItem('event_tickets', JSON.stringify(tickets));
   }, [tickets]);
-  
+
   useEffect(() => {
     localStorage.setItem('event_media', JSON.stringify(media));
   }, [media]);
-  
+
   useEffect(() => {
     localStorage.setItem('event_additionalInfo', JSON.stringify(additionalInfo));
   }, [additionalInfo]);
@@ -182,11 +179,11 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem('event_artists', JSON.stringify(artists));
   }, [artists]);
-  
+
   useEffect(() => {
     localStorage.setItem('event_currentStep', currentStep);
   }, [currentStep]);
-  
+
   // Function to reset all event data
   const resetEventData = () => {
     setBasicDetails(initialBasicDetails);
@@ -198,7 +195,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     setAdditionalInfo(initialAdditionalInfo);
     setArtists([]);
     setCurrentStep('basicDetails');
-    
+
     // Clear localStorage
     localStorage.removeItem('event_basicDetails');
     localStorage.removeItem('event_venues');
@@ -210,7 +207,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('event_artists');
     localStorage.removeItem('event_currentStep');
   };
-  
+
   // Function to get all event data
   const getEventData = () => {
     return {
@@ -224,7 +221,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
       artists
     };
   };
-  
+
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue: EventContextState = {
     basicDetails,
@@ -248,7 +245,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     currentStep,
     setCurrentStep
   };
-  
+
   return (
     <EventContext.Provider value={contextValue}>
       {children}
@@ -266,7 +263,7 @@ export const useEventContext = (): EventContextState => {
 };
 
 // Define the types for step components
-export type { 
+export type {
   BasicDetailsFormValues,
   VenueFormValues,
   DateFormValues,

@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';

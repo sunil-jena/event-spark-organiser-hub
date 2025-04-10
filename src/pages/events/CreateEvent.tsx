@@ -11,7 +11,6 @@ import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSi
 import { EventData } from '@/components/events/steps/types';
 
 // Import the step components
-import { BasicDetailsStep } from '@/components/events/steps/BasicDetailsStep';
 import { VenueStep } from '@/components/events/steps/VenueStep';
 import { DateStep } from '@/components/events/steps/DateStep';
 import { TimeSlotStep } from '@/components/events/steps/TimeSlotStep';
@@ -20,6 +19,7 @@ import { MediaStep } from '@/components/events/steps/MediaStep';
 import { AdditionalInfoStep } from '@/components/events/steps/AdditionalInfoStep';
 import { ReviewStep } from '@/components/events/steps/ReviewStep';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BasicDetailsStep } from '@/components/events/steps/BasicDetailsStep';
 
 const CreateEvent = () => {
   const {
@@ -51,7 +51,7 @@ const CreateEvent = () => {
     setCurrentStep: setEventContextCurrentStep,
   } = useEventContext();
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const location = useLocation();
 
   // Show scroll top button state
@@ -98,7 +98,7 @@ const CreateEvent = () => {
       window.history.pushState(null, '', `#${step}`);
 
       // Update step statuses - using a function that returns the new value
-      setEventStepStatuses((prevStatuses) => {
+      setEventStepStatuses((prevStatuses: any) => {
         const newStatuses = { ...prevStatuses };
 
         Object.keys(newStatuses).forEach(key => {
@@ -158,7 +158,6 @@ const CreateEvent = () => {
 
   // Handle form submissions for each step
   const handleBasicDetailsSubmit = (values: any) => {
-    console.log("Basic details submitted:", values);
     setBasicDetails(values);
     completeStep('venues');
   };
@@ -260,6 +259,7 @@ const CreateEvent = () => {
     }, 1500);
   };
 
+  
   // Render the current step content
   const renderStepContent = () => {
     switch (currentStep) {

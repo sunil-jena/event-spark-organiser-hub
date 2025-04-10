@@ -82,7 +82,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
         >
           {(formik) => (
             <Form>
-              <h2 className="text-xl font-semibold mb-4">Event Details</h2>
+              <h2 className="text-xl font-semibold mb-4">Basic Details</h2>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -130,7 +130,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                   <ErrorMessage name="description" component="div" className="text-red-500 text-sm" />
 
                 </div>
-                <div >
+                <div className='space-y-2 sm:col-span-2'>
                   <Label>Event Tags</Label>
                   <div className="flex items-center mt-1.5 space-x-2">
                     <Input

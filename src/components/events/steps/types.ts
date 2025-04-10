@@ -5,9 +5,6 @@ export interface BasicDetailsFormValues {
   title: string;
   category: string;
   description: string;
-  organizerName: string;
-  organizerEmail: string;
-  organizerPhone: string;
   additionalInfo?: string;
   terms?: string;
   eventType: "public" | "private";
@@ -21,7 +18,11 @@ export interface BasicDetailsFormValues {
   seatingArrangementOption: string;
   kidFriendly: string;
   petFriendly: string;
-  termsAndConditions: string;
+  termsAndConditions?: string;
+  isOnline: false,
+  videoConferenceProvider: string,
+  videoConferenceUrl: string,
+  videoConferencePassword: string,
 }
 
 export interface VenueFormValues {
@@ -61,7 +62,6 @@ export interface DateFormValues {
     endDate: Date;
   };
 }
-
 export interface TimeSlotFormValues {
   id: string;
   dateId: string;
@@ -77,7 +77,6 @@ export interface TimeSlotFormValues {
   gateOpenType?: 'minute' | 'hour';
   gateOpenDuration?: number;
 }
-
 export interface TicketFormValues {
   id: string;
   name: string;
@@ -101,7 +100,6 @@ export interface TicketFormValues {
     validTo: Date;
   }[];
 }
-
 export interface MediaFormValues {
   galleryImages: (string | File)[];
   cardImage?: File | null;

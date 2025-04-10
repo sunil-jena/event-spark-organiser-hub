@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,7 +39,7 @@ export interface TicketFormValues {
 }
 
 interface TicketStepProps {
-  tickets: TicketFormValues[];
+  tickets: any[];
   dates: DateFormValues[];
   timeSlots: TimeSlotFormValues[];
   venues: VenueFormValues[];

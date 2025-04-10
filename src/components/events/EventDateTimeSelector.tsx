@@ -33,8 +33,8 @@ import {
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { EventLocation } from './CreateEventForm';
 import { toast } from '@/hooks/use-toast';
+import { VenueFormValues } from './steps/types';
 
 export interface EventDateTime {
   id: string;
@@ -52,7 +52,7 @@ export interface EventDateTime {
 interface EventDateTimeSelectorProps {
   value: EventDateTime[];
   onChange: (dateTimes: EventDateTime[]) => void;
-  locations: EventLocation[];
+  locations: VenueFormValues[];
 }
 
 type DateType = 'single' | 'multi' | 'range' | 'recurring';
