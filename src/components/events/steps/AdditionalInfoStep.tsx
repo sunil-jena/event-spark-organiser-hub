@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/accordion";
 import { AdditionalInfoFormValues } from './types';
 
+export { AdditionalInfoFormValues };
+
 const AdditionalInfoSchema = Yup.object().shape({
   eventRules: Yup.string(),
   faq: Yup.string(),

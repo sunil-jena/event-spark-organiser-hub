@@ -11,13 +11,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { BasicDetailsFormValues } from './BasicDetailsStep';
-import { VenueFormValues } from './VenueStep';
-import { DateFormValues } from './DateStep';
-import { TimeSlotFormValues } from './TimeSlotStep';
-import { TicketFormValues } from './TicketStep';
-import { MediaFormValues } from './MediaStep';
-import { AdditionalInfoFormValues } from './AdditionalInfoStep';
+import { 
+  BasicDetailsFormValues, 
+  VenueFormValues, 
+  DateFormValues, 
+  TimeSlotFormValues, 
+  TicketFormValues, 
+  MediaFormValues, 
+  AdditionalInfoFormValues 
+} from './types';
 
 interface EventData {
   basicDetails: BasicDetailsFormValues;
@@ -54,6 +56,17 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ eventData, onSubmit, onB
       case 'season-pass': return 'Season Pass';
       default: return type;
     }
+  };
+
+  // Helper function to safely create object URLs
+  const getImageUrl = (image: string | File | null | undefined): string => {
+    if (!image) return '';
+    
+    if (image instanceof File) {
+      return URL.createObjectURL(image);
+    }
+    
+    return image; // Return the string URL directly
   };
 
   return (
@@ -257,7 +270,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ eventData, onSubmit, onB
                       <div>
                         <h4 className="text-sm font-medium text-gray-500 mb-2">Card Image</h4>
                         <img
-                          src={URL.createObjectURL(eventData.media.cardImage)}
+                          src={getImageUrl(eventData.media.cardImage)}
                           alt="Card"
                           className="w-full h-32 object-cover rounded-md border"
                         />
@@ -268,7 +281,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ eventData, onSubmit, onB
                       <div>
                         <h4 className="text-sm font-medium text-gray-500 mb-2">Banner Image</h4>
                         <img
-                          src={URL.createObjectURL(eventData.media.bannerImage)}
+                          src={getImageUrl(eventData.media.bannerImage)}
                           alt="Banner"
                           className="w-full h-24 object-cover rounded-md border"
                         />
@@ -294,7 +307,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ eventData, onSubmit, onB
                         {eventData.media.galleryImages.map((image, index) => (
                           <img
                             key={index}
-                            src={URL.createObjectURL(image)}
+                            src={getImageUrl(image)}
                             alt={`Gallery ${index + 1}`}
                             className="w-full h-20 object-cover rounded-md border"
                           />

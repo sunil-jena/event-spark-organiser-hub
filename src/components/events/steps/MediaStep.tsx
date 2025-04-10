@@ -7,14 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-export interface MediaFormValues {
-  galleryImages: (string | File)[];
-  cardImage?: File;
-  bannerImage?: File; // Changed to match expected type
-  verticalBannerImage?: File;
-  youtubeLink?: string;
-}
+import { MediaFormValues } from './types';
 
 interface MediaStepProps {
   media: MediaFormValues;
@@ -153,6 +146,17 @@ export const MediaStep: React.FC<MediaStepProps> = ({ media, onSubmit, onBack })
     onSubmit(mediaData);
   };
 
+  // Helper function to safely create object URLs
+  const getImageUrl = (image: string | File | null | undefined): string => {
+    if (!image) return '';
+    
+    if (image instanceof File) {
+      return URL.createObjectURL(image);
+    }
+    
+    return image; // Return the string URL directly
+  };
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -180,7 +184,7 @@ export const MediaStep: React.FC<MediaStepProps> = ({ media, onSubmit, onBack })
                 {mediaData.cardImage ? (
                   <div className="relative mb-4">
                     <img
-                      src={URL.createObjectURL(mediaData.cardImage)}
+                      src={getImageUrl(mediaData.cardImage)}
                       alt="Card Preview"
                       className="w-full h-40 object-cover rounded border"
                     />
@@ -225,7 +229,7 @@ export const MediaStep: React.FC<MediaStepProps> = ({ media, onSubmit, onBack })
                 {mediaData.bannerImage ? (
                   <div className="relative mb-4">
                     <img
-                      src={URL.createObjectURL(mediaData.bannerImage)}
+                      src={getImageUrl(mediaData.bannerImage)}
                       alt="Banner Preview"
                       className="w-full h-32 object-cover rounded border"
                     />
@@ -270,7 +274,7 @@ export const MediaStep: React.FC<MediaStepProps> = ({ media, onSubmit, onBack })
                 {mediaData.verticalBannerImage ? (
                   <div className="relative mb-4">
                     <img
-                      src={URL.createObjectURL(mediaData.verticalBannerImage)}
+                      src={getImageUrl(mediaData.verticalBannerImage)}
                       alt="Vertical Banner Preview"
                       className="w-full h-40 object-cover rounded border"
                     />
@@ -317,7 +321,7 @@ export const MediaStep: React.FC<MediaStepProps> = ({ media, onSubmit, onBack })
                     {mediaData.galleryImages.map((image, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={URL.createObjectURL(image)}
+                          src={getImageUrl(image)}
                           alt={`Gallery Image ${index + 1}`}
                           className="w-full h-24 object-cover rounded border"
                         />

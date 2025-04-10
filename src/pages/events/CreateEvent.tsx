@@ -94,8 +94,8 @@ const CreateEvent = () => {
       // Update URL hash without page reload
       window.history.pushState(null, '', `#${step}`);
       
-      // Update step statuses - Fixed type error by using a dispatch function
-      setEventStepStatuses((prevStatuses: Record<EventCreationStep, StepStatus>) => {
+      // Update step statuses
+      setEventStepStatuses((prevStatuses) => {
         const newStatuses = { ...prevStatuses };
         
         Object.keys(newStatuses).forEach(key => {
@@ -117,8 +117,8 @@ const CreateEvent = () => {
   
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
-    // Update step statuses - Fixed type error here
-    setEventStepStatuses((prevStatuses: Record<EventCreationStep, StepStatus>) => {
+    // Update step statuses
+    setEventStepStatuses((prevStatuses) => {
       const newStatuses = { ...prevStatuses };
       newStatuses[currentStep] = { ...prevStatuses[currentStep], status: 'complete' };
       newStatuses[nextStep] = { ...prevStatuses[nextStep], status: 'current', isClickable: true };
@@ -134,8 +134,8 @@ const CreateEvent = () => {
   
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
-    // Update step statuses - Fixed type error here
-    setEventStepStatuses((prevStatuses: Record<EventCreationStep, StepStatus>) => {
+    // Update step statuses
+    setEventStepStatuses((prevStatuses) => {
       const newStatuses = { ...prevStatuses };
       
       Object.keys(newStatuses).forEach(key => {
@@ -165,11 +165,12 @@ const CreateEvent = () => {
   };
   
   const handleDatesSubmit = (values: any) => {
-    // Map to the expected type
+    // Make sure the type property is set correctly for compatibility
     const updatedValues = values.map((date: any) => ({
       ...date,
-      type: date.dateType === 'multiple' ? 'single' : date.dateType // Map 'multiple' to 'single' for compatibility
+      type: date.dateType === 'multiple' ? 'single' : date.dateType
     }));
+    
     setDates(updatedValues);
     completeStep('times');
   };
@@ -188,8 +189,9 @@ const CreateEvent = () => {
       availableDateIds: ticket.availableDateIds || [],
       isAllTimeSlots: ticket.isAllTimeSlots || false,
       availableTimeSlotIds: ticket.availableTimeSlotIds || [],
-      isLimited: ticket.isLimited || false // Add the required isLimited property
+      isLimited: ticket.isLimited || false
     }));
+    
     setTickets(updatedValues);
     completeStep('media');
   };
@@ -200,11 +202,12 @@ const CreateEvent = () => {
   };
   
   const handleAdditionalInfoSubmit = (values: any) => {
-    // Convert faq object array to string if needed
+    // Ensure faq is a string if needed
     const updatedValues = {
       ...values,
       faq: typeof values.faq === 'object' ? JSON.stringify(values.faq) : values.faq
     };
+    
     setAdditionalInfo(updatedValues);
     completeStep('review');
   };
@@ -216,7 +219,7 @@ const CreateEvent = () => {
       venues,
       dates: dates.map(d => ({
         ...d,
-        type: d.dateType === 'multiple' ? 'single' : d.dateType // Map 'multiple' to 'single' for compatibility
+        type: d.dateType === 'multiple' ? 'single' : d.dateType
       })),
       timeSlots,
       tickets: tickets.map(t => ({
@@ -226,7 +229,7 @@ const CreateEvent = () => {
         availableDateIds: t.availableDateIds || [],
         isAllTimeSlots: t.isAllTimeSlots || false,
         availableTimeSlotIds: t.availableTimeSlotIds || [],
-        isLimited: t.isLimited || false // Add the required isLimited property
+        isLimited: t.isLimited || false
       })),
       media,
       additionalInfo: {
@@ -276,7 +279,7 @@ const CreateEvent = () => {
           <DateStep 
             dates={dates.map(d => ({ 
               ...d, 
-              type: d.dateType === 'multiple' ? 'single' : d.dateType // Map 'multiple' to 'single' for compatibility 
+              type: d.dateType === 'multiple' ? 'single' : d.dateType
             }))} 
             venues={venues}
             onSubmit={handleDatesSubmit}
@@ -289,7 +292,7 @@ const CreateEvent = () => {
             timeSlots={timeSlots} 
             dates={dates.map(d => ({ 
               ...d, 
-              type: d.dateType === 'multiple' ? 'single' : d.dateType // Map 'multiple' to 'single' for compatibility
+              type: d.dateType === 'multiple' ? 'single' : d.dateType
             }))}
             venues={venues}
             artists={artists}
@@ -307,11 +310,11 @@ const CreateEvent = () => {
               availableDateIds: t.availableDateIds || [],
               isAllTimeSlots: t.isAllTimeSlots || false,
               availableTimeSlotIds: t.availableTimeSlotIds || [],
-              isLimited: t.isLimited || false // Add the required isLimited property
+              isLimited: t.isLimited || false
             }))}
             dates={dates.map(d => ({ 
               ...d, 
-              type: d.dateType === 'multiple' ? 'single' : d.dateType // Map 'multiple' to 'single' for compatibility
+              type: d.dateType === 'multiple' ? 'single' : d.dateType
             }))}
             timeSlots={timeSlots}
             venues={venues}
@@ -322,12 +325,7 @@ const CreateEvent = () => {
       case 'media':
         return (
           <MediaStep 
-            media={{
-              ...media,
-              bannerImage: media.bannerImage || null,
-              verticalBannerImage: media.verticalBannerImage || null,
-              cardImage: media.cardImage || null
-            }} 
+            media={media} 
             onSubmit={handleMediaSubmit}
             onBack={() => handleStepClick('tickets')}
           />
@@ -335,10 +333,7 @@ const CreateEvent = () => {
       case 'additionalInfo':
         return (
           <AdditionalInfoStep 
-            additionalInfo={{
-              ...additionalInfo,
-              faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
-            }} 
+            additionalInfo={additionalInfo} 
             onSubmit={handleAdditionalInfoSubmit}
             onBack={() => handleStepClick('media')}
           />
@@ -363,10 +358,7 @@ const CreateEvent = () => {
                 availableTimeSlotIds: t.availableTimeSlotIds || [],
                 isLimited: t.isLimited || false
               })),
-              media: {
-                ...media,
-                bannerImage: media.bannerImage || null,
-              },
+              media,
               additionalInfo: {
                 ...additionalInfo,
                 faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq

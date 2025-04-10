@@ -43,7 +43,7 @@ export interface VenueFormValues {
 export interface DateFormValues {
   id: string;
   venueId: string;
-  type: 'single' | 'range' | 'recurring';  // Fixed to match required type
+  type: 'single' | 'range' | 'recurring';
   dateType: 'single' | 'multiple' | 'range' | 'recurring';
   dates: Date[];
   startDate: Date;
@@ -84,7 +84,7 @@ export interface TicketFormValues {
   description: string;
   price: number;
   quantity: number;
-  ticketType: string;
+  ticketType: 'standard' | 'early-bird' | 'vip' | 'season-pass' | string;
   isAllDates: boolean;
   availableDateIds: string[];
   isAllTimeSlots: boolean;
@@ -92,6 +92,8 @@ export interface TicketFormValues {
   dateIds: string[]; // Associated dates
   timeSlotIds?: string[]; // Optional associated time slots
   isLimited: boolean; // Required property
+  saleStartDate?: Date;
+  saleEndDate?: Date;
   promoCodes?: {
     code: string;
     discountPercentage: number;
@@ -104,7 +106,7 @@ export interface MediaFormValues {
   galleryImages: (string | File)[];
   cardImage?: File | null;
   coverImage?: string | File | null;
-  bannerImage?: File | null; // Changed to match component's expectation
+  bannerImage?: string | File | null;
   verticalBannerImage?: File | null;
   eventVerticalCardImage?: string | File | null;
   eventBannerImage?: (string | File)[];
@@ -116,7 +118,7 @@ export interface MediaFormValues {
 
 export interface AdditionalInfoFormValues {
   eventRules?: string;
-  faq?: string; // Changed to match component's expectation
+  faq?: string;
   terms?: string;
   refundPolicy?: string;
   ageRestriction?: string;
