@@ -23,7 +23,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import './App.css';
-
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 // Create a client
 const queryClient = new QueryClient();
 
@@ -32,13 +33,15 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AppContextProvider>
         <EventContextProvider>
+          <Toaster />
+          <Sonner />
           <BrowserRouter>
             <Routes>
               {/* Auth routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              
+
               {/* App routes */}
               <Route path="/" element={<Layout />}>
                 <Route index element={<Dashboard />} />
@@ -55,7 +58,7 @@ function App() {
                 <Route path="settings" element={<Settings />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
-              
+
               {/* 404 route */}
               <Route path="*" element={<NotFound />} />
             </Routes>

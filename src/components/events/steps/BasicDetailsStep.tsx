@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Card, CardContent } from '@/components/ui/card';
@@ -193,7 +193,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
     formik.setFieldValue('language', formik.values.language.filter(lang => lang !== langToRemove));
   };
 
-  const [categoryOpen, setCategoryOpen] = React.useState(false);
+  const [categoryOpen, setCategoryOpen] = useState<boolean>(false);
 
   return (
     <Card className="shadow-lg border-gray-200">
