@@ -364,7 +364,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, minimized, toggleMinimize }: Sideb
   };
 
   const sidebarClasses = cn(
-    'flex flex-col h-screen bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',
+    'flex flex-col min-h-screen bg-primary text-white transition-all duration-300 ease-in-out overflow-hidden',
     isMobile ? (isOpen ? 'fixed inset-0 z-50' : 'w-0') : minimized ? 'w-16' : 'w-64'
   );
 

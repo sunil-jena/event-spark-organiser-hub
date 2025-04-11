@@ -1,9 +1,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, ArrowUp, CalendarIcon, FileText, ImagePlus, MapPin, Ticket } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -24,7 +22,6 @@ import { BasicDetailsStep } from '@/components/events/steps/BasicDetailsStep';
 
 const CreateEvent = () => {
   const {
-    scrollToTop,
     setActiveRoute,
     eventStepStatuses,
     setEventStepStatuses,
@@ -111,9 +108,7 @@ const CreateEvent = () => {
       });
       
       setEventStepStatuses(updateStatuses);
-
-      // Scroll to top when changing steps
-      scrollToTop();
+   
     }
   };
 
@@ -130,7 +125,6 @@ const CreateEvent = () => {
     window.history.pushState(null, '', `#${nextStep}`);
 
     setCurrentStep(nextStep);
-    scrollToTop();
   };
 
   // Enable all steps for reviewing or editing after event creation
@@ -487,16 +481,7 @@ const CreateEvent = () => {
           </Card>
         </div>
       </div>
-      {/* Scroll to top button */}
-      <Button
-        variant="outline"
-        size="icon"
-        className={`fixed bottom-6 right-6 rounded-full shadow-lg transition-opacity duration-300 bg-primary text-white hover:bg-primary/90 z-10 ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-        onClick={scrollToTop}
-      >
-        <ArrowUp className="h-5 w-5" />
-      </Button>
+   
     </div>
   );
 };

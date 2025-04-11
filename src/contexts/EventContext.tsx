@@ -14,7 +14,27 @@ import {
 import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
 
 // Define initial form values
- 
+const initialBasicDetails: BasicDetailsFormValues = {
+  title: '',
+  category: '',
+  description: '',
+  eventType: 'public',
+  aboutMessage: '',
+  eventHighlights: [],
+  tags: [],
+  language: ['English'],
+  ageGroup: 5,
+  ticketNeededForAges: 5,
+  layout: 'outdoor',
+  seatingArrangementOption: '',
+  kidFriendly: '',
+  petFriendly: '',
+  isOnline: false,
+  videoConferenceProvider: '',
+  videoConferenceUrl: '',
+  videoConferencePassword: '',
+};
+
 const initialMedia: MediaFormValues = {
   galleryImages: [],
   eventBannerImage: [],

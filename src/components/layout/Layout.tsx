@@ -6,19 +6,19 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAppContext } from '@/contexts/AppContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { ChevronUp } from 'lucide-react';
+import { ArrowUp, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Layout = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
-  const { 
-    sidebarMinimized, 
-    toggleSidebar, 
-    scrollToTop, 
-    setActiveRoute 
+  const {
+    sidebarMinimized,
+    toggleSidebar,
+    scrollToTop,
+    setActiveRoute
   } = useAppContext();
-  
+
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [notificationsOpen, setNotificationsOpen] = React.useState(false);
@@ -109,7 +109,7 @@ const Layout = () => {
       />
 
       <div
-        className="flex flex-col flex-1 overflow-hidden h-screen"
+        className="flex flex-col flex-1 overflow-hidden"
         style={!isMobile ? mainContentStyle : undefined}
       >
         <Header
@@ -131,27 +131,17 @@ const Layout = () => {
           transition={{ duration: 0.3 }}
         >
           <Outlet />
-          
+
           {/* Scroll to top button */}
-          <AnimatePresence>
-            {showScrollTop && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="fixed bottom-8 right-8 z-50"
-              >
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="rounded-full shadow-md"
-                  onClick={scrollToTop}
-                >
-                  <ChevronUp className="h-5 w-5" />
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <Button
+            variant="outline"
+            size="icon"
+            className={`fixed bottom-6 right-6 rounded-full shadow-lg transition-opacity duration-300 bg-primary text-white hover:bg-primary/90  hover:text-white z-10 ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+            onClick={scrollToTop}
+          >
+            <ArrowUp className="h-5 w-5" />
+          </Button>
         </motion.main>
       </div>
     </div>

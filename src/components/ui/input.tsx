@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 import * as React from "react"
 import { motion } from "framer-motion"
@@ -13,7 +14,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <motion.div
         initial={{ scale: 1 }}
         whileTap={{ scale: 0.99 }}
-        className="relative"
+        className="relative w-full"
       >
         <input
           type={type}
