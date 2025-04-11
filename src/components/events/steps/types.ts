@@ -19,10 +19,10 @@ export interface BasicDetailsFormValues {
   kidFriendly: string;
   petFriendly: string;
   termsAndConditions?: string;
-  isOnline: false,
-  videoConferenceProvider: string,
-  videoConferenceUrl: string,
-  videoConferencePassword: string,
+  isOnline: boolean;
+  videoConferenceProvider: string;
+  videoConferenceUrl: string;
+  videoConferencePassword: string;
 }
 
 export interface VenueFormValues {
@@ -62,6 +62,7 @@ export interface DateFormValues {
     endDate: Date;
   };
 }
+
 export interface TimeSlotFormValues {
   id: string;
   dateId: string;
@@ -77,13 +78,14 @@ export interface TimeSlotFormValues {
   gateOpenType?: 'minute' | 'hour';
   gateOpenDuration?: number;
 }
+
 export interface TicketFormValues {
   id: string;
   name: string;
   description: string;
   price: number;
   quantity: number;
-  ticketType: 'standard' | 'early-bird' | 'vip' | 'season-pass' | string; // Allow broader string type
+  ticketType: 'standard' | 'early-bird' | 'vip' | 'season-pass' | string;
   isAllDates: boolean;
   availableDateIds: string[];
   isAllTimeSlots: boolean;
@@ -100,15 +102,16 @@ export interface TicketFormValues {
     validTo: Date;
   }[];
 }
+
 export interface MediaFormValues {
-  galleryImages: (string | File)[];
-  cardImage?: File | null;
-  coverImage?: string | File | null;
-  bannerImage?: string | File | null;
-  verticalBannerImage?: File | null;
-  eventVerticalCardImage?: string | File | null;
-  eventBannerImage?: (string | File)[];
-  eventVerticalBannerImage?: (string | File)[];
+  galleryImages: string[];
+  cardImage?: string | null;
+  coverImage?: string | null;
+  bannerImage?: string | null;
+  verticalBannerImage?: string | null;
+  eventVerticalCardImage?: string | null;
+  eventBannerImage?: string[];
+  eventVerticalBannerImage?: string[];
   eventVerticalVideo?: string;
   eventMediaLink?: string;
   youtubeLink?: string;
@@ -116,7 +119,7 @@ export interface MediaFormValues {
 
 export interface AdditionalInfoFormValues {
   eventRules?: string;
-  faq?: string; // Changed to string to match component expectations
+  faq?: string;
   terms?: string;
   refundPolicy?: string;
   ageRestriction?: string;
@@ -145,7 +148,7 @@ export interface ArtistFormValues {
   id: string;
   name: string;
   bio?: string;
-  image?: string | File;
+  image?: string;
   socialMedia?: {
     platform: string;
     url: string;

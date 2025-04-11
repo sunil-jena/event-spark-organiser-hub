@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEventContext } from '@/contexts/EventContext';
 import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
-import { EventData } from '@/components/events/steps/types';
+import { EventData, TicketFormValues } from '@/components/events/steps/types';
 
 // Import the step components
 import { VenueStep } from '@/components/events/steps/VenueStep';
@@ -97,21 +98,19 @@ const CreateEvent = () => {
       // Update URL hash without page reload
       window.history.pushState(null, '', `#${step}`);
 
-      // Update step statuses - using a function that returns the new value
-      setEventStepStatuses((prevStatuses: any) => {
-        const newStatuses = { ...prevStatuses };
-
-        Object.keys(newStatuses).forEach(key => {
-          const stepKey = key as EventCreationStep;
-          if (stepKey === step) {
-            newStatuses[stepKey].status = 'current';
-          } else if (newStatuses[stepKey].status === 'current') {
-            newStatuses[stepKey].status = 'complete';
-          }
-        });
-
-        return newStatuses;
+      // Update step statuses
+      const updateStatuses = {...eventStepStatuses};
+      
+      Object.keys(updateStatuses).forEach(key => {
+        const stepKey = key as EventCreationStep;
+        if (stepKey === step) {
+          updateStatuses[stepKey].status = 'current';
+        } else if (updateStatuses[stepKey].status === 'current') {
+          updateStatuses[stepKey].status = 'complete';
+        }
       });
+      
+      setEventStepStatuses(updateStatuses);
 
       // Scroll to top when changing steps
       scrollToTop();
@@ -120,13 +119,12 @@ const CreateEvent = () => {
 
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
-    // Update step statuses - using a function that returns the new value
-    setEventStepStatuses((prevStatuses) => {
-      const newStatuses = { ...prevStatuses };
-      newStatuses[currentStep] = { ...prevStatuses[currentStep], status: 'complete' };
-      newStatuses[nextStep] = { ...prevStatuses[nextStep], status: 'current', isClickable: true };
-      return newStatuses;
-    });
+    // Update step statuses
+    const updateStatuses = {...eventStepStatuses};
+    updateStatuses[currentStep] = { ...eventStepStatuses[currentStep], status: 'complete' };
+    updateStatuses[nextStep] = { ...eventStepStatuses[nextStep], status: 'current', isClickable: true };
+    
+    setEventStepStatuses(updateStatuses);
 
     // Update URL hash
     window.history.pushState(null, '', `#${nextStep}`);
@@ -137,20 +135,18 @@ const CreateEvent = () => {
 
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
-    // Update step statuses - using a function that returns the new value
-    setEventStepStatuses((prevStatuses) => {
-      const newStatuses = { ...prevStatuses };
-
-      Object.keys(newStatuses).forEach(key => {
-        const stepKey = key as EventCreationStep;
-        newStatuses[stepKey].isClickable = true;
-        if (newStatuses[stepKey].status === 'incomplete') {
-          newStatuses[stepKey].status = 'complete';
-        }
-      });
-
-      return newStatuses;
+    // Update step statuses
+    const updateStatuses = {...eventStepStatuses};
+    
+    Object.keys(updateStatuses).forEach(key => {
+      const stepKey = key as EventCreationStep;
+      updateStatuses[stepKey].isClickable = true;
+      if (updateStatuses[stepKey].status === 'incomplete') {
+        updateStatuses[stepKey].status = 'complete';
+      }
     });
+    
+    setEventStepStatuses(updateStatuses);
 
     // Set editing mode to true so all steps are accessible
     setIsEditingEvent(true);
@@ -185,14 +181,14 @@ const CreateEvent = () => {
 
   const handleTicketSubmit = (values: any) => {
     // Add the required properties to match the TicketStep component's expectations
-    const updatedValues = values.map((ticket: any) => ({
-      ...ticket,
-      ticketType: ticket.ticketType || 'standard',
-      isAllDates: ticket.isAllDates || false,
-      availableDateIds: ticket.availableDateIds || [],
-      isAllTimeSlots: ticket.isAllTimeSlots || false,
-      availableTimeSlotIds: ticket.availableTimeSlotIds || [],
-      isLimited: ticket.isLimited || false
+    const updatedValues = values.map((t: any) => ({
+      ...t,
+      ticketType: t.ticketType || 'standard',
+      isAllDates: t.isAllDates || false,
+      availableDateIds: t.availableDateIds || [],
+      isAllTimeSlots: t.isAllTimeSlots || false,
+      availableTimeSlotIds: t.availableTimeSlotIds || [],
+      isLimited: t.isLimited || false
     }));
 
     setTickets(updatedValues);
@@ -226,14 +222,14 @@ const CreateEvent = () => {
       })),
       timeSlots,
       tickets: tickets.map(t => ({
-        ...ticket,
-        ticketType: ticket.ticketType || 'standard',
-        isAllDates: ticket.isAllDates || false,
-        availableDateIds: ticket.availableDateIds || [],
-        isAllTimeSlots: ticket.isAllTimeSlots || false,
-        availableTimeSlotIds: ticket.availableTimeSlotIds || [],
-        isLimited: ticket.isLimited || false
-      })),
+        ...t,
+        ticketType: t.ticketType || 'standard',
+        isAllDates: t.isAllDates || false,
+        availableDateIds: t.availableDateIds || [],
+        isAllTimeSlots: t.isAllTimeSlots || false,
+        availableTimeSlotIds: t.availableTimeSlotIds || [],
+        isLimited: t.isLimited || false
+      })) as TicketFormValues[],
       media,
       additionalInfo: {
         ...additionalInfo,
@@ -315,7 +311,7 @@ const CreateEvent = () => {
               isAllTimeSlots: t.isAllTimeSlots || false,
               availableTimeSlotIds: t.availableTimeSlotIds || [],
               isLimited: t.isLimited || false
-            }))}
+            })) as TicketFormValues[]}
             dates={dates.map(d => ({
               ...d,
               type: d.dateType === 'multiple' ? 'single' : d.dateType
@@ -361,13 +357,12 @@ const CreateEvent = () => {
                 isAllTimeSlots: t.isAllTimeSlots || false,
                 availableTimeSlotIds: t.availableTimeSlotIds || [],
                 isLimited: t.isLimited || false
-              })),
+              })) as TicketFormValues[],
               media,
               additionalInfo: {
                 ...additionalInfo,
                 faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
-              },
-              // artists: artists
+              }
             }}
             onSubmit={handleFinalSubmit}
             onBack={() => handleStepClick('additionalInfo')}
