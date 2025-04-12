@@ -36,7 +36,7 @@ export interface VenueFormValues {
   latitude?: number;
   longitude?: number;
   capacity?: number;
-  isTBD?: boolean; // To Be Determined flag
+  tba?: boolean; // To Be Determined flag
   venueToBeAnnounced: boolean;
   isActiveLocation: boolean;
 }

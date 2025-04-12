@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useEffect } from 'react';
+import { format, addDays, isAfter, isBefore, addWeeks } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Calendar, Plus, Trash2, Repeat } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -19,99 +23,166 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { v4 as uuidv4 } from 'uuid';
-import { format, addDays, isAfter, isBefore, addWeeks } from 'date-fns';
-import { Switch } from '@/components/ui/switch';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { DatePickerCalendar } from './DatePickerCalendar';
 import { VenueFormValues } from './VenueStep';
 
+/**
+ * Helper functions to convert between Date and numeric format (ddMMyyyy).
+ * We store dates as numbers so that, for example, April 2, 1999 becomes 02041999.
+ */
+const formatDateNumber = (date: Date): number => {
+  // Format as "ddMMyyyy" and convert to number.
+  return Number(format(date, 'ddMMyyyy'));
+};
+
+const parseDateNumber = (dateNumber: number): Date => {
+  // Convert the numeric date to an 8-digit string and then create a Date object.
+  const str = dateNumber.toString().padStart(8, '0');
+  const day = parseInt(str.slice(0, 2), 10);
+  const month = parseInt(str.slice(2, 4), 10) - 1; // Date() months are 0-indexed.
+  const year = parseInt(str.slice(4, 8), 10);
+  return new Date(year, month, day);
+};
+
+/**
+ * Update the DateFormValues interface so that dates are stored as numbers.
+ */
 export interface DateFormValues {
   id: string;
   type: 'single' | 'range' | 'recurring';
-  startDate: Date;
-  endDate?: Date;
+  startDate: number;           // Stored as ddMMyyyy number format.
+  endDate?: number;
   recurringType?: 'daily' | 'weekly' | 'monthly';
-  recurringUntil?: Date;
-  recurringDays?: number[]; // 0 = Sunday, 1 = Monday, etc.
+  recurringUntil?: number;
+  recurringDays?: number[];    // 0 = Sunday, 1 = Monday, etc.
   venueId?: string;
   notes?: string;
 }
 
 interface DateStepProps {
-  dates: DateFormValues[];
+  dates?: DateFormValues[];
   venues: VenueFormValues[];
   onSubmit: (dates: DateFormValues[]) => void;
   onBack: () => void;
 }
 
-export const DateStep: React.FC<DateStepProps> = ({ dates, venues, onSubmit, onBack }) => {
-  const [dateList, setDateList] = useState<DateFormValues[]>(dates);
-  const [dateType, setDateType] = useState<'single' | 'range' | 'recurring'>('single');
-  const [newDate, setNewDate] = useState<DateFormValues>({
+const validationSchema = Yup.object().shape({
+  startDate: Yup.number()
+    .required('Start date is required')
+    .test('is-valid', 'Invalid date', value => {
+      if (!value) return false;
+      const d = parseDateNumber(value);
+      return !isNaN(d.getTime());
+    }),
+  endDate: Yup.number().when('type', {
+    is: 'range',
+    then: (schema) =>
+      schema
+        .required('End date is required for date range')
+        .test('is-after', 'End date must be after start date', function (value) {
+          const { startDate } = this.parent;
+          if (!startDate || !value) return false;
+          return isAfter(parseDateNumber(value), parseDateNumber(startDate));
+        }),
+  }),
+  recurringType: Yup.string().when('type', {
+    is: 'recurring',
+    then: (schema) => schema.required('Please select how often the event repeats'),
+  }),
+  recurringUntil: Yup.number().when('type', {
+    is: 'recurring',
+    then: (schema) =>
+      schema
+        .required('Please specify when the recurring event ends')
+        .test('is-after', 'Recurring until date must be after start date', function (value) {
+          const { startDate } = this.parent;
+          if (!startDate || !value) return false;
+          return isAfter(parseDateNumber(value), parseDateNumber(startDate));
+        }),
+  }),
+});
+
+export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) => {
+  const { toast } = useToast();
+  const [dateList, setDateList] = React.useState<DateFormValues[]>([]);
+  const [dateType, setDateType] = React.useState<'single' | 'range' | 'recurring'>('single');
+  const [showStartCalendar, setShowStartCalendar] = React.useState(false);
+  const [showEndCalendar, setShowEndCalendar] = React.useState(false);
+  const [showUntilCalendar, setShowUntilCalendar] = React.useState(false);
+
+  // Set initial form values with dates as numbers.
+  const initialValues: DateFormValues = {
     id: uuidv4(),
     type: 'single',
-    startDate: new Date(),
-    venueId: venues.length > 0 ? venues[0].id : undefined
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+    startDate: formatDateNumber(new Date()),
+    venueId: ''
+  };
 
-  const validateDate = (date: DateFormValues) => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!date.startDate) {
-      newErrors.startDate = 'Start date is required';
-    }
-    
-    if (date.type === 'range' && !date.endDate) {
-      newErrors.endDate = 'End date is required for date range';
-    }
-    
-    if (date.type === 'range' && date.startDate && date.endDate && 
-        isAfter(date.startDate, date.endDate)) {
-      newErrors.endDate = 'End date must be after start date';
-    }
-    
-    if (date.type === 'recurring' && !date.recurringType) {
-      newErrors.recurringType = 'Please select how often the event repeats';
-    }
-    
-    if (date.type === 'recurring' && !date.recurringUntil) {
-      newErrors.recurringUntil = 'Please specify when the recurring event ends';
-    }
-    
-    return newErrors;
+  const formik = useFormik({
+    initialValues,
+    validationSchema,
+    onSubmit: (values) => {
+      handleAddDate();
+    },
+    validateOnChange: false,
+    validateOnBlur: false,
+  });
+
+  useEffect(() => {
+    // When dateType changes, reset the form but keep the current venue selection.
+    const venueId = formik.values.venueId;
+    formik.resetForm({
+      values: {
+        id: uuidv4(),
+        type: dateType,
+        startDate: formatDateNumber(new Date()),
+        endDate: dateType === 'range' ? formatDateNumber(addDays(new Date(), 3)) : undefined,
+        recurringType: dateType === 'recurring' ? 'weekly' : undefined,
+        recurringUntil: dateType === 'recurring' ? formatDateNumber(addWeeks(new Date(), 8)) : undefined,
+        recurringDays: dateType === 'recurring' ? [1, 3, 5] : undefined,
+        venueId
+      }
+    });
+  }, [dateType]);
+
+  const handleDateTypeChange = (value: string) => {
+    const newType = value as 'single' | 'range' | 'recurring';
+    setDateType(newType);
   };
 
   const handleAddDate = () => {
-    // Make sure the date type matches the currently selected tab
-    const dateToAdd = { ...newDate, type: dateType };
-    
-    const validationErrors = validateDate(dateToAdd);
-    
-    if (Object.keys(validationErrors).length === 0) {
-      setDateList([...dateList, dateToAdd]);
-      
-      // Reset form but keep venue selection
-      setNewDate({
-        id: uuidv4(),
-        type: dateType,
-        startDate: new Date(),
-        venueId: dateToAdd.venueId
-      });
-      
-      setErrors({});
-      
-      toast({
-        title: "Date added",
-        description: "Your event date has been added."
-      });
-    } else {
-      setErrors(validationErrors);
-    }
+    // Create a date object to add (ensuring the type matches the current selection).
+    const dateToAdd = { ...formik.values, type: dateType };
+    // Validate the form before adding.
+    formik.validateForm().then(errors => {
+      if (Object.keys(errors).length === 0) {
+        setDateList([...dateList, dateToAdd]);
+        // Reset form but keep the venue selection.
+        const venueId = formik.values.venueId;
+        formik.resetForm({
+          values: {
+            id: uuidv4(),
+            type: dateType,
+            startDate: formatDateNumber(new Date()),
+            endDate: dateType === 'range' ? formatDateNumber(addDays(new Date(), 3)) : undefined,
+            recurringType: dateType === 'recurring' ? 'weekly' : undefined,
+            recurringUntil: dateType === 'recurring' ? formatDateNumber(addWeeks(new Date(), 8)) : undefined,
+            recurringDays: dateType === 'recurring' ? [1, 3, 5] : undefined,
+            venueId
+          }
+        });
+        toast({
+          title: "Date added",
+          description: "Your event date has been added."
+        });
+      }
+    });
   };
 
   const handleRemoveDate = (id: string) => {
     setDateList(dateList.filter(date => date.id !== id));
-    
     toast({
       title: "Date removed",
       description: "The date has been removed from your event."
@@ -127,42 +198,51 @@ export const DateStep: React.FC<DateStepProps> = ({ dates, venues, onSubmit, onB
       });
       return;
     }
-    
     onSubmit(dateList);
   };
 
-  const handleDateTypeChange = (value: string) => {
-    const newType = value as 'single' | 'range' | 'recurring';
-    setDateType(newType);
-    
-    // Reset the date object to match the new type
-    setNewDate({
-      id: uuidv4(),
-      type: newType,
-      startDate: new Date(),
-      endDate: newType === 'range' ? addDays(new Date(), 3) : undefined,
-      recurringType: newType === 'recurring' ? 'weekly' : undefined,
-      recurringUntil: newType === 'recurring' ? addWeeks(new Date(), 8) : undefined,
-      recurringDays: newType === 'recurring' ? [1, 3, 5] : undefined, // Mon, Wed, Fri
-      venueId: newDate.venueId
-    });
-    
-    // Clear errors
-    setErrors({});
+  // Calendar selection handlers that convert Date values to our numeric format.
+  const handleStartDateSelect = (date: Date) => {
+    formik.setFieldValue('startDate', formatDateNumber(date));
+    setShowStartCalendar(false);
+    // If an end date exists and it is before the newly selected start date, update the end date.
+    if (formik.values.endDate && isBefore(parseDateNumber(formik.values.endDate), date)) {
+      formik.setFieldValue('endDate', formatDateNumber(addDays(date, 1)));
+    }
   };
 
+  const handleEndDateSelect = (date: Date) => {
+    formik.setFieldValue('endDate', formatDateNumber(date));
+    setShowEndCalendar(false);
+  };
+
+  const handleUntilDateSelect = (date: Date) => {
+    formik.setFieldValue('recurringUntil', formatDateNumber(date));
+    setShowUntilCalendar(false);
+  };
+
+  // Format the display string by converting stored numbers back into Dates.
   const formatDateDisplay = (date: DateFormValues) => {
     const venueName = venues.find(v => v.id === date.venueId)?.name || 'No venue selected';
-    
     switch (date.type) {
       case 'single':
-        return `${format(date.startDate, 'MMMM d, yyyy')} at ${venueName}`;
+        return `${format(parseDateNumber(date.startDate), 'MMMM d, yyyy')} at ${venueName}`;
       case 'range':
-        return `${format(date.startDate, 'MMM d')} - ${format(date.endDate!, 'MMM d, yyyy')} at ${venueName}`;
+        return `${format(parseDateNumber(date.startDate), 'MMM d')} - ${format(
+          parseDateNumber(date.endDate!),
+          'MMM d, yyyy'
+        )} at ${venueName}`;
       case 'recurring':
-        const frequencyText = date.recurringType === 'daily' ? 'Daily' : 
-                              date.recurringType === 'weekly' ? 'Weekly' : 'Monthly';
-        return `${frequencyText} from ${format(date.startDate, 'MMM d')} until ${format(date.recurringUntil!, 'MMM d, yyyy')} at ${venueName}`;
+        const frequencyText =
+          date.recurringType === 'daily'
+            ? 'Daily'
+            : date.recurringType === 'weekly'
+              ? 'Weekly'
+              : 'Monthly';
+        return `${frequencyText} from ${format(
+          parseDateNumber(date.startDate),
+          'MMM d'
+        )} until ${format(parseDateNumber(date.recurringUntil!), 'MMM d, yyyy')} at ${venueName}`;
       default:
         return 'Unknown date format';
     }
@@ -179,178 +259,188 @@ export const DateStep: React.FC<DateStepProps> = ({ dates, venues, onSubmit, onB
   ];
 
   return (
-    <Card>
+    <Card className="shadow-md">
       <CardContent className="pt-6">
-        <h2 className="text-xl font-semibold mb-4">Event Dates</h2>
-        
+        <h2 className="text-xl font-semibold mb-4 text-[#24005b]">Event Dates</h2>
+
         <Tabs defaultValue="single" onValueChange={handleDateTypeChange}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="single">Single Date</TabsTrigger>
-            <TabsTrigger value="range">Date Range</TabsTrigger>
-            <TabsTrigger value="recurring">Recurring Dates</TabsTrigger>
+          <TabsList className="mb-4 bg-[#24005b]/10">
+            <TabsTrigger value="single" className="data-[state=active]:bg-[#24005b] data-[state=active]:text-white">
+              Single Date
+            </TabsTrigger>
+            <TabsTrigger value="range" className="data-[state=active]:bg-[#24005b] data-[state=active]:text-white">
+              Date Range
+            </TabsTrigger>
+            <TabsTrigger value="recurring" className="data-[state=active]:bg-[#24005b] data-[state=active]:text-white">
+              Recurring Dates
+            </TabsTrigger>
           </TabsList>
-          
+
+          {/* SINGLE DATE TAB */}
           <TabsContent value="single" className="border rounded-lg p-4 bg-gray-50">
-            <h3 className="font-medium mb-3 flex items-center">
+            <h3 className="font-medium mb-3 flex items-center text-[#24005b]">
               <Calendar className="h-4 w-4 mr-2" />
               Add Single Date
             </h3>
-            
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <Label htmlFor="startDate">Event Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={format(newDate.startDate, 'yyyy-MM-dd')}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setNewDate({...newDate, startDate: new Date(e.target.value)});
-                    }
-                  }}
-                  className={errors.startDate ? "border-red-500" : ""}
-                />
-                {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate}</p>}
+                <div className="relative">
+                  <Input
+                    id="startDate"
+                    value={format(parseDateNumber(formik.values.startDate), 'MMMM dd, yyyy')}
+                    onClick={() => setShowStartCalendar(!showStartCalendar)}
+                    readOnly
+                    className={`cursor-pointer ${formik.errors.startDate ? "border-red-500" : ""}`}
+                  />
+                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#24005b] pointer-events-none" size={16} />
+                </div>
+                {formik.errors.startDate && <p className="text-red-500 text-sm">{formik.errors.startDate as string}</p>}
+                {showStartCalendar && (
+                  <div className="relative z-10 mt-1">
+                    <DatePickerCalendar
+                      selected={parseDateNumber(formik.values.startDate)}
+                      onSelect={handleStartDateSelect}
+                      onClose={() => setShowStartCalendar(false)}
+                    />
+                  </div>
+                )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="venueId">Venue</Label>
-                <Select
-                  value={newDate.venueId}
-                  onValueChange={(value) => setNewDate({...newDate, venueId: value})}
-                >
-                  <SelectTrigger id="venueId">
+                <Select value={formik.values.venueId} onValueChange={(value) => formik.setFieldValue('venueId', value)}>
+                  <SelectTrigger id="venueId" className="border bg-white">
                     <SelectValue placeholder="Select venue" />
                   </SelectTrigger>
                   <SelectContent>
                     {venues.map((venue) => (
                       <SelectItem key={venue.id} value={venue.id}>
-                        {venue.tbd ? `TBD Venue in ${venue.city}` : venue.name}
+                        {venue.tba ? `TBA Venue in ${venue.city}` : venue.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="notes">Notes (Optional)</Label>
-                <Input
-                  id="notes"
-                  value={newDate.notes || ''}
-                  onChange={(e) => setNewDate({...newDate, notes: e.target.value})}
-                  placeholder="Add any notes about this date"
-                />
-              </div>
             </div>
           </TabsContent>
-          
+
+          {/* DATE RANGE TAB */}
           <TabsContent value="range" className="border rounded-lg p-4 bg-gray-50">
-            <h3 className="font-medium mb-3 flex items-center">
+            <h3 className="font-medium mb-3 flex items-center text-[#24005b]">
               <Calendar className="h-4 w-4 mr-2" />
               Add Date Range
             </h3>
-            
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <Label htmlFor="rangeStartDate">Start Date</Label>
-                <Input
-                  id="rangeStartDate"
-                  type="date"
-                  value={format(newDate.startDate, 'yyyy-MM-dd')}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      const newStartDate = new Date(e.target.value);
-                      setNewDate({
-                        ...newDate, 
-                        startDate: newStartDate,
-                        // If end date exists and is before the new start date, update it
-                        endDate: newDate.endDate && isBefore(newDate.endDate, newStartDate) ? 
-                                addDays(newStartDate, 1) : newDate.endDate
-                      });
-                    }
-                  }}
-                  className={errors.startDate ? "border-red-500" : ""}
-                />
-                {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate}</p>}
+                <div className="relative">
+                  <Input
+                    id="rangeStartDate"
+                    value={format(parseDateNumber(formik.values.startDate), 'MMMM dd, yyyy')}
+                    onClick={() => setShowStartCalendar(!showStartCalendar)}
+                    readOnly
+                    className={`cursor-pointer ${formik.errors.startDate ? "border-red-500" : ""}`}
+                  />
+                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#24005b] pointer-events-none" size={16} />
+                </div>
+                {formik.errors.startDate && <p className="text-red-500 text-sm">{formik.errors.startDate as string}</p>}
+                {showStartCalendar && (
+                  <div className="relative z-10 mt-1">
+                    <DatePickerCalendar
+                      selected={parseDateNumber(formik.values.startDate)}
+                      onSelect={handleStartDateSelect}
+                      onClose={() => setShowStartCalendar(false)}
+                    />
+                  </div>
+                )}
               </div>
-              
-              <div className="space-y-2">
+
+              <div className="space-y-2 relative">
                 <Label htmlFor="rangeEndDate">End Date</Label>
-                <Input
-                  id="rangeEndDate"
-                  type="date"
-                  value={newDate.endDate ? format(newDate.endDate, 'yyyy-MM-dd') : ''}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setNewDate({...newDate, endDate: new Date(e.target.value)});
-                    }
-                  }}
-                  className={errors.endDate ? "border-red-500" : ""}
-                />
-                {errors.endDate && <p className="text-red-500 text-sm">{errors.endDate}</p>}
+                <div className="relative">
+                  <Input
+                    id="rangeEndDate"
+                    value={formik.values.endDate ? format(parseDateNumber(formik.values.endDate), 'MMMM dd, yyyy') : ''}
+                    onClick={() => setShowEndCalendar(!showEndCalendar)}
+                    readOnly
+                    className={`cursor-pointer ${formik.errors.endDate ? "border-red-500" : ""}`}
+                  />
+                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#24005b] pointer-events-none" size={16} />
+                </div>
+                {formik.errors.endDate && <p className="text-red-500 text-sm">{formik.errors.endDate as string}</p>}
+                {showEndCalendar && (
+                  <div className="relative z-10 mt-1">
+                    <DatePickerCalendar
+                      selected={
+                        formik.values.endDate
+                          ? parseDateNumber(formik.values.endDate)
+                          : addDays(parseDateNumber(formik.values.startDate), 1)
+                      }
+                      onSelect={handleEndDateSelect}
+                      onClose={() => setShowEndCalendar(false)}
+                      minDate={addDays(parseDateNumber(formik.values.startDate), 1)}
+                    />
+                  </div>
+                )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="rangeVenueId">Venue</Label>
-                <Select
-                  value={newDate.venueId}
-                  onValueChange={(value) => setNewDate({...newDate, venueId: value})}
-                >
-                  <SelectTrigger id="rangeVenueId">
+                <Select value={formik.values.venueId} onValueChange={(value) => formik.setFieldValue('venueId', value)}>
+                  <SelectTrigger id="rangeVenueId" className="border bg-white">
                     <SelectValue placeholder="Select venue" />
                   </SelectTrigger>
                   <SelectContent>
                     {venues.map((venue) => (
                       <SelectItem key={venue.id} value={venue.id}>
-                        {venue.tbd ? `TBD Venue in ${venue.city}` : venue.name}
+                        {venue.tba ? `TBA Venue in ${venue.city}` : venue.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="rangeNotes">Notes (Optional)</Label>
-                <Input
-                  id="rangeNotes"
-                  value={newDate.notes || ''}
-                  onChange={(e) => setNewDate({...newDate, notes: e.target.value})}
-                  placeholder="Add any notes about this date range"
-                />
-              </div>
             </div>
           </TabsContent>
-          
+
+          {/* RECURRING DATES TAB */}
           <TabsContent value="recurring" className="border rounded-lg p-4 bg-gray-50">
-            <h3 className="font-medium mb-3 flex items-center">
+            <h3 className="font-medium mb-3 flex items-center text-[#24005b]">
               <Repeat className="h-4 w-4 mr-2" />
               Add Recurring Dates
             </h3>
-            
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <Label htmlFor="recurringStartDate">First Event Date</Label>
-                <Input
-                  id="recurringStartDate"
-                  type="date"
-                  value={format(newDate.startDate, 'yyyy-MM-dd')}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setNewDate({...newDate, startDate: new Date(e.target.value)});
-                    }
-                  }}
-                  className={errors.startDate ? "border-red-500" : ""}
-                />
-                {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate}</p>}
+                <div className="relative">
+                  <Input
+                    id="recurringStartDate"
+                    value={format(parseDateNumber(formik.values.startDate), 'MMMM dd, yyyy')}
+                    onClick={() => setShowStartCalendar(!showStartCalendar)}
+                    readOnly
+                    className={`cursor-pointer ${formik.errors.startDate ? "border-red-500" : ""}`}
+                  />
+                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#24005b] pointer-events-none" size={16} />
+                </div>
+                {formik.errors.startDate && <p className="text-red-500 text-sm">{formik.errors.startDate as string}</p>}
+                {showStartCalendar && (
+                  <div className="relative z-10 mt-1">
+                    <DatePickerCalendar
+                      selected={parseDateNumber(formik.values.startDate)}
+                      onSelect={handleStartDateSelect}
+                      onClose={() => setShowStartCalendar(false)}
+                    />
+                  </div>
+                )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="recurringType">Repeats</Label>
                 <Select
-                  value={newDate.recurringType}
-                  onValueChange={(value: any) => setNewDate({...newDate, recurringType: value})}
+                  value={formik.values.recurringType as string}
+                  onValueChange={(value: any) => formik.setFieldValue('recurringType', value)}
                 >
-                  <SelectTrigger id="recurringType" className={errors.recurringType ? "border-red-500" : ""}>
+                  <SelectTrigger id="recurringType" className={`border bg-white ${formik.errors.recurringType ? "border-red-500" : ""}`}>
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -359,10 +449,10 @@ export const DateStep: React.FC<DateStepProps> = ({ dates, venues, onSubmit, onB
                     <SelectItem value="monthly">Monthly</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.recurringType && <p className="text-red-500 text-sm">{errors.recurringType}</p>}
+                {formik.errors.recurringType && <p className="text-red-500 text-sm">{formik.errors.recurringType as string}</p>}
               </div>
-              
-              {newDate.recurringType === 'weekly' && (
+
+              {formik.values.recurringType === 'weekly' && (
                 <div className="space-y-2 sm:col-span-2">
                   <Label>Repeats On</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -370,22 +460,18 @@ export const DateStep: React.FC<DateStepProps> = ({ dates, venues, onSubmit, onB
                       <Button
                         key={day.value}
                         type="button"
-                        variant={newDate.recurringDays?.includes(parseInt(day.value)) ? "default" : "outline"}
-                        className="h-10 w-10 p-0 rounded-full"
+                        variant={formik.values.recurringDays?.includes(parseInt(day.value)) ? "default" : "outline"}
+                        className={`h-10 w-10 p-0 rounded-full ${formik.values.recurringDays?.includes(parseInt(day.value))
+                            ? "bg-[#24005b] hover:bg-[#24005b]/90"
+                            : "hover:bg-[#24005b]/10"
+                          }`}
                         onClick={() => {
                           const dayNum = parseInt(day.value);
-                          const currentDays = newDate.recurringDays || [];
-                          
+                          const currentDays = formik.values.recurringDays || [];
                           if (currentDays.includes(dayNum)) {
-                            setNewDate({
-                              ...newDate, 
-                              recurringDays: currentDays.filter(d => d !== dayNum)
-                            });
+                            formik.setFieldValue('recurringDays', currentDays.filter(d => d !== dayNum));
                           } else {
-                            setNewDate({
-                              ...newDate,
-                              recurringDays: [...currentDays, dayNum].sort()
-                            });
+                            formik.setFieldValue('recurringDays', [...currentDays, dayNum].sort());
                           }
                         }}
                       >
@@ -395,71 +481,71 @@ export const DateStep: React.FC<DateStepProps> = ({ dates, venues, onSubmit, onB
                   </div>
                 </div>
               )}
-              
-              <div className="space-y-2">
+
+              <div className="space-y-2 relative">
                 <Label htmlFor="recurringUntil">Repeats Until</Label>
-                <Input
-                  id="recurringUntil"
-                  type="date"
-                  value={newDate.recurringUntil ? format(newDate.recurringUntil, 'yyyy-MM-dd') : ''}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setNewDate({...newDate, recurringUntil: new Date(e.target.value)});
-                    }
-                  }}
-                  className={errors.recurringUntil ? "border-red-500" : ""}
-                />
-                {errors.recurringUntil && <p className="text-red-500 text-sm">{errors.recurringUntil}</p>}
+                <div className="relative">
+                  <Input
+                    id="recurringUntil"
+                    value={formik.values.recurringUntil ? format(parseDateNumber(formik.values.recurringUntil), 'MMMM dd, yyyy') : ''}
+                    onClick={() => setShowUntilCalendar(!showUntilCalendar)}
+                    readOnly
+                    className={`cursor-pointer ${formik.errors.recurringUntil ? "border-red-500" : ""}`}
+                  />
+                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#24005b] pointer-events-none" size={16} />
+                </div>
+                {formik.errors.recurringUntil && <p className="text-red-500 text-sm">{formik.errors.recurringUntil as string}</p>}
+                {showUntilCalendar && (
+                  <div className="relative z-10 mt-1">
+                    <DatePickerCalendar
+                      selected={
+                        formik.values.recurringUntil
+                          ? parseDateNumber(formik.values.recurringUntil)
+                          : addWeeks(parseDateNumber(formik.values.startDate), 4)
+                      }
+                      onSelect={handleUntilDateSelect}
+                      onClose={() => setShowUntilCalendar(false)}
+                      minDate={addDays(parseDateNumber(formik.values.startDate), 1)}
+                    />
+                  </div>
+                )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="recurringVenueId">Venue</Label>
-                <Select
-                  value={newDate.venueId}
-                  onValueChange={(value) => setNewDate({...newDate, venueId: value})}
-                >
-                  <SelectTrigger id="recurringVenueId">
+                <Select value={formik.values.venueId} onValueChange={(value) => formik.setFieldValue('venueId', value)}>
+                  <SelectTrigger id="recurringVenueId" className="border bg-white">
                     <SelectValue placeholder="Select venue" />
                   </SelectTrigger>
                   <SelectContent>
                     {venues.map((venue) => (
                       <SelectItem key={venue.id} value={venue.id}>
-                        {venue.tbd ? `TBD Venue in ${venue.city}` : venue.name}
+                        {venue.tba ? `TBA Venue in ${venue.city}` : venue.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="recurringNotes">Notes (Optional)</Label>
-                <Input
-                  id="recurringNotes"
-                  value={newDate.notes || ''}
-                  onChange={(e) => setNewDate({...newDate, notes: e.target.value})}
-                  placeholder="Add any notes about these recurring dates"
-                />
-              </div>
             </div>
           </TabsContent>
         </Tabs>
-        
+
         <Button
-          onClick={handleAddDate}
-          className="mt-4 flex items-center"
-          variant="secondary"
+          onClick={() => formik.handleSubmit()}
+          className="mt-4 flex items-center bg-[#24005b] hover:bg-[#24005b]/90"
+          variant="default"
         >
           <Plus className="h-4 w-4 mr-2" /> Add Date
         </Button>
-        
+
         {dateList.length > 0 && (
           <div className="mb-6 mt-6">
-            <h3 className="font-medium mb-3">Added Dates</h3>
+            <h3 className="font-medium mb-3 text-[#24005b]">Added Dates</h3>
             <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
               {dateList.map((date) => (
-                <div key={date.id} className="border rounded-lg p-3 bg-white flex justify-between items-start">
+                <div key={date.id} className="border rounded-lg p-3 bg-white flex justify-between items-start shadow-sm hover:shadow-md transition-shadow">
                   <div>
-                    <h4 className="font-medium">{formatDateDisplay(date)}</h4>
+                    <h4 className="font-medium text-[#24005b]">{formatDateDisplay(date)}</h4>
                     {date.notes && <p className="text-sm text-gray-600">{date.notes}</p>}
                   </div>
                   <Button
@@ -477,17 +563,18 @@ export const DateStep: React.FC<DateStepProps> = ({ dates, venues, onSubmit, onB
         )}
 
         <div className="flex justify-between mt-6">
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             variant="outline"
             onClick={onBack}
+            className="border-[#24005b]/30 text-[#24005b] hover:bg-[#24005b]/10"
           >
             Back
           </Button>
-          <Button 
+          <Button
             type="button"
             onClick={handleSubmit}
-            className="flex items-center"
+            className="flex items-center bg-[#24005b] hover:bg-[#24005b]/90"
           >
             Next: Time Slots <ChevronRight className="ml-2 h-4 w-4" />
           </Button>

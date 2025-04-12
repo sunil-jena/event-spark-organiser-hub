@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { useLoadScript } from '@react-google-maps/api';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface VenueFormValues {
   id: string;
@@ -29,7 +30,7 @@ export interface VenueFormValues {
   capacity?: number;
   latitude?: number;
   longitude?: number;
-  tbd?: boolean; // To be determined flag
+  tba?: boolean; // To be determined flag
 }
 
 interface VenueStepProps {
@@ -37,6 +38,11 @@ interface VenueStepProps {
   onSubmit: (venues: VenueFormValues[]) => void;
   onBack: () => void;
 }
+
+// Google Maps API key
+const GOOGLE_MAPS_API_KEY = "AIzaSyAQr_EW8L6NELIUATInZXac_Tyij4yhOOE";
+
+const libraries: ("places")[] = ['places'];
 
 // List of sample cities
 const CITIES = [
@@ -109,42 +115,51 @@ const CITIES = [
 
 // Validation schema for a single venue
 const venueSchema = Yup.object().shape({
-  name: Yup.string().when('tbd', {
+  name: Yup.string().when('tba', {
     is: false,
     then: (schema) => schema.required('Venue name is required'),
     otherwise: (schema) => schema,
   }),
-  address: Yup.string().when('tbd', {
+  address: Yup.string().when('tba', {
     is: false,
     then: (schema) => schema.required('Address is required'),
     otherwise: (schema) => schema,
   }),
   city: Yup.string().required('City is required'),
-  state: Yup.string().when('tbd', {
+  state: Yup.string().when('tba', {
     is: false,
     then: (schema) => schema.required('State is required'),
     otherwise: (schema) => schema,
   }),
-  zipCode: Yup.string().when('tbd', {
+  zipCode: Yup.string().when('tba', {
     is: false,
     then: (schema) => schema.required('Zip code is required'),
     otherwise: (schema) => schema,
   }),
   country: Yup.string().required('Country is required'),
   capacity: Yup.number().min(1, 'Capacity must be greater than 0').nullable(),
-  tbd: Yup.boolean(),
+  tba: Yup.boolean(),
 });
 
 export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }) => {
+  // Load Google Maps API
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries,
+  });
+
   const [venueList, setVenueList] = useState<VenueFormValues[]>(venues);
   const [cityOpen, setCityOpen] = useState<boolean>(false);
   const [addMethod, setAddMethod] = useState<'manual' | 'map'>('manual');
-  const [mapApiKey, setMapApiKey] = useState<string>('');
-  const [showMapKeyInput, setShowMapKeyInput] = useState<boolean>(false);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [mapLoaded, setMapLoaded] = useState<boolean>(false);
+  const [selectedCity, setSelectedCity] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const { toast } = useToast();
+
+  // Map related refs
+  const mapRef = useRef<HTMLDivElement>(null);
+  const googleMapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
 
   // Formik for new venue form
   const venueFormik = useFormik({
@@ -155,30 +170,38 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
       city: '',
       state: '',
       zipCode: '',
-      country: 'United States',
+      country: 'India',
       capacity: undefined as number | undefined,
-      tbd: false
+      latitude: undefined as number | undefined,
+      longitude: undefined as number | undefined,
+      tba: false
     },
     validationSchema: venueSchema,
     onSubmit: (values, { resetForm }) => {
+      
       setVenueList(prev => [...prev, { ...values, id: uuidv4() }]);
       toast({
         title: "Venue added",
         description: `${values.name || 'Venue'} has been added to your event venues.`
       });
       resetForm();
+
+      // Clear map markers if in map mode
+      if (addMethod === 'map') {
+        clearMapMarkers();
+      }
     },
   });
 
-  // Effect to handle TBD changes
+  // Effect to handle tba changes
   useEffect(() => {
-    if (venueFormik.values.tbd) {
-      venueFormik.setFieldValue('name', 'TBD');
+    if (venueFormik.values.tba) {
+      venueFormik.setFieldValue('name', 'tba');
       venueFormik.setFieldValue('address', '');
       venueFormik.setFieldValue('state', '');
       venueFormik.setFieldValue('zipCode', '');
     }
-  }, [venueFormik.values.tbd]);
+  }, [venueFormik.values.tba]);
 
   // Handle venue removal
   const handleRemoveVenue = (id: string) => {
@@ -199,34 +222,226 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
       });
       return;
     }
-
     onSubmit(venueList);
   };
 
-  // Initialize map if API key is provided
-  useEffect(() => {
-    if (addMethod === 'map' && mapApiKey && mapRef.current && !mapLoaded) {
-      // This would be where we'd initialize Google Maps
-      // For this implementation, we're just simulating the map loading
-      setMapLoaded(true);
+  // Clear all markers from the map
+  const clearMapMarkers = () => {
+    if (markersRef.current.length > 0) {
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current = [];
+    }
+  };
 
-      // Simulated map loading code - in a real implementation, 
-      // this would be replaced with actual Google Maps initialization
-      const simulateMapLoad = () => {
-        if (mapRef.current) {
-          mapRef.current.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-full">
-              <div class="h-12 w-12 text-gray-400 mb-2"></div>
-              <p class="text-gray-500">Map would load here with API key</p>
-              <p class="text-xs text-gray-400 mt-1">This is a placeholder for Google Maps integration</p>
-            </div>
-          `;
-        }
+  // Initialize Google Maps when map tab is selected
+  useEffect(() => {
+    if (addMethod === 'map' && isLoaded && !loadError && mapRef.current && !googleMapRef.current) {
+      // Default center: India
+      const defaultCenter = { lat: 20.5937, lng: 78.9629 };
+
+      const mapOptions: google.maps.MapOptions = {
+        center: defaultCenter,
+        zoom: 5,
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: true,
       };
 
-      setTimeout(simulateMapLoad, 500);
+      const map = new google.maps.Map(mapRef.current, mapOptions);
+      googleMapRef.current = map;
+
+      // Set up the SearchBox
+      const input = document.getElementById('venue-map-search') as HTMLInputElement;
+      if (input) {
+        const searchBox = new google.maps.places.SearchBox(input);
+        searchBoxRef.current = searchBox;
+
+        // Auto-fill form immediately when a place is selected from the SearchBox suggestions.
+        searchBox.addListener('places_changed', () => {
+          const places = searchBox.getPlaces();
+          if (!places || places.length === 0) return;
+
+          clearMapMarkers();
+          // Use the first result automatically
+          const place = places[0];
+          if (!place.geometry || !place.geometry.location) return;
+
+          // If a city filter is active, check if the place is within the selected city
+          if (selectedCity) {
+            const addressComponents = place.address_components || [];
+            const cityComponent = addressComponents.find(component =>
+              component.types.includes('locality')
+            );
+            if (cityComponent) {
+              const placeCity = cityComponent.long_name.toLowerCase();
+              const selectedCityObj = CITIES.find(c => c.value === selectedCity);
+              if (selectedCityObj && !placeCity.includes(selectedCityObj.label.toLowerCase())) {
+                toast({
+                  title: "City Mismatch",
+                  description: "The selected location does not match the chosen city.",
+                  variant: "destructive"
+                });
+                return;
+              }
+            }
+          }
+
+          // Extract and update form values automatically
+          const addressComponents = place.address_components || [];
+          let city = '';
+          let state = '';
+          let country = '';
+          let postalCode = '';
+          addressComponents.forEach(component => {
+            const types = component.types;
+            if (types.includes('locality')) {
+              city = component.long_name;
+            } else if (types.includes('administrative_area_level_1')) {
+              state = component.long_name;
+            } else if (types.includes('country')) {
+              country = component.long_name;
+            } else if (types.includes('postal_code')) {
+              postalCode = component.long_name;
+            }
+          });
+          venueFormik.setFieldValue('name', place.name || 'New Venue');
+          venueFormik.setFieldValue('address', place.formatted_address || '');
+          venueFormik.setFieldValue('city', city);
+          venueFormik.setFieldValue('state', state);
+          venueFormik.setFieldValue('zipCode', postalCode);
+          venueFormik.setFieldValue('country', country || 'India');
+          venueFormik.setFieldValue('latitude', place.geometry.location.lat());
+          venueFormik.setFieldValue('longitude', place.geometry.location.lng());
+
+          // Optionally, update the search query with the place name
+          setSearchQuery(place.name || '');
+
+          // Update the map view to focus on the found place
+          const bounds = new google.maps.LatLngBounds();
+          if (place.geometry.viewport) {
+            bounds.union(place.geometry.viewport);
+          } else {
+            bounds.extend(place.geometry.location);
+          }
+          map.fitBounds(bounds);
+
+          // Add a marker without a click event – auto-fill has already happened.
+          const marker = new google.maps.Marker({
+            map,
+            position: place.geometry.location,
+            animation: google.maps.Animation.DROP,
+          });
+          markersRef.current.push(marker);
+        });
+
+        // Bias the SearchBox results toward current map's viewport.
+        map.addListener('bounds_changed', () => {
+          searchBox.setBounds(map.getBounds() as google.maps.LatLngBounds);
+        });
+      }
+
+      // If a city is selected, try to center the map on that city.
+      if (selectedCity) {
+        const cityObj = CITIES.find(c => c.value === selectedCity);
+        if (cityObj) {
+          const geocoder = new google.maps.Geocoder();
+          geocoder.geocode({ address: cityObj.label }, (results, status) => {
+            if (status === "OK" && results && results[0] && results[0].geometry) {
+              map.setCenter(results[0].geometry.location);
+              map.setZoom(12);
+            }
+          });
+        }
+      }
     }
-  }, [addMethod, mapApiKey, mapLoaded]);
+
+    return () => {
+      clearMapMarkers();
+    };
+  }, [addMethod, isLoaded, loadError, selectedCity]);
+
+  // Handle city selection for map filter
+  const handleCitySelect = (cityValue: string) => {
+    venueFormik.setFieldValue('city', cityValue);
+    setSelectedCity(cityValue);
+    setCityOpen(false);
+
+    // If map is loaded, center map on selected city.
+    if (googleMapRef.current && isLoaded) {
+      const cityObj = CITIES.find(c => c.value === cityValue);
+      if (cityObj) {
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ address: cityObj.label }, (results, status) => {
+          if (status === "OK" && results && results[0] && results[0].geometry) {
+            googleMapRef.current?.setCenter(results[0].geometry.location);
+            googleMapRef.current?.setZoom(12);
+          }
+        });
+      }
+    }
+  };
+
+  // Handle map search via geocoder (triggered by the Search button)
+  const handleMapSearch = () => {
+    if (!isLoaded || !searchQuery) return;
+    const geocoder = new google.maps.Geocoder();
+    let searchTerm = searchQuery;
+    if (selectedCity) {
+      const cityObj = CITIES.find(c => c.value === selectedCity);
+      if (cityObj) {
+        searchTerm = `${searchTerm}, ${cityObj.label}`;
+      }
+    }
+    geocoder.geocode({ address: searchTerm }, (results, status) => {
+      if (status === "OK" && results && results[0] && googleMapRef.current) {
+        const place = results[0];
+        googleMapRef.current.setCenter(place.geometry.location);
+        googleMapRef.current.setZoom(15);
+        clearMapMarkers();
+
+        // Extract and auto-fill form values immediately.
+        const addressComponents = place.address_components || [];
+        let city = '';
+        let state = '';
+        let country = '';
+        let postalCode = '';
+        addressComponents.forEach(component => {
+          const types = component.types;
+          if (types.includes('locality')) {
+            city = component.long_name;
+          } else if (types.includes('administrative_area_level_1')) {
+            state = component.long_name;
+          } else if (types.includes('country')) {
+            country = component.long_name;
+          } else if (types.includes('postal_code')) {
+            postalCode = component.long_name;
+          }
+        });
+        venueFormik.setFieldValue('name', searchQuery || 'New Venue');
+        venueFormik.setFieldValue('address', place.formatted_address || '');
+        venueFormik.setFieldValue('city', city);
+        venueFormik.setFieldValue('state', state);
+        venueFormik.setFieldValue('zipCode', postalCode);
+        venueFormik.setFieldValue('country', country || 'India');
+        venueFormik.setFieldValue('latitude', place.geometry.location.lat());
+        venueFormik.setFieldValue('longitude', place.geometry.location.lng());
+
+        // Add a marker for visual context.
+        const marker = new google.maps.Marker({
+          map: googleMapRef.current,
+          position: place.geometry.location,
+          animation: google.maps.Animation.DROP,
+        });
+        markersRef.current.push(marker);
+      } else {
+        toast({
+          title: "Search Error",
+          description: "Could not find the location. Please try again.",
+          variant: "destructive"
+        });
+      }
+    });
+  };
 
   return (
     <Card>
@@ -248,24 +463,21 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
             <form onSubmit={venueFormik.handleSubmit}>
               <div className="flex items-center mb-4">
                 <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="venueTBD"
-                    checked={venueFormik.values.tbd}
-                    onChange={venueFormik.handleChange}
-                    onBlur={venueFormik.handleBlur}
-                    name="tbd"
-                    className="h-4 w-4 rounded"
+                  <Checkbox
+                    id="tba"
+                    checked={venueFormik.values.tba}
+                    onCheckedChange={(checked) => venueFormik.setFieldValue('tba', checked)}
+                    className="data-[state=checked]:bg-[#24005b]"
                   />
-                  <Label htmlFor="venueTBD">Venue to be determined (TBD)</Label>
+                  <Label htmlFor="tba">Venue to be Announced (TBA)</Label>
                 </div>
                 <div className="ml-2 text-xs text-gray-500">
-                  {venueFormik.values.tbd && "(Only city selection is required)"}
+                  {venueFormik.values.tba && "(Only city selection is required)"}
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                {!venueFormik.values.tbd && (
+                {!venueFormik.values.tba && (
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="name">Venue Name</Label>
@@ -282,7 +494,7 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                         <p className="text-red-500 text-sm">{venueFormik.errors.name}</p>
                       }
                     </div>
-
+                    {/* 
                     <div className="space-y-2">
                       <Label htmlFor="capacity">Capacity (optional)</Label>
                       <Input
@@ -298,22 +510,19 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                       {venueFormik.errors.capacity && venueFormik.touched.capacity &&
                         <p className="text-red-500 text-sm">{venueFormik.errors.capacity}</p>
                       }
-                    </div>
+                    </div> */}
                   </>
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="city" className="text-sm font-medium">
-                    City <span className="text-red-500">*</span>
-                  </Label>
+                  <Label htmlFor="city">City <span className="text-red-500">*</span></Label>
                   <Popover open={cityOpen} onOpenChange={setCityOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={cityOpen}
-                        className={`w-full justify-between ${venueFormik.errors.city && venueFormik.touched.city ? "border-red-500" : ""
-                          }`}
+                        className={`w-full justify-between ${venueFormik.errors.city && venueFormik.touched.city ? "border-red-500" : ""}`}
                       >
                         {venueFormik.values.city
                           ? CITIES.find((city) => city.value === venueFormik.values.city)?.label || venueFormik.values.city
@@ -330,10 +539,7 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                             <CommandItem
                               key={city.value}
                               value={city.value}
-                              onSelect={(currentValue) => {
-                                venueFormik.setFieldValue('city', currentValue);
-                                setCityOpen(false);
-                              }}
+                              onSelect={(currentValue) => handleCitySelect(currentValue)}
                             >
                               <span>{city.label}</span>
                             </CommandItem>
@@ -347,7 +553,7 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                   }
                 </div>
 
-                {!venueFormik.values.tbd && (
+                {!venueFormik.values.tba && (
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="address">Address</Label>
@@ -416,73 +622,84 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
               Select Venue from Map
             </h3>
 
-            {!mapApiKey && (
-              <div className="mb-4">
-                {showMapKeyInput ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="mapApiKey">Google Maps API Key</Label>
-                    <Input
-                      id="mapApiKey"
-                      type="text"
-                      value={mapApiKey}
-                      onChange={(e) => setMapApiKey(e.target.value)}
-                      placeholder="Enter your Google Maps API key"
-                    />
-                    <p className="text-xs text-gray-500">
-                      You can get a key from the <a href="https://developers.google.com/maps/documentation/javascript/get-api-key" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Google Maps Platform</a>.
-                    </p>
-                    <Button
-                      onClick={() => setShowMapKeyInput(false)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={() => setShowMapKeyInput(true)}
-                    variant="outline"
-                    className="mb-4"
-                  >
-                    Enter Google Maps API Key
-                  </Button>
-                )}
-              </div>
-            )}
-
             <div className="mb-4">
+              <Label htmlFor="venue-city-filter" className="mb-1 block">Filter By City</Label>
+              <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={cityOpen}
+                    className={`w-full justify-between mb-2 ${venueFormik.errors.city && venueFormik.touched.city ? "border-red-500" : ""}`}
+                  >
+                    {venueFormik.values.city
+                      ? CITIES.find((city) => city.value === venueFormik.values.city)?.label || venueFormik.values.city
+                      : "Select city"}
+                    <ChevronRight className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search city..." />
+                    <CommandEmpty>No city found.</CommandEmpty>
+                    <CommandGroup className="max-h-60 overflow-auto">
+                      {CITIES.map((city) => (
+                        <CommandItem
+                          key={city.value}
+                          value={city.value}
+                          onSelect={(currentValue) => handleCitySelect(currentValue)}
+                        >
+                          <span>{city.label}</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
               <div className="flex gap-2">
                 <Input
-                  placeholder="Search for a venue..."
+                  id="venue-map-search"
+                  placeholder={selectedCity
+                    ? `Search venues in ${CITIES.find(c => c.value === selectedCity)?.label || selectedCity}`
+                    : "Search for a venue..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1"
+                  disabled={!isLoaded}
                 />
-                <Button variant="secondary" className="flex items-center">
+                <Button
+                  variant="secondary"
+                  className="flex items-center"
+                  onClick={handleMapSearch}
+                  disabled={!isLoaded || !searchQuery}
+                >
                   <Search className="h-4 w-4 mr-2" /> Search
                 </Button>
               </div>
+
+              {!isLoaded && (
+                <p className="text-xs text-amber-600 mt-1">Loading Google Maps API...</p>
+              )}
+
+              {loadError && (
+                <p className="text-xs text-red-500 mt-1">Error loading Google Maps: {loadError.message}</p>
+              )}
             </div>
 
             <div
               ref={mapRef}
               className="h-80 border border-gray-300 rounded-md mb-4 bg-gray-100 flex items-center justify-center"
             >
-              {!mapApiKey ? (
-                <div className="text-center p-4">
-                  <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Enter your Google Maps API key to enable map selection</p>
-                </div>
-              ) : !mapLoaded ? (
+              {!isLoaded && (
                 <div className="flex flex-col items-center justify-center">
                   <MapPin className="h-12 w-12 text-gray-400 mb-2" />
                   <p className="text-gray-500">Loading map...</p>
                 </div>
-              ) : null}
+              )}
             </div>
 
-            {mapApiKey && mapLoaded && (
+            {isLoaded && (
               <form onSubmit={venueFormik.handleSubmit}>
                 <div className="space-y-4">
                   <h4 className="font-medium">Selected Venue</h4>
@@ -490,18 +707,22 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                     <div className="space-y-2">
                       <Label htmlFor="name">Venue Name</Label>
                       <Input
-                        id="mapVenueName"
+                        id="name"
                         name="name"
                         value={venueFormik.values.name}
                         onChange={venueFormik.handleChange}
                         onBlur={venueFormik.handleBlur}
                         placeholder="Enter venue name"
+                        className={venueFormik.errors.name && venueFormik.touched.name ? "border-red-500" : ""}
                       />
+                      {venueFormik.errors.name && venueFormik.touched.name &&
+                        <p className="text-red-500 text-sm">{venueFormik.errors.name}</p>
+                      }
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="capacity">Capacity (optional)</Label>
                       <Input
-                        id="mapVenueCapacity"
+                        id="capacity"
                         name="capacity"
                         type="number"
                         value={venueFormik.values.capacity || ''}
@@ -509,13 +730,77 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                         onBlur={venueFormik.handleBlur}
                         placeholder="Enter maximum capacity"
                       />
+                    </div> */}
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input
+                        id="address"
+                        name="address"
+                        value={venueFormik.values.address}
+                        onChange={venueFormik.handleChange}
+                        onBlur={venueFormik.handleBlur}
+                        placeholder="Enter address"
+                        className={venueFormik.errors.address && venueFormik.touched.address ? "border-red-500" : ""}
+                      />
+                      {venueFormik.errors.address && venueFormik.touched.address &&
+                        <p className="text-red-500 text-sm">{venueFormik.errors.address}</p>
+                      }
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        name="city"
+                        value={venueFormik.values.city}
+                        onChange={venueFormik.handleChange}
+                        onBlur={venueFormik.handleBlur}
+                        placeholder="Enter city"
+                        className={venueFormik.errors.city && venueFormik.touched.city ? "border-red-500" : ""}
+                      />
+                      {venueFormik.errors.city && venueFormik.touched.city &&
+                        <p className="text-red-500 text-sm">{venueFormik.errors.city}</p>
+                      }
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        name="state"
+                        value={venueFormik.values.state}
+                        onChange={venueFormik.handleChange}
+                        onBlur={venueFormik.handleBlur}
+                        placeholder="Enter state"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zipCode">Zip Code</Label>
+                      <Input
+                        id="zipCode"
+                        name="zipCode"
+                        value={venueFormik.values.zipCode}
+                        onChange={venueFormik.handleChange}
+                        onBlur={venueFormik.handleBlur}
+                        placeholder="Enter zip code"
+                      />
                     </div>
                   </div>
+
+                  {venueFormik.values.latitude && venueFormik.values.longitude && (
+                    <div className="flex items-start space-x-2 text-sm text-gray-500">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <span>
+                        Latitude: {venueFormik.values.latitude.toFixed(6)}, Longitude: {venueFormik.values.longitude.toFixed(6)}
+                      </span>
+                    </div>
+                  )}
 
                   <Button
                     type="submit"
                     className="flex items-center"
                     variant="secondary"
+                    disabled={!venueFormik.values.name || !venueFormik.values.city}
                   >
                     <Plus className="h-4 w-4 mr-2" /> Add Selected Venue
                   </Button>
@@ -532,14 +817,19 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
               {venueList.map((venue) => (
                 <div key={venue.id} className="border rounded-lg p-3 bg-white flex justify-between items-start">
                   <div>
-                    <h4 className="font-medium">{venue.tbd ? `TBD Venue in ${venue.city}` : venue.name}</h4>
-                    {!venue.tbd && (
+                    <h4 className="font-medium">{venue.tba ? `tba Venue in ${venue.city}` : venue.name}</h4>
+                    {!venue.tba && (
                       <p className="text-sm text-gray-600">{venue.address}, {venue.city}, {venue.state} {venue.zipCode}</p>
                     )}
-                    {venue.tbd && (
+                    {venue.tba && (
                       <p className="text-sm text-gray-600">Location will be determined later</p>
                     )}
                     {venue.capacity && <p className="text-xs text-gray-500">Capacity: {venue.capacity}</p>}
+                    {venue.latitude && venue.longitude && (
+                      <p className="text-xs text-gray-500">
+                        Location: {venue.latitude.toFixed(6)}, {venue.longitude.toFixed(6)}
+                      </p>
+                    )}
                   </div>
                   <Button
                     variant="ghost"
