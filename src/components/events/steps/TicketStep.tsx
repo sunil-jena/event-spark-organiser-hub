@@ -1,29 +1,22 @@
+import React, { useState } from "react";
+import { useFormik } from "formik";
+import { v4 as uuidv4 } from "uuid";
+import { format } from "date-fns";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from 'react';
+// UI Components
 import {
   Card,
-  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '@/components/ui/card';
-import {
-  ChevronRight,
-  PlusCircle,
-  Trash2,
-  CalendarRange,
-  Tag,
-  Clock,
-  CircleDollarSign,
-  ChevronsUpDown,
-  Check,
-  Info,
-} from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -31,64 +24,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/hooks/use-toast';
-import { v4 as uuidv4 } from 'uuid';
-import { format } from 'date-fns';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
-import { Separator } from '@/components/ui/separator';
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-// --- Type Definitions ---
-export interface TicketFormValues {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  quantity: number;
-  ticketType: 'standard' | 'early-bird' | 'vip' | 'season-pass';
-  isAllDates: boolean;
-  availableDateIds: string[];
-  isAllTimeSlots: boolean;
-  availableTimeSlotIds: string[];
-  isLimited: boolean;
-  saleStartDate?: Date;
-  saleEndDate?: Date;
-}
+// Icons
+import {
+  Package,
+  Tag,
+  Clock,
+  MapPin,
+  PlusCircle,
+  Edit,
+  Trash2,
+  X,
+  ChevronRight,
+  IndianRupee,
+  Info,
+  CalendarRange,
+} from "lucide-react";
+import * as Yup from "yup";
 
-export interface DateFormValues {
-  id: string;
-  startDate: Date;
-  endDate?: Date;
-  type: 'single' | 'range' | 'recurring';
-  // … other fields as needed
-}
+// Toast notification
+import { useToast } from "@/hooks/use-toast";
 
-export interface TimeSlotFormValues {
-  id: string;
-  startTime: string;
-  endTime: string;
-  dateId: string;
-  // … other fields as needed
-}
-
-export interface VenueFormValues {
-  id: string;
-  name: string;
-  city: string;
-  tba?: boolean;
-  // … other fields as needed
-}
+// Types (adjust these types as needed)
+import { DateFormValues, TicketFormValues, TimeSlotFormValues, VenueFormValues } from "./types";
 
 interface TicketConfiguratorProps {
   ticketTypes: TicketFormValues[];
@@ -99,53 +74,84 @@ interface TicketConfiguratorProps {
   onSubmit: (tickets: TicketFormValues[]) => void;
 }
 
+// Helper function to format Indian price
+const formatIndianPrice = (amount: number): string => {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// Helper function to get ticket category description
+const getTicketCategoryDescription = (category: string): string => {
+  switch (category) {
+    case "standard":
+      return "Regular ticket with standard access";
+    case "early-bird":
+      return "Discounted tickets available before the general sale";
+    case "vip":
+      return "Premium tickets with exclusive benefits";
+    case "season-pass":
+      return "Access to multiple events or dates";
+    default:
+      return "";
+  }
+};
+
+// Helper function to get ticket category label
+const getTicketCategoryLabel = (category: string): string => {
+  switch (category) {
+    case "standard":
+      return "Standard";
+    case "early-bird":
+      return "Early Bird";
+    case "vip":
+      return "VIP";
+    case "season-pass":
+      return "Season Pass";
+    default:
+      return category;
+  }
+};
+
+// Helper function to format event date
+// In this example, we assume the date is provided as a number (e.g. 21122023 for Dec 21, 2023)
+// Adjust this function if you already have Date objects.
+const formatEventDate = (dateNumber: number): Date => {
+  const str = dateNumber.toString().padStart(8, "0");
+  const day = parseInt(str.slice(0, 2), 10);
+  const month = parseInt(str.slice(2, 4), 10) - 1; // Month is 0-indexed
+  const year = parseInt(str.slice(4, 8), 10);
+  return new Date(year, month, day);
+};
+
 // --- Validation Schema for the New Ticket Form ---
 const ticketValidationSchema = Yup.object().shape({
-  name: Yup.string().required('Ticket name is required'),
-  price: Yup.number().min(0, 'Price cannot be negative').required('Price is required'),
-  quantity: Yup.number().min(1, 'Quantity must be at least 1').required('Quantity is required'),
-  availableDateIds: Yup.array().when('isAllDates', {
+  name: Yup.string().required("Ticket name is required"),
+  price: Yup.number().min(0, "Price cannot be negative").required("Price is required"),
+  quantity: Yup.number().min(1, "Quantity must be at least 1").required("Quantity is required"),
+  availableDateIds: Yup.array().when("isAllDates", {
     is: false,
-    then: (schema) => schema.min(1, 'Please select at least one date'),
+    then: (schema) => schema.min(1, "Please select at least one date"),
   }),
-  availableTimeSlotIds: Yup.array().when('isAllTimeSlots', {
+  availableTimeSlotIds: Yup.array().when("isAllTimeSlots", {
     is: false,
-    then: (schema) => schema.min(1, 'Please select at least one time slot'),
+    then: (schema) => schema.min(1, "Please select at least one time slot"),
   }),
-  saleStartDate: Yup.date().when('isLimited', {
+  saleStartDate: Yup.date().when("isLimited", {
     is: true,
-    then: (schema) => schema.required('Sale start date is required'),
+    then: (schema) => schema.required("Sale start date is required"),
   }),
-  saleEndDate: Yup.date().when('isLimited', {
+  saleEndDate: Yup.date().when("isLimited", {
     is: true,
-    then: (schema) => schema
-      .required('Sale end date is required')
-      .min(Yup.ref('saleStartDate'), 'Sale end date must be after sale start date'),
+    then: (schema) =>
+      schema
+        .required("Sale end date is required")
+        .min(Yup.ref("saleStartDate"), "Sale end date must be after sale start date"),
   }),
 });
 
-// --- Helper Function ---
-const getTicketTypeLabel = (type: string) => {
-  switch (type) {
-    case 'standard': return 'Standard';
-    case 'early-bird': return 'Early Bird';
-    case 'vip': return 'VIP';
-    case 'season-pass': return 'Season Pass';
-    default: return type;
-  }
-};
-
-const getTicketTypeDescription = (type: string) => {
-  switch (type) {
-    case 'standard': return 'Regular admission ticket';
-    case 'early-bird': return 'Early access at a discounted price';
-    case 'vip': return 'Premium access with special perks';
-    case 'season-pass': return 'Full access for the entire season';
-    default: return '';
-  }
-};
-
-// --- Main Component ---
 const TicketStep: React.FC<TicketConfiguratorProps> = ({
   ticketTypes,
   setTicketTypes,
@@ -154,968 +160,894 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
   venues,
   onSubmit,
 }) => {
-  // Local state for all tickets and for advanced configuration
+  const { toast } = useToast();
+
+  // Local state for tickets and edit mode
   const [ticketList, setTicketList] = useState<TicketFormValues[]>(ticketTypes || []);
-  const [useAdvancedConfig, setUseAdvancedConfig] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>("general");
-  const [activeTicketId, setActiveTicketId] = useState<string>(
-    ticketList.length > 0 ? ticketList[0].id : ''
-  );
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [activeTicketId, setActiveTicketId] = useState<string>("");
 
-  // Set active ticket when ticket list changes
-  useEffect(() => {
-    if (ticketList.length > 0 && !ticketList.find(t => t.id === activeTicketId)) {
-      setActiveTicketId(ticketList[0].id);
-    }
-  }, [ticketList, activeTicketId]);
+  // Multi-select states for badges
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
+  const [selectedVenues, setSelectedVenues] = useState<string[]>([]);
 
-  // useFormik hook for the "Add New Ticket" form.
+  // Handle description items (array of strings)
+  const [descriptionItems, setDescriptionItems] = useState<string[]>([""]);
+
+  // Initial form values for the ticket form
+  const initialValues: TicketFormValues = {
+    id: uuidv4(),
+    name: "",
+    description: [""],
+    price: 0,
+    quantity: 100,
+    ticketType: "paid",
+    ticketCategory: "standard",
+    entryPerTicket: 1,
+    bookingPerTicket: 1,
+    ticketStatus: "active",
+    isAllDates: true,
+    availableDateIds: [],
+    isAllTimeSlots: true,
+    availableTimeSlotIds: [],
+    dateIds: [],
+    timeSlotIds: [],
+    isAllVenues: true,
+    venueIds: [],
+    isLimited: false,
+    isCombo: false,
+    saleStartDate: new Date(),
+    saleEndDate: undefined,
+  };
+
+  // Formik hook
   const formik = useFormik<TicketFormValues>({
-    initialValues: {
-      id: uuidv4(),
-      name: '',
-      description: '',
-      price: 0,
-      quantity: 100,
-      ticketType: 'standard',
-      isAllDates: true,
-      availableDateIds: [],
-      isAllTimeSlots: true,
-      availableTimeSlotIds: [],
-      isLimited: false,
-      saleStartDate: new Date(),
-      saleEndDate: undefined,
-    },
+    initialValues,
     validationSchema: ticketValidationSchema,
     onSubmit: (values, { resetForm }) => {
-      // If the ticket applies to all dates/time slots, populate the arrays.
-      const ticket: TicketFormValues = { ...values, id: uuidv4() };
-      if (ticket.isAllDates) {
-        ticket.availableDateIds = dates.map((d) => d.id);
+      const updatedValues = { ...values };
+
+      // Populate date, time slot, and venue fields if "apply to all" is selected
+      if (updatedValues.isAllDates) {
+        updatedValues.availableDateIds = dates.map((d) => d.id);
+        updatedValues.dateIds = dates.map((d) => d.id);
+      } else {
+        updatedValues.dateIds = updatedValues.availableDateIds;
       }
-      if (ticket.isAllTimeSlots) {
-        ticket.availableTimeSlotIds = timeSlots.map((t) => t.id);
+      if (updatedValues.isAllTimeSlots) {
+        updatedValues.availableTimeSlotIds = timeSlots.map((t) => t.id);
+        updatedValues.timeSlotIds = timeSlots.map((t) => t.id);
+      } else {
+        updatedValues.timeSlotIds = updatedValues.availableTimeSlotIds;
+      }
+      if (updatedValues.isAllVenues) {
+        updatedValues.venueIds = venues.map((v) => v.id);
       }
 
-      // Format dates if they exist
-      if (ticket.saleStartDate && typeof ticket.saleStartDate === 'string') {
-        ticket.saleStartDate = new Date(ticket.saleStartDate);
+      // Format dates if necessary
+      if (updatedValues.saleStartDate && typeof updatedValues.saleStartDate === "string") {
+        updatedValues.saleStartDate = new Date(updatedValues.saleStartDate);
       }
-      if (ticket.saleEndDate && typeof ticket.saleEndDate === 'string') {
-        ticket.saleEndDate = new Date(ticket.saleEndDate);
+      if (updatedValues.saleEndDate && typeof updatedValues.saleEndDate === "string") {
+        updatedValues.saleEndDate = new Date(updatedValues.saleEndDate);
       }
 
-      const updated = [...ticketList, ticket];
-      setTicketList(updated);
-      setTicketTypes(updated);
-      setActiveTicketId(ticket.id);
+      // Update description from items
+      updatedValues.description = descriptionItems.filter((item) => item.trim() !== "");
+      if (updatedValues.description.length === 0) {
+        updatedValues.description = [""];
+      }
+
+      if (isEditMode) {
+        // Update existing ticket
+        const updated = ticketList.map((ticket) =>
+          ticket.id === updatedValues.id ? updatedValues : ticket
+        );
+        setTicketList(updated);
+        setTicketTypes(updated);
+        setIsEditMode(false);
+        toast({
+          title: "Ticket updated",
+          description: "The ticket has been successfully updated.",
+          variant: "default",
+        });
+      } else {
+        // Add new ticket
+        const updated = [...ticketList, updatedValues];
+        setTicketList(updated);
+        setTicketTypes(updated);
+        toast({
+          title: "Ticket added",
+          description: "The ticket has been added to your event.",
+          variant: "default",
+        });
+      }
+
       resetForm();
-      toast({
-        title: "Ticket added",
-        description: "The ticket has been added to your event.",
-      });
+      setActiveTicketId("");
+      setSelectedDates([]);
+      setSelectedTimeSlots([]);
+      setSelectedVenues([]);
+      setDescriptionItems([""]);
     },
   });
 
-  // Update a ticket from the advanced configuration section.
-  const updateTicketType = (id: string, field: keyof TicketFormValues, value: any) => {
-    const updated = ticketList.map(ticket =>
-      ticket.id === id ? { ...ticket, [field]: value } : ticket
-    );
-    setTicketList(updated);
-    setTicketTypes(updated);
+  // Function to toggle the selection of a badge-based item
+  const toggleSelection = (
+    id: string,
+    selectedList: string[],
+    setSelected: (ids: string[]) => void,
+    fieldName: string
+  ) => {
+    let newSelection: string[] = [];
+    if (selectedList.includes(id)) {
+      newSelection = selectedList.filter((item) => item !== id);
+    } else {
+      newSelection = [...selectedList, id];
+    }
+    setSelected(newSelection);
+    formik.setFieldValue(fieldName, newSelection);
   };
 
-  // Toggle specific date selection for the active ticket.
-  const toggleDateForTicket = (date: DateFormValues) => {
-    const ticket = ticketList.find(t => t.id === activeTicketId);
-    if (!ticket) return;
-    const exists = ticket.availableDateIds.includes(date.id);
-    updateTicketType(
-      activeTicketId,
-      'availableDateIds',
-      exists
-        ? ticket.availableDateIds.filter(id => id !== date.id)
-        : [...ticket.availableDateIds, date.id]
-    );
-  };
-
-  // Toggle specific venue selection for the active ticket.
-  const toggleVenueForTicket = (venue: VenueFormValues) => {
-    const ticket = ticketList.find(t => t.id === activeTicketId);
-    if (!ticket) return;
-    // Simulate venue selection with availableDateIds for now
-    const exists = ticket.availableDateIds.includes(venue.id);
-    updateTicketType(
-      activeTicketId,
-      'availableDateIds',
-      exists
-        ? ticket.availableDateIds.filter(id => id !== venue.id)
-        : [...ticket.availableDateIds, venue.id]
-    );
-  };
-
-  // Toggle specific time slot selection for the active ticket.
-  const toggleTimeSlotForTicket = (timeSlotId: string) => {
-    const ticket = ticketList.find(t => t.id === activeTicketId);
-    if (!ticket) return;
-    const exists = ticket.availableTimeSlotIds.includes(timeSlotId);
-    updateTicketType(
-      activeTicketId,
-      'availableTimeSlotIds',
-      exists
-        ? ticket.availableTimeSlotIds.filter(id => id !== timeSlotId)
-        : [...ticket.availableTimeSlotIds, timeSlotId]
-    );
+  // Initialize editing a ticket
+  const editTicket = (id: string) => {
+    const ticket = ticketList.find((t) => t.id === id);
+    if (ticket) {
+      setActiveTicketId(id);
+      setIsEditMode(true);
+      formik.setValues({
+        ...ticket,
+        saleStartDate: ticket.saleStartDate ? new Date(ticket.saleStartDate) : new Date(),
+        saleEndDate: ticket.saleEndDate ? new Date(ticket.saleEndDate) : undefined,
+      });
+      setDescriptionItems(ticket.description && ticket.description.length > 0 ? ticket.description : [""]);
+      setSelectedDates(ticket.availableDateIds || []);
+      setSelectedTimeSlots(ticket.availableTimeSlotIds || []);
+      setSelectedVenues(ticket.venueIds || []);
+    }
   };
 
   // Delete a ticket
   const deleteTicket = (id: string) => {
-    const updatedList = ticketList.filter(t => t.id !== id);
+    const updatedList = ticketList.filter((t) => t.id !== id);
     setTicketList(updatedList);
     setTicketTypes(updatedList);
-
-    if (updatedList.length > 0 && id === activeTicketId) {
-      setActiveTicketId(updatedList[0].id);
+    if (id === activeTicketId) {
+      setActiveTicketId("");
+      setIsEditMode(false);
+      formik.resetForm();
+      setSelectedDates([]);
+      setSelectedTimeSlots([]);
+      setSelectedVenues([]);
+      setDescriptionItems([""]);
     }
+    toast({
+      title: "Ticket deleted",
+      description: "The ticket has been removed from your event.",
+      variant: "destructive",
+    });
   };
 
+  // Calculate total ticket value
   const totalValue = ticketList.reduce(
     (sum, ticket) => sum + ticket.price * ticket.quantity,
     0
   );
 
-  // --- The active ticket for advanced configuration
-  const activeTicket = ticketList.find(t => t.id === activeTicketId);
-
-  // Handle form validation errors display
+  // Helper to display validation errors
   const getFieldError = (fieldName: string) => {
-    return formik.touched[fieldName as keyof TicketFormValues] && formik.errors[fieldName as keyof TicketFormValues]
+    return formik.touched[fieldName as keyof TicketFormValues] &&
+      formik.errors[fieldName as keyof TicketFormValues]
       ? String(formik.errors[fieldName as keyof TicketFormValues])
       : null;
   };
 
+  const cancelEdit = () => {
+    setIsEditMode(false);
+    setActiveTicketId("");
+    formik.resetForm();
+    setSelectedDates([]);
+    setSelectedTimeSlots([]);
+    setSelectedVenues([]);
+    setDescriptionItems([""]);
+  };
+
+  // Description items management
+  const addDescriptionItem = () => {
+    setDescriptionItems([...descriptionItems, ""]);
+  };
+
+  const updateDescriptionItem = (index: number, value: string) => {
+    const newItems = [...descriptionItems];
+    newItems[index] = value;
+    setDescriptionItems(newItems);
+  };
+
+  const removeDescriptionItem = (index: number) => {
+    if (descriptionItems.length > 1) {
+      const newItems = descriptionItems.filter((_, i) => i !== index);
+      setDescriptionItems(newItems);
+    }
+  };
+
+  // Optional: Remove selected badge (for extra control)
+  const removeSelectedDate = (dateId: string) => {
+    const newDates = selectedDates.filter((id) => id !== dateId);
+    setSelectedDates(newDates);
+    formik.setFieldValue("availableDateIds", newDates);
+  };
+
+  const removeSelectedTimeSlot = (timeSlotId: string) => {
+    const newTimeSlots = selectedTimeSlots.filter((id) => id !== timeSlotId);
+    setSelectedTimeSlots(newTimeSlots);
+    formik.setFieldValue("availableTimeSlotIds", newTimeSlots);
+  };
+
+  const removeSelectedVenue = (venueId: string) => {
+    const newVenues = selectedVenues.filter((id) => id !== venueId);
+    setSelectedVenues(newVenues);
+    formik.setFieldValue("venueIds", newVenues);
+  };
+
   return (
     <div className="space-y-6">
-      <Card className="border-brand-200">
-        <CardHeader className="flex flex-row items-center justify-between pb-2 border-b">
+      <Card className="border-brand-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="flex flex-row items-center justify-between pb-2 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
           <div>
-            <CardTitle className="text-2xl font-bold text-brand-500">Ticket Types</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-800">
+              {isEditMode ? "Edit Ticket" : "Ticket Types"}
+            </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Configure the tickets available for your event
+              {isEditMode
+                ? "Update the selected ticket's details"
+                : "Configure the tickets available for your event"}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="advanced-config"
-                checked={useAdvancedConfig}
-                onCheckedChange={setUseAdvancedConfig}
-              />
-              <Label htmlFor="advanced-config" className="text-sm">
-                Advanced Configuration
-              </Label>
-            </div>
+          {isEditMode && (
             <Button
               type="button"
-              onClick={() => formik.handleSubmit()}
-              className="flex items-center bg-brand-500 hover:bg-brand-600"
+              variant="outline"
+              onClick={cancelEdit}
+              className="flex items-center hover:bg-red-50 hover:text-red-600 transition-colors"
             >
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Ticket
+              <X className="h-4 w-4 mr-2" />
+              Cancel Editing
             </Button>
-          </div>
+          )}
         </CardHeader>
         <CardContent className="pt-6">
-          {/* New Ticket Form */}
-          {(ticketList.length === 0 || !useAdvancedConfig) && (
-            <form onSubmit={formik.handleSubmit} className="mb-6 border rounded-lg p-6 bg-brand-50">
-              <h3 className="text-lg font-semibold text-brand-600 mb-4">Add a New Ticket</h3>
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-brand-700">Ticket Name *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formik.values.name}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="e.g. General Admission"
-                    className={getFieldError('name') ? "border-destructive" : ""}
-                  />
-                  {getFieldError('name') && (
-                    <p className="text-destructive text-xs mt-1">{getFieldError('name')}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ticketType" className="text-brand-700">Ticket Type *</Label>
-                  <Select
-                    value={formik.values.ticketType}
-                    onValueChange={(value) => formik.setFieldValue('ticketType', value)}
-                  >
-                    <SelectTrigger id="ticketType" className="w-full">
-                      <SelectValue placeholder="Select ticket type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">Standard</SelectItem>
-                      <SelectItem value="early-bird">Early Bird</SelectItem>
-                      <SelectItem value="vip">VIP</SelectItem>
-                      <SelectItem value="season-pass">Season Pass</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {getTicketTypeDescription(formik.values.ticketType)}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-brand-700">Price ($) *</Label>
-                  <div className="relative">
-                    <CircleDollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="price"
-                      name="price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formik.values.price}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      placeholder="0.00"
-                      className={`pl-8 ${getFieldError('price') ? "border-destructive" : ""}`}
-                    />
-                  </div>
-                  {getFieldError('price') && (
-                    <p className="text-destructive text-xs mt-1">{getFieldError('price')}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quantity" className="text-brand-700">Quantity Available *</Label>
-                  <Input
-                    id="quantity"
-                    name="quantity"
-                    type="number"
-                    min="1"
-                    value={formik.values.quantity}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="100"
-                    className={getFieldError('quantity') ? "border-destructive" : ""}
-                  />
-                  {getFieldError('quantity') && (
-                    <p className="text-destructive text-xs mt-1">{getFieldError('quantity')}</p>
-                  )}
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="description" className="text-brand-700">Description (Optional)</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={formik.values.description}
-                    onChange={formik.handleChange}
-                    placeholder="Describe what this ticket includes..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-4 sm:col-span-2">
-                  <Separator className="my-4" />
-                  <h4 className="font-medium text-brand-600">Availability Settings</h4>
-                </div>
-
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="flex items-center space-x-2 mb-2 text-brand-700">
-                    <CalendarRange className="h-4 w-4 text-brand-400" />
-                    <span>Date Availability</span>
-                  </Label>
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Switch
-                      id="isAllDates"
-                      checked={formik.values.isAllDates}
-                      onCheckedChange={(checked) => formik.setFieldValue('isAllDates', checked)}
-                    />
-                    <Label htmlFor="isAllDates" className="cursor-pointer">
-                      Apply to all dates
-                    </Label>
-                  </div>
-
-                  {!formik.values.isAllDates && dates.length > 0 && (
-                    <div className="pl-8 pt-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        {dates.map((date) => (
-                          <div key={date.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`date-${date.id}`}
-                              checked={formik.values.availableDateIds.includes(date.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  formik.setFieldValue('availableDateIds', [...formik.values.availableDateIds, date.id]);
-                                } else {
-                                  formik.setFieldValue(
-                                    'availableDateIds',
-                                    formik.values.availableDateIds.filter(id => id !== date.id)
-                                  );
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`date-${date.id}`} className="text-sm">
-                              {format(date.startDate, 'PPP')}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                      {getFieldError('availableDateIds') && (
-                        <p className="text-destructive text-xs mt-1">{getFieldError('availableDateIds')}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {!formik.values.isAllDates && dates.length === 0 && (
-                    <div className="pl-8 pt-2">
-                      <p className="text-amber-600 text-sm bg-amber-50 p-2 rounded">
-                        You need to add event dates first to select specific dates.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="flex items-center space-x-2 mb-2 text-brand-700">
-                    <Clock className="h-4 w-4 text-brand-400" />
-                    <span>Time Slot Availability</span>
-                  </Label>
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Switch
-                      id="isAllTimeSlots"
-                      checked={formik.values.isAllTimeSlots}
-                      onCheckedChange={(checked) => formik.setFieldValue('isAllTimeSlots', checked)}
-                    />
-                    <Label htmlFor="isAllTimeSlots" className="cursor-pointer">
-                      Apply to all time slots
-                    </Label>
-                  </div>
-
-                  {!formik.values.isAllTimeSlots && timeSlots.length > 0 && (
-                    <div className="pl-8 pt-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        {timeSlots.map((slot) => {
-                          const date = dates.find(d => d.id === slot.dateId);
-                          const dateDisplay = date ? format(date.startDate, 'M/d/yyyy') : 'Unknown date';
-
-                          return (
-                            <div key={slot.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`slot-${slot.id}`}
-                                checked={formik.values.availableTimeSlotIds.includes(slot.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    formik.setFieldValue('availableTimeSlotIds', [...formik.values.availableTimeSlotIds, slot.id]);
-                                  } else {
-                                    formik.setFieldValue(
-                                      'availableTimeSlotIds',
-                                      formik.values.availableTimeSlotIds.filter(id => id !== slot.id)
-                                    );
-                                  }
-                                }}
-                              />
-                              <Label htmlFor={`slot-${slot.id}`} className="text-sm">
-                                {dateDisplay} | {slot.startTime} - {slot.endTime}
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {getFieldError('availableTimeSlotIds') && (
-                        <p className="text-destructive text-xs mt-1">{getFieldError('availableTimeSlotIds')}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {!formik.values.isAllTimeSlots && timeSlots.length === 0 && (
-                    <div className="pl-8 pt-2">
-                      <p className="text-amber-600 text-sm bg-amber-50 p-2 rounded">
-                        You need to add time slots first to select specific time slots.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="flex items-center space-x-2 mb-2 text-brand-700">
-                    <Tag className="h-4 w-4 text-brand-400" />
-                    <span>Limited Time Offer</span>
-                  </Label>
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Switch
-                      id="isLimited"
-                      checked={formik.values.isLimited}
-                      onCheckedChange={(checked) => formik.setFieldValue('isLimited', checked)}
-                    />
-                    <Label htmlFor="isLimited" className="cursor-pointer">
-                      Set sale period
-                    </Label>
-                  </div>
-                  {formik.values.isLimited && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8">
-                      <div className="space-y-2">
-                        <Label htmlFor="saleStartDate">Sale Start Date</Label>
-                        <Input
-                          id="saleStartDate"
-                          name="saleStartDate"
-                          type="date"
-                          value={formik.values.saleStartDate ? format(new Date(formik.values.saleStartDate), 'yyyy-MM-dd') : ''}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          className={getFieldError('saleStartDate') ? "border-destructive" : ""}
-                        />
-                        {getFieldError('saleStartDate') && (
-                          <p className="text-destructive text-xs mt-1">{getFieldError('saleStartDate')}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="saleEndDate">Sale End Date</Label>
-                        <Input
-                          id="saleEndDate"
-                          name="saleEndDate"
-                          type="date"
-                          value={formik.values.saleEndDate ? format(new Date(formik.values.saleEndDate), 'yyyy-MM-dd') : ''}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          className={getFieldError('saleEndDate') ? "border-destructive" : ""}
-                        />
-                        {getFieldError('saleEndDate') && (
-                          <p className="text-destructive text-xs mt-1">{getFieldError('saleEndDate')}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <Button
-                  type="submit"
-                  className="bg-brand-500 hover:bg-brand-600 flex items-center"
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" /> Add Ticket
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {/* If tickets have been added, show the ticket list and advanced configuration */}
-          {ticketList.length > 0 && (
-            <>
-              {/* Simple table view */}
-              {!useAdvancedConfig ? (
-                <Card className="mt-6 border-brand-200">
-                  <CardHeader className="py-4">
-                    <CardTitle className="text-lg font-semibold text-brand-500">Added Tickets</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader className="bg-primary">
-                        <TableRow>
-                          <TableHead className="w-[40%] text-white">Name</TableHead>
-                          <TableHead className="w-[20%] text-white">Price</TableHead>
-                          <TableHead className="w-[20%] text-white">Quantity</TableHead>
-                          <TableHead className="w-[15%] text-white">Value</TableHead>
-                          <TableHead className="w-[5%] text-white"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {ticketList.map(ticket => (
-                          <TableRow key={ticket.id} className="hover:bg-brand-50/50">
-                            <TableCell>
-                              <div className="font-medium">{ticket.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {getTicketTypeLabel(ticket.ticketType)}
-                              </div>
-                            </TableCell>
-                            <TableCell>${ticket.price.toFixed(2)}</TableCell>
-                            <TableCell>{ticket.quantity}</TableCell>
-                            <TableCell className="font-medium">
-                              ${(ticket.price * ticket.quantity).toFixed(2)}
-                            </TableCell>
-                            <TableCell>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => deleteTicket(ticket.id)}
-                                      className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Delete this ticket</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                      <TableFooter>
-                        <TableRow className="bg-brand-50/70">
-                          <TableCell colSpan={3} className="text-right font-medium">
-                            Total Value:
-                          </TableCell>
-                          <TableCell className="font-bold text-brand-700">
-                            ${totalValue.toFixed(2)}
-                          </TableCell>
-                          <TableCell></TableCell>
-                        </TableRow>
-                      </TableFooter>
-                    </Table>
-                  </CardContent>
-                </Card>
+          <form
+            onSubmit={formik.handleSubmit}
+            className="mb-6 border rounded-lg p-6 bg-gradient-to-b from-slate-50 to-blue-50 shadow-sm animate-fade-in"
+          >
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              {isEditMode ? (
+                <Edit className="h-5 w-5 mr-2 text-blue-600" />
               ) : (
-                // Advanced configuration view for the active ticket
-                <div className="mt-6 flex flex-col md:flex-row gap-6">
-                  <div className="w-full md:w-1/3">
-                    <h3 className="text-lg font-semibold text-primary mb-4">Ticket List</h3>
-                    <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
-                      {ticketList.map(ticket => (
-                        <div
-                          key={ticket.id}
-                          className={`flex justify-between items-center p-3 rounded-md cursor-pointer border transition-all ${ticket.id === activeTicketId
-                            ? 'bg-brand-500  border-primary shadow-md'
-                            : 'hover:bg-primary border-brand-100'
-                            } text-primary`}
-                          onClick={() => setActiveTicketId(ticket.id)}
-                        >
-                          <div>
-                            <div className="font-medium">{ticket.name}</div>
-                            <div className={`text-xs ${ticket.id === activeTicketId ? 'text-white/80' : 'text-muted-foreground'}`}>
-                              {getTicketTypeLabel(ticket.ticketType)} · ${ticket.price} × {ticket.quantity}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 text-primary">
-                            <Badge variant={ticket.id === activeTicketId ? "outline" : "secondary"} className="font-semibold">
-                              ${(ticket.price * ticket.quantity).toFixed(2)}
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteTicket(ticket.id);
-                              }}
-                              className={`h-7 w-7 p-0 ${ticket.id === activeTicketId
-                                ? 'text-white/80 hover:text-white hover:bg-white/10'
-                                : 'text-destructive hover:bg-destructive/10 hover:text-destructive'
-                                }`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4">
+                <PlusCircle className="h-5 w-5 mr-2 text-emerald-600" />
+              )}
+              {isEditMode ? "Edit Ticket" : "Add a New Ticket"}
+            </h3>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              {/* Basic Information */}
+              <div className="space-y-2">
+                <Label htmlFor="name" className="font-medium flex items-center">
+                  Ticket Name <span className="text-destructive ml-1">*</span>
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formik.values.name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="e.g. General Admission"
+                  className={`transition-all duration-200 ${getFieldError("name")
+                    ? "border-destructive"
+                    : "hover:border-primary focus:border-primary"
+                    }`}
+                />
+                {getFieldError("name") && (
+                  <p className="text-destructive text-xs mt-1">{getFieldError("name")}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ticketType" className="font-medium flex items-center">
+                  Ticket Type <span className="text-destructive ml-1">*</span>
+                </Label>
+                <Select
+                  value={formik.values.ticketType}
+                  onValueChange={(value) => {
+                    formik.setFieldValue("ticketType", value);
+                    if (value === "free") {
+                      formik.setFieldValue("price", 0);
+                    }
+                  }}
+                >
+                  <SelectTrigger id="ticketType" className="w-full hover:border-primary transition-colors">
+                    <SelectValue placeholder="Select ticket type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ticketCategory" className="font-medium flex items-center">
+                  Ticket Category <span className="text-destructive ml-1">*</span>
+                </Label>
+                <Select
+                  value={formik.values.ticketCategory}
+                  onValueChange={(value) => formik.setFieldValue("ticketCategory", value)}
+                >
+                  <SelectTrigger id="ticketCategory" className="w-full hover:border-primary transition-colors">
+                    <SelectValue placeholder="Select ticket category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="early-bird">Early Bird</SelectItem>
+                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="season-pass">Season Pass</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getTicketCategoryDescription(formik.values.ticketCategory)}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ticketStatus" className="font-medium flex items-center">
+                  Ticket Status <span className="text-destructive ml-1">*</span>
+                </Label>
+                <Select
+                  value={formik.values.ticketStatus}
+                  onValueChange={(value) => formik.setFieldValue("ticketStatus", value)}
+                >
+                  <SelectTrigger id="ticketStatus" className="w-full hover:border-primary transition-colors">
+                    <SelectValue placeholder="Select ticket status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="sold out">Sold Out</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                    <SelectItem value="filling fast">Filling Fast</SelectItem>
+                    <SelectItem value="coming soon">Coming Soon</SelectItem>
+                    <SelectItem value="few tickets left">Few Tickets Left</SelectItem>
+                    <SelectItem value="offline sell">Offline Sell</SelectItem>
+                  </SelectContent>
+                </Select>
+                {getFieldError("ticketStatus") && (
+                  <p className="text-destructive text-xs mt-1">{getFieldError("ticketStatus")}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="price" className="font-medium flex items-center">
+                  Price (₹) <span className="text-destructive ml-1">*</span>
+                </Label>
+                <div className="relative">
+                  <IndianRupee className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="price"
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={formik.values.price}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    placeholder="0"
+                    className={`pl-8 ${getFieldError("price")
+                      ? "border-destructive"
+                      : "hover:border-primary focus:border-primary transition-colors"
+                      }`}
+                    disabled={formik.values.ticketType === "free"}
+                  />
+                </div>
+                {getFieldError("price") && (
+                  <p className="text-destructive text-xs mt-1">{getFieldError("price")}</p>
+                )}
+                {formik.values.ticketType === "free" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Price is set to 0 for free tickets
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="quantity" className="font-medium flex items-center">
+                  Quantity Available <span className="text-destructive ml-1">*</span>
+                </Label>
+                <Input
+                  id="quantity"
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  value={formik.values.quantity}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="100"
+                  className={`transition-all duration-200 ${getFieldError("quantity")
+                    ? "border-destructive"
+                    : "hover:border-primary focus:border-primary"
+                    }`}
+                />
+                {getFieldError("quantity") && (
+                  <p className="text-destructive text-xs mt-1">{getFieldError("quantity")}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="entryPerTicket" className="font-medium flex items-center">
+                  Entries Per Ticket <span className="text-destructive ml-1">*</span>
+                </Label>
+                <Input
+                  id="entryPerTicket"
+                  name="entryPerTicket"
+                  type="number"
+                  min="1"
+                  value={formik.values.entryPerTicket}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="1"
+                  className={`transition-all duration-200 ${getFieldError("entryPerTicket")
+                    ? "border-destructive"
+                    : "hover:border-primary focus:border-primary"
+                    }`}
+                />
+                {getFieldError("entryPerTicket") && (
+                  <p className="text-destructive text-xs mt-1">{getFieldError("entryPerTicket")}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bookingPerTicket" className="font-medium flex items-center">
+                  Bookings Per Ticket <span className="text-destructive ml-1">*</span>
+                </Label>
+                <Input
+                  id="bookingPerTicket"
+                  name="bookingPerTicket"
+                  type="number"
+                  min="1"
+                  value={formik.values.bookingPerTicket}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="1"
+                  className={`transition-all duration-200 ${getFieldError("bookingPerTicket")
+                    ? "border-destructive"
+                    : "hover:border-primary focus:border-primary"
+                    }`}
+                />
+                {getFieldError("bookingPerTicket") && (
+                  <p className="text-destructive text-xs mt-1">{getFieldError("bookingPerTicket")}</p>
+                )}
+              </div>
+
+              {/* Combo Ticket Switch */}
+              <div className="space-y-2 sm:col-span-2 bg-blue-50 p-4 rounded-md shadow-inner hover:bg-blue-100 transition-colors duration-300">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isCombo" className="flex items-center space-x-2 font-medium cursor-pointer">
+                    <Package className="h-4 w-4 text-blue-600" />
+                    <span>Is this a combo ticket?</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground ml-1 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-white p-3 shadow-lg">
+                          <p className="max-w-xs">
+                            Combo tickets bundle multiple events or experiences together at a discounted price.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </Label>
+                  <Switch
+                    id="isCombo"
+                    checked={formik.values.isCombo}
+                    onCheckedChange={(checked) => formik.setFieldValue("isCombo", checked)}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
+                {formik.values.isCombo && (
+                  <p className="text-xs text-blue-700 mt-2 bg-blue-100 p-3 rounded border-l-2 border-blue-500 animate-fade-in">
+                    This ticket will be sold as a combo package. Make sure to correctly configure which dates, venues and time slots this applies to.
+                  </p>
+                )}
+              </div>
+
+              {/* Description Items */}
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="description" className="font-medium">
+                  Description Items
+                </Label>
+                {descriptionItems.map((item, index) => (
+                  <div key={index} className="flex items-start space-x-2">
+                    <Textarea
+                      value={item}
+                      onChange={(e) => updateDescriptionItem(index, e.target.value)}
+                      placeholder={`Description item ${index + 1}`}
+                      rows={2}
+                      className="hover:border-primary focus:border-primary transition-colors"
+                    />
+                    <div className="flex flex-col space-y-2 mt-1">
                       <Button
-                        variant="outline"
-                        className="w-full bg-brand-50 hover:bg-brand-100 border-brand-200 text-brand-700"
-                        onClick={() => {
-                          setUseAdvancedConfig(false);
-                          formik.resetForm();
-                        }}
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeDescriptionItem(index)}
+                        className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 transition-colors"
+                        disabled={descriptionItems.length === 1}
                       >
-                        <PlusCircle className="h-4 w-4 mr-2" /> Add Another Ticket
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-
-                  {activeTicket && (
-                    <div className="flex-1 border rounded-lg p-6 bg-white shadow-sm">
-                      <h3 className="text-xl font-semibold text-brand-700 mb-4">
-                        Edit {activeTicket.name}
-                      </h3>
-                      <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList className="w-full mb-6 bg-gray-100">
-                          <TabsTrigger value="general" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
-                            General
-                          </TabsTrigger>
-                          <TabsTrigger value="dates" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
-                            Dates
-                          </TabsTrigger>
-                          <TabsTrigger value="venues" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
-                            Venues
-                          </TabsTrigger>
-                          <TabsTrigger value="timeslots" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
-                            Time Slots
-                          </TabsTrigger>
-                        </TabsList>
-
-                        {/* General Tab: Show current properties, allow editing via update functions */}
-                        <TabsContent value="general" className="mt-0">
-                          <div className="space-y-6 p-1">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="space-y-2">
-                                <Label htmlFor="ticket-name-advanced" className="text-brand-700">Ticket Name</Label>
-                                <Input
-                                  id="ticket-name-advanced"
-                                  value={activeTicket.name}
-                                  onChange={(e) =>
-                                    updateTicketType(activeTicket.id, 'name', e.target.value)
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="ticket-type-advanced" className="text-brand-700">Ticket Type</Label>
-                                <Select
-                                  value={activeTicket.ticketType}
-                                  onValueChange={(value) =>
-                                    updateTicketType(activeTicket.id, 'ticketType', value)
-                                  }
-                                >
-                                  <SelectTrigger id="ticket-type-advanced">
-                                    <SelectValue placeholder="Select ticket type" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="standard">Standard</SelectItem>
-                                    <SelectItem value="early-bird">Early Bird</SelectItem>
-                                    <SelectItem value="vip">VIP</SelectItem>
-                                    <SelectItem value="season-pass">Season Pass</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {getTicketTypeDescription(activeTicket.ticketType)}
-                                </p>
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="ticket-price-advanced" className="text-brand-700">Price</Label>
-                                <div className="relative">
-                                  <CircleDollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                  <Input
-                                    id="ticket-price-advanced"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={activeTicket.price}
-                                    onChange={(e) =>
-                                      updateTicketType(activeTicket.id, 'price', parseFloat(e.target.value))
-                                    }
-                                    className="pl-8"
-                                  />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="ticket-quantity-advanced" className="text-brand-700">Quantity</Label>
-                                <Input
-                                  id="ticket-quantity-advanced"
-                                  type="number"
-                                  min="1"
-                                  value={activeTicket.quantity}
-                                  onChange={(e) =>
-                                    updateTicketType(activeTicket.id, 'quantity', parseInt(e.target.value))
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-2 md:col-span-2">
-                                <Label htmlFor="ticket-description-advanced" className="text-brand-700">Description</Label>
-                                <Textarea
-                                  id="ticket-description-advanced"
-                                  value={activeTicket.description}
-                                  onChange={(e) =>
-                                    updateTicketType(activeTicket.id, 'description', e.target.value)
-                                  }
-                                  rows={3}
-                                  placeholder="Describe what this ticket includes..."
-                                />
-                              </div>
-                            </div>
-
-                            <div className="border-t pt-4 mt-4">
-                              <h4 className="font-medium text-brand-700 mb-4">Availability Settings</h4>
-
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <CalendarRange className="h-4 w-4 text-brand-400" />
-                                    <Label htmlFor="apply-all-dates" className="font-medium">
-                                      Apply to all dates
-                                    </Label>
-                                  </div>
-                                  <Switch
-                                    id="apply-all-dates"
-                                    checked={activeTicket.isAllDates}
-                                    onCheckedChange={(checked) => {
-                                      updateTicketType(activeTicket.id, 'isAllDates', checked);
-                                      if (checked) {
-                                        updateTicketType(
-                                          activeTicket.id,
-                                          'availableDateIds',
-                                          dates.map(d => d.id)
-                                        );
-                                      }
-                                    }}
-                                  />
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4 text-brand-400" />
-                                    <Label htmlFor="apply-all-timeslots" className="font-medium">
-                                      Apply to all time slots
-                                    </Label>
-                                  </div>
-                                  <Switch
-                                    id="apply-all-timeslots"
-                                    checked={activeTicket.isAllTimeSlots}
-                                    onCheckedChange={(checked) => {
-                                      updateTicketType(activeTicket.id, 'isAllTimeSlots', checked);
-                                      if (checked) {
-                                        updateTicketType(
-                                          activeTicket.id,
-                                          'availableTimeSlotIds',
-                                          timeSlots.map(t => t.id)
-                                        );
-                                      }
-                                    }}
-                                  />
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <Tag className="h-4 w-4 text-brand-400" />
-                                    <Label htmlFor="limited-time-offer" className="font-medium">
-                                      Limited time offer
-                                    </Label>
-                                  </div>
-                                  <Switch
-                                    id="limited-time-offer"
-                                    checked={activeTicket.isLimited}
-                                    onCheckedChange={(checked) => {
-                                      updateTicketType(activeTicket.id, 'isLimited', checked);
-                                    }}
-                                  />
-                                </div>
-
-                                {activeTicket.isLimited && (
-                                  <div className="grid grid-cols-2 gap-4 pl-6 mt-2">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="sale-start-date">Sale Start Date</Label>
-                                      <Input
-                                        id="sale-start-date"
-                                        type="date"
-                                        value={activeTicket.saleStartDate ? format(new Date(activeTicket.saleStartDate), 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => {
-                                          updateTicketType(
-                                            activeTicket.id,
-                                            'saleStartDate',
-                                            e.target.value ? new Date(e.target.value) : undefined
-                                          );
-                                        }}
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor="sale-end-date">Sale End Date</Label>
-                                      <Input
-                                        id="sale-end-date"
-                                        type="date"
-                                        value={activeTicket.saleEndDate ? format(new Date(activeTicket.saleEndDate), 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => {
-                                          updateTicketType(
-                                            activeTicket.id,
-                                            'saleEndDate',
-                                            e.target.value ? new Date(e.target.value) : undefined
-                                          );
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="border-t pt-4 flex justify-between items-center">
-                              <div className="font-semibold text-brand-700">
-                                Total Value: <span className="text-lg ml-1">${(activeTicket.price * activeTicket.quantity).toFixed(2)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </TabsContent>
-
-                        {/* Applicable Dates Tab */}
-                        <TabsContent value="dates" className="mt-0">
-                          {dates.length === 0 ? (
-                            <div className="bg-amber-50 text-amber-800 p-6 rounded-md flex items-center gap-3 border border-amber-200">
-                              <Info className="h-5 w-5" />
-                              <p>You need to add event dates first before you can select specific dates.</p>
-                            </div>
-                          ) : activeTicket.isAllDates ? (
-                            <div className="bg-blue-50 text-blue-800 p-6 rounded-md flex items-center gap-3 border border-blue-200">
-                              <Info className="h-5 w-5" />
-                              <div>
-                                <p className="font-medium">This ticket applies to all dates</p>
-                                <p className="text-sm mt-1">Switch to the General tab and uncheck "Apply to all dates" to select specific dates.</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="p-2">
-                              <p className="text-muted-foreground mb-4">Select the dates on which this ticket will be valid:</p>
-                              <div className="flex flex-wrap gap-3">
-                                {dates.map((date) => {
-                                  const isSelected = activeTicket.availableDateIds.includes(date.id);
-                                  return (
-                                    <div
-                                      key={date.id}
-                                      onClick={() => toggleDateForTicket(date)}
-                                      className={`px-4 py-3 rounded-md cursor-pointer border transition-all ${isSelected
-                                        ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                                        : 'bg-background hover:bg-brand-50 border-input'
-                                        }`}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <CalendarRange className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-brand-400'}`} />
-                                        <div>
-                                          <div className="font-medium">{format(date.startDate, 'EEEE')}</div>
-                                          <div className={`text-sm ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
-                                            {format(date.startDate, 'MMMM d, yyyy')}
-                                          </div>
-                                        </div>
-                                        {isSelected && <Check className="h-4 w-4 ml-2" />}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </TabsContent>
-
-                        {/* Applicable Venues Tab */}
-                        <TabsContent value="venues" className="mt-0">
-                          {venues.length === 0 ? (
-                            <div className="bg-amber-50 text-amber-800 p-6 rounded-md flex items-center gap-3 border border-amber-200">
-                              <Info className="h-5 w-5" />
-                              <p>You need to add venues first before you can select specific venues.</p>
-                            </div>
-                          ) : activeTicket.isAllDates ? (
-                            <div className="bg-blue-50 text-blue-800 p-6 rounded-md flex items-center gap-3 border border-blue-200">
-                              <Info className="h-5 w-5" />
-                              <div>
-                                <p className="font-medium">This ticket applies to all venues</p>
-                                <p className="text-sm mt-1">Switch to the General tab and uncheck "Apply to all dates" to select specific venues.</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="p-2">
-                              <p className="text-muted-foreground mb-4">Select the venues where this ticket will be valid:</p>
-                              <div className="flex flex-wrap gap-3">
-                                {venues.map((venue) => {
-                                  const isSelected = activeTicket.availableDateIds.includes(venue.id);
-                                  return (
-                                    <div
-                                      key={venue.id}
-                                      onClick={() => toggleVenueForTicket(venue)}
-                                      className={`px-4 py-3 rounded-md cursor-pointer border transition-all ${isSelected
-                                        ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                                        : 'bg-background hover:bg-brand-50 border-input'
-                                        }`}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <div>
-                                          <div className="font-medium">{venue.name}</div>
-                                          <div className={`text-sm ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
-                                            {venue.city}
-                                          </div>
-                                        </div>
-                                        {isSelected && <Check className="h-4 w-4 ml-2" />}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </TabsContent>
-
-                        {/* Time Slots Tab */}
-                        <TabsContent value="timeslots" className="mt-0">
-                          {timeSlots.length === 0 ? (
-                            <div className="bg-amber-50 text-amber-800 p-6 rounded-md flex items-center gap-3 border border-amber-200">
-                              <Info className="h-5 w-5" />
-                              <p>You need to add time slots first before you can select specific time slots.</p>
-                            </div>
-                          ) : activeTicket.isAllTimeSlots ? (
-                            <div className="bg-blue-50 text-blue-800 p-6 rounded-md flex items-center gap-3 border border-blue-200">
-                              <Info className="h-5 w-5" />
-                              <div>
-                                <p className="font-medium">This ticket applies to all time slots</p>
-                                <p className="text-sm mt-1">Switch to the General tab and uncheck "Apply to all time slots" to select specific ones.</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="p-2">
-                              <p className="text-muted-foreground mb-4">Select the time slots for which this ticket will be valid:</p>
-                              <div className="flex flex-wrap gap-3">
-                                {timeSlots.map((slot) => {
-                                  const isSelected = activeTicket.availableTimeSlotIds.includes(slot.id);
-                                  const date = dates.find(d => d.id === slot.dateId);
-                                  const dateDisplay = date ? format(date.startDate, 'M/d/yyyy') : 'Unknown date';
-
-                                  return (
-                                    <div
-                                      key={slot.id}
-                                      onClick={() => toggleTimeSlotForTicket(slot.id)}
-                                      className={`px-4 py-3 rounded-md cursor-pointer border transition-all ${isSelected
-                                        ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                                        : 'bg-background hover:bg-brand-50 border-input'
-                                        }`}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <Clock className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-brand-400'}`} />
-                                        <div>
-                                          <div className="font-medium">{slot.startTime} - {slot.endTime}</div>
-                                          <div className={`text-sm ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
-                                            {dateDisplay}
-                                          </div>
-                                        </div>
-                                        {isSelected && <Check className="h-4 w-4 ml-2" />}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </TabsContent>
-                      </Tabs>
-                    </div>
-                  )}
-                </div>
-              )}
-              <div className="mt-8 flex items-center justify-between">
-                <div className="font-medium text-brand-700">
-                  Total Tickets: <Badge variant="outline" className="ml-1 bg-brand-50">{ticketList.length}</Badge>
-                  <span className="mx-2">|</span>
-                  Total Value: <Badge variant="outline" className="ml-1 bg-brand-50">${totalValue.toFixed(2)}</Badge>
-                </div>
+                ))}
                 <Button
                   type="button"
-                  onClick={() => {
-                    if (ticketList.length === 0) {
-                      toast({
-                        title: "No tickets added",
-                        description: "Please add at least one ticket for your event.",
-                        variant: "destructive"
-                      });
-                      return;
-                    }
-                    // Pass the complete ticket list to the onSubmit prop.
-                    onSubmit(ticketList);
-                  }}
-                  className="flex items-center bg-brand-500 hover:bg-brand-600"
+                  variant="outline"
+                  size="sm"
+                  onClick={addDescriptionItem}
+                  className="mt-2 text-xs hover:bg-blue-50 hover:text-blue-600 transition-colors"
                 >
-                  Next: Media <ChevronRight className="ml-2 h-4 w-4" />
+                  <PlusCircle className="h-3 w-3 mr-1" /> Add Description Item
                 </Button>
               </div>
-            </>
-          )}
+
+              <div className="space-y-4 sm:col-span-2">
+                <Separator className="my-4" />
+                <h4 className="font-medium text-gray-700 flex items-center bg-slate-100 p-2 rounded-md">
+                  <Tag className="h-4 w-4 mr-2 text-gray-600" />
+                  Availability Settings
+                </h4>
+              </div>
+
+              {/* Date Availability Section with Badge Selection */}
+              <div className="space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                <Label className="flex items-center space-x-2 mb-2 font-medium">
+                  <CalendarRange className="h-4 w-4 text-indigo-600" />
+                  <span>Date Availability</span>
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {dates.length > 0 ? (
+                    dates.map((date) => {
+                      const isSelected = selectedDates.includes(date.id);
+                      return (
+                        <Badge
+                          key={date.id}
+                          variant={isSelected ? "default" : "outline"}
+                          onClick={() =>
+                            toggleSelection(date.id, selectedDates, setSelectedDates, "availableDateIds")
+                          }
+                          className="cursor-pointer hover:bg-indigo-100 transition-colors"
+                        >
+                          {format(formatEventDate(date.startDate), "MMM d, yyyy")}
+                        </Badge>
+                      );
+                    })
+                  ) : (
+                    <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+                      You need to add event dates first.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Venue Availability Section with Badge Selection */}
+              <div className="space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                <Label className="flex items-center space-x-2 mb-2 font-medium">
+                  <MapPin className="h-4 w-4 text-emerald-600" />
+                  <span>Venue Availability</span>
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {venues.length > 0 ? (
+                    venues.map((venue) => {
+                      const isSelected = selectedVenues.includes(venue.id);
+                      return (
+                        <Badge
+                          key={venue.id}
+                          variant={isSelected ? "default" : "outline"}
+                          onClick={() =>
+                            toggleSelection(venue.id, selectedVenues, setSelectedVenues, "venueIds")
+                          }
+                          className="cursor-pointer hover:bg-emerald-100 transition-colors"
+                        >
+                          {venue.name} ({venue.city})
+                        </Badge>
+                      );
+                    })
+                  ) : (
+                    <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+                      You need to add venues first.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Time Slot Availability Section with Badge Selection */}
+              <div className="space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                <Label className="flex items-center space-x-2 mb-2 font-medium">
+                  <Clock className="h-4 w-4 text-violet-600" />
+                  <span>Time Slot Availability</span>
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {timeSlots.length > 0 ? (
+                    timeSlots.map((slot) => {
+                      const isSelected = selectedTimeSlots.includes(slot.id);
+                      const date = dates.find((d) => d.id === slot.dateId);
+                      return (
+                        <Badge
+                          key={slot.id}
+                          variant={isSelected ? "default" : "outline"}
+                          onClick={() =>
+                            toggleSelection(
+                              slot.id,
+                              selectedTimeSlots,
+                              setSelectedTimeSlots,
+                              "availableTimeSlotIds"
+                            )
+                          }
+                          className="cursor-pointer hover:bg-violet-100 transition-colors"
+                        >
+                          {slot.startTime} - {slot.endTime}
+                        </Badge>
+                      );
+                    })
+                  ) : (
+                    <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+                      You need to add time slots first.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Limited Time Offer Section */}
+              <div className="space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                <Label className="flex items-center space-x-2 mb-2 font-medium">
+                  <Tag className="h-4 w-4 text-amber-600" />
+                  <span>Limited Time Offer</span>
+                </Label>
+                <div className="flex items-center space-x-2 mb-3">
+                  <Checkbox
+                    id="isLimited"
+                    checked={formik.values.isLimited}
+                    onCheckedChange={(checked) => formik.setFieldValue("isLimited", checked)}
+                    className="data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                  />
+                  <Label htmlFor="isLimited" className="cursor-pointer">
+                    Set sale period
+                  </Label>
+                </div>
+                {formik.values.isLimited && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8 animate-fade-in">
+                    <div className="space-y-2">
+                      <Label htmlFor="saleStartDate" className="flex items-center">
+                        Sale Start Date <span className="text-destructive ml-1">*</span>
+                      </Label>
+                      <Input
+                        id="saleStartDate"
+                        name="saleStartDate"
+                        type="date"
+                        value={
+                          formik.values.saleStartDate
+                            ? format(new Date(formik.values.saleStartDate), "yyyy-MM-dd")
+                            : ""
+                        }
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`hover:border-amber-400 focus:border-amber-500 transition-colors ${getFieldError("saleStartDate") ? "border-destructive" : ""
+                          }`}
+                      />
+                      {getFieldError("saleStartDate") && (
+                        <p className="text-destructive text-xs mt-1">{getFieldError("saleStartDate")}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="saleEndDate" className="flex items-center">
+                        Sale End Date <span className="text-destructive ml-1">*</span>
+                      </Label>
+                      <Input
+                        id="saleEndDate"
+                        name="saleEndDate"
+                        type="date"
+                        value={
+                          formik.values.saleEndDate
+                            ? format(new Date(formik.values.saleEndDate), "yyyy-MM-dd")
+                            : ""
+                        }
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`hover:border-amber-400 focus:border-amber-500 transition-colors ${getFieldError("saleEndDate") ? "border-destructive" : ""
+                          }`}
+                      />
+                      {getFieldError("saleEndDate") && (
+                        <p className="text-destructive text-xs mt-1">{getFieldError("saleEndDate")}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-2">
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={cancelEdit}
+                  className="hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button type="submit" className="bg-primary hover:bg-primary/90 flex items-center hover:shadow-md transition-all">
+                {isEditMode ? (
+                  <>
+                    <Edit className="h-4 w-4 mr-2" /> Update Ticket
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Add Ticket
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+
+          <Card className="mt-8 border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+            <CardHeader className="py-4 bg-gradient-to-r from-gray-50 to-indigo-50">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center">
+                <Tag className="h-5 w-5 mr-2 text-primary" />
+                Added Tickets
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {ticketList.length > 0 ? (
+                <Table>
+                  <TableHeader className="bg-gray-100">
+                    <TableRow>
+                      <TableHead className="w-[30%]">Name</TableHead>
+                      <TableHead className="w-[15%]">Type</TableHead>
+                      <TableHead className="w-[15%]">Price</TableHead>
+                      <TableHead className="w-[15%]">Quantity</TableHead>
+                      <TableHead className="w-[15%]">Value</TableHead>
+                      <TableHead className="w-[10%] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ticketList.map((ticket) => (
+                      <TableRow key={ticket.id} className="hover:bg-blue-50/80 transition-colors">
+                        <TableCell>
+                          <div className="font-medium">{ticket.name}</div>
+                          <div className="text-xs flex items-center space-x-1">
+                            <span className="text-muted-foreground">{getTicketCategoryLabel(ticket.ticketCategory)}</span>
+                            {ticket.isCombo && (
+                              <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                                Combo
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={ticket.ticketType === "free" ? "outline" : "default"} className={ticket.ticketType === "free" ? "border-green-300 text-green-700 bg-green-50" : ""}>
+                            {ticket.ticketType === "free" ? "Free" : "Paid"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{ticket.ticketType === "free" ? "Free" : formatIndianPrice(ticket.price)}</TableCell>
+                        <TableCell>{ticket.quantity.toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">{formatIndianPrice(ticket.price * ticket.quantity)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex space-x-1 justify-end">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => editTicket(ticket.id)}
+                                    className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-white p-2 shadow-lg">
+                                  <p>Edit this ticket</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => deleteTicket(ticket.id)}
+                                    className="h-8 w-8 p-0 text-destructive hover:bg-red-100 hover:text-red-700 transition-colors"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-white p-2 shadow-lg">
+                                  <p>Delete this ticket</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow className="bg-gradient-to-r from-slate-50 to-blue-50">
+                      <TableCell colSpan={4} className="text-right font-medium">
+                        Total Value:
+                      </TableCell>
+                      <TableCell className="font-bold text-gray-700">
+                        {formatIndianPrice(totalValue)}
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+              ) : (
+                <div className="py-16 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <Tag className="h-16 w-16 text-gray-300 animate-pulse" strokeWidth={1.5} />
+                    <div className="space-y-2">
+                      <p className="text-lg">No tickets added yet</p>
+                      <p className="text-sm">Use the form above to add tickets to your event</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById("name")?.focus()}
+                      className="mt-4 hover:bg-primary/10 transition-colors"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" /> Start Adding Tickets
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="mt-8 flex items-center justify-between">
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center bg-white px-3 py-2 rounded-md shadow-sm">
+                <Badge variant="outline" className="mr-2 bg-primary text-white">
+                  {ticketList.length}
+                </Badge>
+                <span className="text-gray-700">Tickets</span>
+              </div>
+              <div className="flex items-center bg-white px-3 py-2 rounded-md shadow-sm">
+                <Badge variant="outline" className="mr-2 bg-primary text-white">
+                  {formatIndianPrice(totalValue)}
+                </Badge>
+                <span className="text-gray-700">Total Value</span>
+              </div>
+            </div>
+            <Button
+              type="button"
+              onClick={() => {
+                if (ticketList.length === 0) {
+                  toast({
+                    title: "No tickets added",
+                    description: "Please add at least one ticket for your event.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                onSubmit(ticketList);
+              }}
+              className="flex items-center bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
+            >
+              Next: Media <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

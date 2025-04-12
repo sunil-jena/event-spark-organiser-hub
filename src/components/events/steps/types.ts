@@ -44,23 +44,30 @@ export interface VenueFormValues {
 export interface DateFormValues {
   id: string;
   venueId: string;
-  type: 'single' | 'range' | 'recurring'; // Required by DateStep.tsx
+  // The “type” here is the one your DateStep uses (single, range, or recurring)
+  type: 'single' | 'range' | 'recurring';
+  // This extra field comes from your context; for example, if you need to support multiple dates.
   dateType: 'single' | 'multiple' | 'range' | 'recurring';
-  dates: Date[];
-  startDate: Date;
-  endDate?: Date;
+  // For multiple dates (if needed), stored as numbers.
+  dates: number[];
+  // Main dates stored as numbers (ddMMyyyy).
+  startDate: number;
+  endDate?: number;
+  // Additional flags you might need.
   isDateRange: boolean;
   isSingleDay: boolean;
+  // Optional recurring details using numeric values.
   recurring?: {
-    startDate: Date;
+    startDate: number;
     recurrencePattern: 'daily' | 'weekly' | 'monthly';
     occurrences: number;
-    generatedDates: Date[];
+    generatedDates: number[];
   };
-  range?: {
-    startDate: Date;
-    endDate: Date;
-  };
+  // Simplified recurring fields for this step
+  recurringType?: 'daily' | 'weekly' | 'monthly';
+  recurringUntil?: number;
+  recurringDays?: number[]; // 0 = Sunday, 1 = Monday, etc.
+  notes?: string;
 }
 
 export interface TimeSlotFormValues {
@@ -82,66 +89,74 @@ export interface TimeSlotFormValues {
 export interface TicketFormValues {
   id: string;
   name: string;
-  description: string;
+  description: string[];
   price: number;
   quantity: number;
-  ticketType: 'standard' | 'early-bird' | 'vip' | 'season-pass' | string;
+  ticketType: "free" | "paid"; // Only free or paid tickets allowed
+  ticketCategory: 'standard' | 'early-bird' | 'vip' | 'season-pass' | string;
+  entryPerTicket: number;
+  bookingPerTicket: number;
+  ticketStatus:
+  | "active"
+  | "inactive"
+  | "sold out"
+  | "expired"
+  | "filling fast"
+  | "coming soon"
+  | "few tickets left"
+  | "offline sell";
   isAllDates: boolean;
   availableDateIds: string[];
   isAllTimeSlots: boolean;
   availableTimeSlotIds: string[];
+  isAllVenues: boolean;
+  venueIds: string[],
+  isCombo: boolean
   dateIds: string[]; // Associated dates
   timeSlotIds?: string[]; // Optional associated time slots
   isLimited: boolean; // Required property
   saleStartDate?: Date;
   saleEndDate?: Date;
-  promoCodes?: {
-    code: string;
-    discountPercentage: number;
-    validFrom: Date;
-    validTo: Date;
-  }[];
+  // promoCodes?: {
+  //   code: string;
+  //   discountPercentage: number;
+  //   validFrom: Date;
+  //   validTo: Date;
+  // }[];
 }
 
 export interface MediaFormValues {
   galleryImages: string[];
-  cardImage?: string | null;
-  coverImage?: string | null;
-  bannerImage?: string | null;
-  verticalBannerImage?: string | null;
+  eventcardImage?: string | null;
   eventVerticalCardImage?: string | null;
   eventBannerImage?: string[];
   eventVerticalBannerImage?: string[];
   eventVerticalVideo?: string;
-  eventMediaLink?: string;
   youtubeLink?: string;
 }
 
-export interface AdditionalInfoFormValues {
-  eventRules?: string;
-  faq?: string;
-  terms?: string;
-  refundPolicy?: string;
-  ageRestriction?: string;
-  accessibility?: string[];
-  tags?: string[];
-  customFields?: { name: string; value: string }[];
-  sponsor?: {
-    brandName: string;
-    brandLogo: string;
-    priority: number;
-  }[];
-  isPromoted?: {
-    isActive: boolean;
-    priority: number;
-  };
-  trendingShow?: {
-    isTrending: boolean;
-    priority: number;
-  };
-  bookingStatus?: 'open' | 'closed' | 'opening soon' | 'sold out' | 'filling fast';
-  isFillingFast?: boolean;
-}
+// export interface AdditionalInfoFormValues {
+//   eventRules?: string;
+//   faq?: string;
+//   terms?: string;
+//   refundPolicy?: string;
+//   accessibility?: string[];
+//   sponsor?: {
+//     brandName: string;
+//     brandLogo: string;
+//     priority: number;
+//   }[];
+//   // isPromoted?: {
+//   //   isActive: boolean;
+//   //   priority: number;
+//   // };
+//   // trendingShow?: {
+//   //   isTrending: boolean;
+//   //   priority: number;
+//   // };
+//   // bookingStatus?: 'open' | 'closed' | 'opening soon' | 'sold out' | 'filling fast';
+//   // isFillingFast?: boolean;
+// }
 
 // Define artist type
 export interface ArtistFormValues {
@@ -155,6 +170,14 @@ export interface ArtistFormValues {
   }[];
 }
 
+export interface AdditionalInfoFormValues {
+  termsAndConditions: string;
+  prohibitedItems: string[];
+  sponsors: Sponsor[];
+  faqItems?: FaqItem[];
+}
+
+
 // Define an event data interface to include all form values
 export interface EventData {
   basicDetails: BasicDetailsFormValues;
@@ -166,3 +189,42 @@ export interface EventData {
   additionalInfo: AdditionalInfoFormValues;
   artists?: ArtistFormValues[];
 }
+
+export interface ProhibitedItem {
+  id: string;
+  label: string;
+}
+
+export interface Sponsor {
+  brandName: string;
+  brandLogo: string;
+  priority: number;
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+export const COMMON_PROHIBITED_ITEMS: ProhibitedItem[] = [
+  { id: 'weapons', label: 'Weapons of any kind' },
+  { id: 'alcohol', label: 'Outside alcohol' },
+  { id: 'drugs', label: 'Illegal substances' },
+  { id: 'glass', label: 'Glass containers' },
+  { id: 'cans', label: 'Cans or metal containers' },
+  { id: 'bottles', label: 'Plastic bottles over 1L' },
+  { id: 'food', label: 'Outside food and beverages' },
+  { id: 'pets', label: 'Pets (except service animals)' },
+  { id: 'cameras', label: 'Professional cameras without credentials' },
+  { id: 'drones', label: 'Drones or aerial equipment' },
+  { id: 'selfie', label: 'Selfie sticks' },
+  { id: 'fireworks', label: 'Fireworks or explosives' },
+  { id: 'lasers', label: 'Laser pointers' },
+  { id: 'megaphone', label: 'Megaphones or sound amplifiers' },
+  { id: 'flags', label: 'Large flags or banners' },
+  { id: 'chairs', label: 'Chairs or furniture' },
+  { id: 'skateboards', label: 'Skateboards, scooters, or bicycles' },
+  { id: 'markers', label: 'Permanent markers or spray paint' },
+  { id: 'instruments', label: 'Musical instruments' },
+  { id: 'flammable', label: 'Flammable materials' }
+];

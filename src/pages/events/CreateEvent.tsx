@@ -51,9 +51,9 @@ const CreateEvent = () => {
 
   // const navigate = useNavigate();
   const location = useLocation();
-
+  const navigate = useNavigate()
   // Show scroll top button state
-  const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
+  // const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
 
   // Current step tracking (synced with EventContext)
   const [currentStep, setCurrentStep] = useState<EventCreationStep>(eventContextCurrentStep);
@@ -78,14 +78,14 @@ const CreateEvent = () => {
   }, [location.hash, setActiveRoute, eventStepStatuses]);
 
   // Handle scroll to detect when to show the scroll-to-top button
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     setShowScrollTop(window.scrollY > 300);
+  //   };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  //   window.addEventListener('scroll', handleScroll);
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, []);
 
   // Handle step change
   const handleStepClick = (step: EventCreationStep) => {
@@ -93,11 +93,11 @@ const CreateEvent = () => {
       setCurrentStep(step);
 
       // Update URL hash without page reload
-      window.history.pushState(null, '', `#${step}`);
+      // window.history.pushState(null, '', `#${step}`);
 
       // Update step statuses
-      const updateStatuses = {...eventStepStatuses};
-      
+      const updateStatuses = { ...eventStepStatuses };
+
       Object.keys(updateStatuses).forEach(key => {
         const stepKey = key as EventCreationStep;
         if (stepKey === step) {
@@ -106,32 +106,34 @@ const CreateEvent = () => {
           updateStatuses[stepKey].status = 'complete';
         }
       });
-      
+
+      navigate(`/events/create#${step}`)
+
       setEventStepStatuses(updateStatuses);
-   
+
     }
   };
 
   // Mark current step as complete and move to next step
   const completeStep = (nextStep: EventCreationStep) => {
     // Update step statuses
-    const updateStatuses = {...eventStepStatuses};
+    const updateStatuses = { ...eventStepStatuses };
     updateStatuses[currentStep] = { ...eventStepStatuses[currentStep], status: 'complete' };
     updateStatuses[nextStep] = { ...eventStepStatuses[nextStep], status: 'current', isClickable: true };
-    
+
     setEventStepStatuses(updateStatuses);
 
     // Update URL hash
-    window.history.pushState(null, '', `#${nextStep}`);
-
+    // window.history.pushState(null, '', `/events/create#${nextStep}`);
+    navigate(`/events/create#${nextStep}`)
     setCurrentStep(nextStep);
   };
 
   // Enable all steps for reviewing or editing after event creation
   const enableAllSteps = () => {
     // Update step statuses
-    const updateStatuses = {...eventStepStatuses};
-    
+    const updateStatuses = { ...eventStepStatuses };
+
     Object.keys(updateStatuses).forEach(key => {
       const stepKey = key as EventCreationStep;
       updateStatuses[stepKey].isClickable = true;
@@ -139,7 +141,7 @@ const CreateEvent = () => {
         updateStatuses[stepKey].status = 'complete';
       }
     });
-    
+
     setEventStepStatuses(updateStatuses);
 
     // Set editing mode to true so all steps are accessible
@@ -249,7 +251,9 @@ const CreateEvent = () => {
     }, 1500);
   };
 
-  
+
+  console.log(dates);
+
   // Render the current step content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -275,7 +279,7 @@ const CreateEvent = () => {
               ...d,
               type: d.dateType === 'multiple' ? 'single' : d.dateType
             }))}
-            venues={venues}
+            // venues={venues}
             onSubmit={handleDatesSubmit}
             onBack={() => handleStepClick('venues')}
           />
@@ -284,12 +288,12 @@ const CreateEvent = () => {
         return (
           <TimeSlotStep
             timeSlots={timeSlots}
-            dates={dates.map(d => ({
-              ...d,
-              type: d.dateType === 'multiple' ? 'single' : d.dateType
-            }))}
-            venues={venues}
-            artists={artists}
+            // dates={dates.map(d => ({
+            //   ...d,
+            //   type: d.dateType === 'multiple' ? 'single' : d.dateType
+            // }))}
+            // venues={venues}
+            // artists={artists}
             onSubmit={handleTimeSlotSubmit}
             onBack={() => handleStepClick('dates')}
           />
@@ -297,19 +301,8 @@ const CreateEvent = () => {
       case 'tickets':
         return (
           <TicketStep
-            tickets={tickets.map(t => ({
-              ...t,
-              ticketType: t.ticketType || 'standard',
-              isAllDates: t.isAllDates || false,
-              availableDateIds: t.availableDateIds || [],
-              isAllTimeSlots: t.isAllTimeSlots || false,
-              availableTimeSlotIds: t.availableTimeSlotIds || [],
-              isLimited: t.isLimited || false
-            })) as TicketFormValues[]}
-            dates={dates.map(d => ({
-              ...d,
-              type: d.dateType === 'multiple' ? 'single' : d.dateType
-            }))}
+            tickets={tickets}
+            dates={dates}
             timeSlots={timeSlots}
             venues={venues}
             onSubmit={handleTicketSubmit}
@@ -481,7 +474,7 @@ const CreateEvent = () => {
           </Card>
         </div>
       </div>
-   
+
     </div>
   );
 };

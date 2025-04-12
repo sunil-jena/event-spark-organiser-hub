@@ -26,44 +26,28 @@ import { v4 as uuidv4 } from 'uuid';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { DatePickerCalendar } from './DatePickerCalendar';
-import { VenueFormValues } from './VenueStep';
+import { DateFormValues } from './types';
 
 /**
- * Helper functions to convert between Date and numeric format (ddMMyyyy).
- * We store dates as numbers so that, for example, April 2, 1999 becomes 02041999.
+ * Utility functions to convert between JavaScript Date and numeric format (ddMMyyyy).
+ * For example, April 2, 1999 becomes 02041999.
  */
 const formatDateNumber = (date: Date): number => {
-  // Format as "ddMMyyyy" and convert to number.
   return Number(format(date, 'ddMMyyyy'));
 };
 
 const parseDateNumber = (dateNumber: number): Date => {
-  // Convert the numeric date to an 8-digit string and then create a Date object.
   const str = dateNumber.toString().padStart(8, '0');
   const day = parseInt(str.slice(0, 2), 10);
-  const month = parseInt(str.slice(2, 4), 10) - 1; // Date() months are 0-indexed.
+  const month = parseInt(str.slice(2, 4), 10) - 1; // Month is 0-indexed
   const year = parseInt(str.slice(4, 8), 10);
   return new Date(year, month, day);
 };
 
-/**
- * Update the DateFormValues interface so that dates are stored as numbers.
- */
-export interface DateFormValues {
-  id: string;
-  type: 'single' | 'range' | 'recurring';
-  startDate: number;           // Stored as ddMMyyyy number format.
-  endDate?: number;
-  recurringType?: 'daily' | 'weekly' | 'monthly';
-  recurringUntil?: number;
-  recurringDays?: number[];    // 0 = Sunday, 1 = Monday, etc.
-  venueId?: string;
-  notes?: string;
-}
-
 interface DateStepProps {
   dates?: DateFormValues[];
-  venues: VenueFormValues[];
+  // For simplicity the venue type here includes basic fields.
+  // venues: { id: string; name: string; tba?: boolean; city?: string }[];
   onSubmit: (dates: DateFormValues[]) => void;
   onBack: () => void;
 }
@@ -104,45 +88,53 @@ const validationSchema = Yup.object().shape({
   }),
 });
 
-export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) => {
+export const DateStep: React.FC<DateStepProps> = ({ dates = [], onSubmit, onBack }) => {
   const { toast } = useToast();
-  const [dateList, setDateList] = React.useState<DateFormValues[]>([]);
+  const [dateList, setDateList] = React.useState<DateFormValues[]>([...dates]);
   const [dateType, setDateType] = React.useState<'single' | 'range' | 'recurring'>('single');
   const [showStartCalendar, setShowStartCalendar] = React.useState(false);
   const [showEndCalendar, setShowEndCalendar] = React.useState(false);
   const [showUntilCalendar, setShowUntilCalendar] = React.useState(false);
 
-  // Set initial form values with dates as numbers.
+  // Set initial form values (with dates stored as numbers)
   const initialValues: DateFormValues = {
     id: uuidv4(),
+    venueId: '',
     type: 'single',
+    dateType: 'single',
+    dates: [],
     startDate: formatDateNumber(new Date()),
-    venueId: ''
+    isDateRange: false,
+    isSingleDay: true,
   };
 
   const formik = useFormik({
     initialValues,
     validationSchema,
-    onSubmit: (values) => {
+    onSubmit: () => {
       handleAddDate();
     },
     validateOnChange: false,
     validateOnBlur: false,
   });
 
+  // When the date type changes (single, range, or recurring), reset the form but preserve the venue.
   useEffect(() => {
-    // When dateType changes, reset the form but keep the current venue selection.
     const venueId = formik.values.venueId;
     formik.resetForm({
       values: {
         id: uuidv4(),
+        venueId,
         type: dateType,
+        dateType: dateType,
+        dates: [],
         startDate: formatDateNumber(new Date()),
         endDate: dateType === 'range' ? formatDateNumber(addDays(new Date(), 3)) : undefined,
+        isDateRange: dateType === 'range',
+        isSingleDay: dateType === 'single',
         recurringType: dateType === 'recurring' ? 'weekly' : undefined,
         recurringUntil: dateType === 'recurring' ? formatDateNumber(addWeeks(new Date(), 8)) : undefined,
         recurringDays: dateType === 'recurring' ? [1, 3, 5] : undefined,
-        venueId
       }
     });
   }, [dateType]);
@@ -153,24 +145,28 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
   };
 
   const handleAddDate = () => {
-    // Create a date object to add (ensuring the type matches the current selection).
-    const dateToAdd = { ...formik.values, type: dateType };
-    // Validate the form before adding.
+    // Create the date object (ensuring the type and dateType are updated)
+    const dateToAdd: DateFormValues = { ...formik.values, type: dateType, dateType };
+    // Validate then add to the list if there are no errors.
     formik.validateForm().then(errors => {
       if (Object.keys(errors).length === 0) {
         setDateList([...dateList, dateToAdd]);
-        // Reset form but keep the venue selection.
+        // Reset the form while preserving the venue selection.
         const venueId = formik.values.venueId;
         formik.resetForm({
           values: {
             id: uuidv4(),
+            venueId,
             type: dateType,
+            dateType: dateType,
+            dates: [],
             startDate: formatDateNumber(new Date()),
             endDate: dateType === 'range' ? formatDateNumber(addDays(new Date(), 3)) : undefined,
+            isDateRange: dateType === 'range',
+            isSingleDay: dateType === 'single',
             recurringType: dateType === 'recurring' ? 'weekly' : undefined,
             recurringUntil: dateType === 'recurring' ? formatDateNumber(addWeeks(new Date(), 8)) : undefined,
             recurringDays: dateType === 'recurring' ? [1, 3, 5] : undefined,
-            venueId
           }
         });
         toast({
@@ -201,11 +197,11 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
     onSubmit(dateList);
   };
 
-  // Calendar selection handlers that convert Date values to our numeric format.
+  // Calendar selection handlers (convert Date to our numeric format)
   const handleStartDateSelect = (date: Date) => {
     formik.setFieldValue('startDate', formatDateNumber(date));
     setShowStartCalendar(false);
-    // If an end date exists and it is before the newly selected start date, update the end date.
+    // If an end date exists and the new start is after it, update the end date.
     if (formik.values.endDate && isBefore(parseDateNumber(formik.values.endDate), date)) {
       formik.setFieldValue('endDate', formatDateNumber(addDays(date, 1)));
     }
@@ -221,18 +217,17 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
     setShowUntilCalendar(false);
   };
 
-  // Format the display string by converting stored numbers back into Dates.
+  // Helper to format the display string, converting numeric dates back to Date objects.
   const formatDateDisplay = (date: DateFormValues) => {
-    const venueName = venues.find(v => v.id === date.venueId)?.name || 'No venue selected';
     switch (date.type) {
       case 'single':
-        return `${format(parseDateNumber(date.startDate), 'MMMM d, yyyy')} at ${venueName}`;
+        return `${format(parseDateNumber(date.startDate), 'MMMM d, yyyy')} `;
       case 'range':
         return `${format(parseDateNumber(date.startDate), 'MMM d')} - ${format(
           parseDateNumber(date.endDate!),
           'MMM d, yyyy'
-        )} at ${venueName}`;
-      case 'recurring':
+        )}`;
+      case 'recurring': {
         const frequencyText =
           date.recurringType === 'daily'
             ? 'Daily'
@@ -242,7 +237,8 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
         return `${frequencyText} from ${format(
           parseDateNumber(date.startDate),
           'MMM d'
-        )} until ${format(parseDateNumber(date.recurringUntil!), 'MMM d, yyyy')} at ${venueName}`;
+        )} until ${format(parseDateNumber(date.recurringUntil!), 'MMM d, yyyy')} }`;
+      }
       default:
         return 'Unknown date format';
     }
@@ -262,7 +258,6 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
     <Card className="shadow-md">
       <CardContent className="pt-6">
         <h2 className="text-xl font-semibold mb-4 text-[#24005b]">Event Dates</h2>
-
         <Tabs defaultValue="single" onValueChange={handleDateTypeChange}>
           <TabsList className="mb-4 bg-[#24005b]/10">
             <TabsTrigger value="single" className="data-[state=active]:bg-[#24005b] data-[state=active]:text-white">
@@ -306,8 +301,7 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                   </div>
                 )}
               </div>
-
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="venueId">Venue</Label>
                 <Select value={formik.values.venueId} onValueChange={(value) => formik.setFieldValue('venueId', value)}>
                   <SelectTrigger id="venueId" className="border bg-white">
@@ -321,7 +315,7 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </div>
           </TabsContent>
 
@@ -355,7 +349,6 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                   </div>
                 )}
               </div>
-
               <div className="space-y-2 relative">
                 <Label htmlFor="rangeEndDate">End Date</Label>
                 <div className="relative">
@@ -384,8 +377,7 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                   </div>
                 )}
               </div>
-
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="rangeVenueId">Venue</Label>
                 <Select value={formik.values.venueId} onValueChange={(value) => formik.setFieldValue('venueId', value)}>
                   <SelectTrigger id="rangeVenueId" className="border bg-white">
@@ -399,7 +391,7 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </div>
           </TabsContent>
 
@@ -433,7 +425,6 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                   </div>
                 )}
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="recurringType">Repeats</Label>
                 <Select
@@ -451,7 +442,6 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                 </Select>
                 {formik.errors.recurringType && <p className="text-red-500 text-sm">{formik.errors.recurringType as string}</p>}
               </div>
-
               {formik.values.recurringType === 'weekly' && (
                 <div className="space-y-2 sm:col-span-2">
                   <Label>Repeats On</Label>
@@ -462,8 +452,8 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                         type="button"
                         variant={formik.values.recurringDays?.includes(parseInt(day.value)) ? "default" : "outline"}
                         className={`h-10 w-10 p-0 rounded-full ${formik.values.recurringDays?.includes(parseInt(day.value))
-                            ? "bg-[#24005b] hover:bg-[#24005b]/90"
-                            : "hover:bg-[#24005b]/10"
+                          ? "bg-[#24005b] hover:bg-[#24005b]/90"
+                          : "hover:bg-[#24005b]/10"
                           }`}
                         onClick={() => {
                           const dayNum = parseInt(day.value);
@@ -481,7 +471,6 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                   </div>
                 </div>
               )}
-
               <div className="space-y-2 relative">
                 <Label htmlFor="recurringUntil">Repeats Until</Label>
                 <div className="relative">
@@ -498,11 +487,7 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                 {showUntilCalendar && (
                   <div className="relative z-10 mt-1">
                     <DatePickerCalendar
-                      selected={
-                        formik.values.recurringUntil
-                          ? parseDateNumber(formik.values.recurringUntil)
-                          : addWeeks(parseDateNumber(formik.values.startDate), 4)
-                      }
+                      selected={formik.values.recurringUntil ? parseDateNumber(formik.values.recurringUntil) : addWeeks(parseDateNumber(formik.values.startDate), 4)}
                       onSelect={handleUntilDateSelect}
                       onClose={() => setShowUntilCalendar(false)}
                       minDate={addDays(parseDateNumber(formik.values.startDate), 1)}
@@ -510,8 +495,7 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                   </div>
                 )}
               </div>
-
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="recurringVenueId">Venue</Label>
                 <Select value={formik.values.venueId} onValueChange={(value) => formik.setFieldValue('venueId', value)}>
                   <SelectTrigger id="recurringVenueId" className="border bg-white">
@@ -525,7 +509,7 @@ export const DateStep: React.FC<DateStepProps> = ({ venues, onSubmit, onBack }) 
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </div>
           </TabsContent>
         </Tabs>

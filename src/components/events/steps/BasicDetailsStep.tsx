@@ -738,9 +738,8 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
           <div className="flex justify-end mt-8">
             <Button
               type="submit"
-              className="flex items-center gap-2 px-6 py-2"
+              className="flex items-center gap-2 px-6 py-2 bg-primary"
               disabled={!formik.isValid || formik.isSubmitting}
-              style={{ backgroundColor: "#24005b" }}
             >
               Next: Venues <ChevronRight className="h-4 w-4" />
             </Button>

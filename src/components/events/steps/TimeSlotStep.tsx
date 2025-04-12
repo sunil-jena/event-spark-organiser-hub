@@ -23,8 +23,6 @@ export interface TimeSlotFormValues {
   id: string;
   startTime: string;
   endTime: string;
-  dateId: string;
-  venueId: string;
   gateOpensBeforeStart: boolean;
   gateOpenType?: 'minute' | 'hour';
   gateOpenDuration?: number;
@@ -36,9 +34,9 @@ export interface TimeSlotFormValues {
 
 interface TimeSlotStepProps {
   timeSlots: TimeSlotFormValues[];
-  dates: DateFormValues[];
-  venues: VenueFormValues[];
-  artists: ArtistFormValues[];
+  // dates: DateFormValues[];
+  // venues: VenueFormValues[];
+  // artists: ArtistFormValues[];
   onSubmit: (timeSlots: TimeSlotFormValues[]) => void;
   onBack: () => void;
 }
@@ -78,38 +76,40 @@ const timeSlotValidationSchema = Yup.object().shape({
         return endH * 60 + endM > startH * 60 + startM;
       }
     ),
-  dateId: Yup.string().required('Date is required'),
-  venueId: Yup.string().required('Venue is required'),
+  // dateId: Yup.string().required('Date is required'),
+  // venueId: Yup.string().required('Venue is required'),
 });
 
-const getDateDisplay = (dateId: string, dates: DateFormValues[]) => {
-  const date = dates.find(d => d.id === dateId);
-  return date ? format(date.startDate, 'PPP') : 'Unknown date';
-};
+// const getDateDisplay = (dateId: string, dates: DateFormValues[]) => {
+//   const date = dates.find(d => d.id === dateId);
+//   return date ? format(date.startDate, 'PPP') : 'Unknown date';
+// };
 
-const getVenueDisplay = (venueId: string, venues: VenueFormValues[]) => {
-  const venue = venues.find(v => v.id === venueId);
-  return venue ? (venue.tba ? `TBA Venue in ${venue.city}` : venue.name) : 'Unknown venue';
-};
+// const getVenueDisplay = (venueId: string, venues: VenueFormValues[]) => {
+//   const venue = venues.find(v => v.id === venueId);
+//   return venue ? (venue.tba ? `TBA Venue in ${venue.city}` : venue.name) : 'Unknown venue';
+// };
 
 export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
   timeSlots,
-  dates,
-  venues,
-  artists,
+  // dates,
+  // venues,
   onSubmit,
   onBack
 }) => {
   const [timeSlotList, setTimeSlotList] = React.useState<TimeSlotFormValues[]>(timeSlots);
 
+  // Generate minute options from 1 to 59
+  const minuteOptions = Array.from({ length: 59 }, (_, i) => i + 1);
+
+  // Generate hour options from 1 to 4
+  const hourOptions = [1, 2, 3, 4];
   // Formik hook to manage the new time slot form.
   const formik = useFormik<TimeSlotFormValues>({
     initialValues: {
       id: uuidv4(),
       startTime: '09:00',
       endTime: '17:00',
-      dateId: '',
-      venueId: '',
       gateOpensBeforeStart: false,
       gateOpenType: undefined,
       gateOpenDuration: undefined,
@@ -123,8 +123,6 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
           id: uuidv4(),
           startTime: '09:00',
           endTime: '17:00',
-          dateId: dates.length > 0 ? dates[0].id : '',
-          venueId: venues.length > 0 ? venues[0].id : '',
           gateOpensBeforeStart: false,
           gateOpenType: undefined,
           gateOpenDuration: undefined,
@@ -183,7 +181,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
             Add New Time Slot
           </h3>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {/* Start Time */}
             <div className="space-y-2">
               <Label htmlFor="startTime">Start Time</Label>
@@ -227,7 +225,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
             </div>
 
             {/* Date Selection */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="dateId">Date</Label>
               <Select
                 value={formik.values.dateId}
@@ -246,10 +244,10 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
                 </SelectContent>
               </Select>
               {formik.errors.dateId && <p className="text-red-500 text-sm">{formik.errors.dateId}</p>}
-            </div>
+            </div> */}
 
             {/* Venue Selection */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="venueId">Venue</Label>
               <Select
                 value={formik.values.venueId}
@@ -267,7 +265,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
                 </SelectContent>
               </Select>
               {formik.errors.venueId && <p className="text-red-500 text-sm">{formik.errors.venueId}</p>}
-            </div>
+            </div> */}
           </div>
 
           {/* Gate Opens Option */}
@@ -302,13 +300,39 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
 
                 <div className="space-y-2">
                   <Label htmlFor="gateOpenDuration">Duration</Label>
-                  <Input
-                    id="gateOpenDuration"
-                    type="number"
-                    min="1"
-                    value={formik.values.gateOpenDuration || 1}
-                    onChange={(e) => formik.setFieldValue('gateOpenDuration', parseInt(e.target.value) || 0)}
-                  />
+                  {formik.values.gateOpenType === 'minute' ? (
+                    <Select
+                      value={formik.values.gateOpenDuration?.toString() || '15'}
+                      onValueChange={(value) => formik.setFieldValue('gateOpenDuration', parseInt(value))}
+                    >
+                      <SelectTrigger id="gateOpenDuration">
+                        <SelectValue placeholder="Select minutes" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {minuteOptions.map((minute) => (
+                          <SelectItem key={`minute-${minute}`} value={minute.toString()}>
+                            {minute} {minute === 1 ? 'minute' : 'minutes'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Select
+                      value={formik.values.gateOpenDuration?.toString() || '1'}
+                      onValueChange={(value) => formik.setFieldValue('gateOpenDuration', parseInt(value))}
+                    >
+                      <SelectTrigger id="gateOpenDuration">
+                        <SelectValue placeholder="Select hours" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {hourOptions.map((hour) => (
+                          <SelectItem key={`hour-${hour}`} value={hour.toString()}>
+                            {hour} {hour === 1 ? 'hour' : 'hours'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               </div>
             )}
@@ -332,8 +356,8 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
                       <h4 className="font-medium">
                         {startTimeOption?.label} - {endTimeOption?.label}
                       </h4>
-                      <p className="text-sm text-gray-600">{getDateDisplay(slot.dateId, dates)}</p>
-                      <p className="text-xs text-gray-500">Venue: {getVenueDisplay(slot.venueId, venues)}</p>
+                      {/* <p className="text-sm text-gray-600">{getDateDisplay(slot.dateId, dates)}</p>
+                      <p className="text-xs text-gray-500">Venue: {getVenueDisplay(slot.venueId, venues)}</p> */}
                       {slot.gateOpensBeforeStart && (
                         <p className="text-xs text-gray-500">
                           Gate opens {slot.gateOpenDuration} {slot.gateOpenType === 'hour' ? 'hour(s)' : 'minute(s)'} before start
