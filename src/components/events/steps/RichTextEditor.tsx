@@ -4,50 +4,56 @@ import 'react-quill/dist/quill.snow.css';
 import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
-    value: string;
-    onChange: (value: string) => void;
-    placeholder?: string;
-    className?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
 }
 
 const modules = {
-    toolbar: [
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        [{ indent: '-1' }, { indent: '+1' }],
-        [{ align: [] }],
-        ['link'],
-        ['clean']
-    ]
+  toolbar: [
+    [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    [{ indent: '-1' }, { indent: '+1' }],
+    [{ align: [] }],
+    ['link'],
+    ['clean'],
+  ],
 };
 
 const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'indent',
-    'link', 'align'
+  'header',
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'list',
+  'bullet',
+  'indent',
+  'link',
+  'align',
 ];
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
-    value,
-    onChange,
-    placeholder = 'Start typing...',
-    className
+  value,
+  onChange,
+  placeholder = 'Start typing...',
+  className,
 }) => {
-    return (
-        <div className={cn("rich-text-editor", className)}>
-            <ReactQuill
-                theme="snow"
-                value={value || ''}
-                onChange={onChange}
-                modules={modules}
-                formats={formats}
-                placeholder={placeholder}
-                className="min-h-[200px]"
-            />
-            <style>
-                {`
+  return (
+    <div className={cn('rich-text-editor', className)}>
+      <ReactQuill
+        theme='snow'
+        value={value || ''}
+        onChange={onChange}
+        modules={modules}
+        formats={formats}
+        placeholder={placeholder}
+        className='min-h-[200px]'
+      />
+      <style>
+        {`
         .ql-container {
           min-height: 200px;
           border-bottom-left-radius: 0.5rem;
@@ -65,7 +71,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           font-size: 1rem;
         }
         `}
-            </style>
-        </div>
-    );
+      </style>
+    </div>
+  );
 };

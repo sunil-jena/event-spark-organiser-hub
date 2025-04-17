@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -80,7 +79,7 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 262 91.2% 73%;
-    
+
     --sidebar-background: 262 83% 40%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 262 83% 60%;
@@ -104,7 +103,9 @@
 
 /* Form field styles */
 .form-field-focus {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .form-field-focus:focus-within {
@@ -150,7 +151,8 @@
   transform: rotateY(180deg);
 }
 
-.card-flip-front, .card-flip-back {
+.card-flip-front,
+.card-flip-back {
   backface-visibility: hidden;
 }
 

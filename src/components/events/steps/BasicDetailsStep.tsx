@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -7,30 +6,44 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ChevronRight, X, Globe, Lock, Users, Tag, Calendar, Video, MessageCircle, Star, MapPin, Baby, Dog } from 'lucide-react';
+import {
+  ChevronRight,
+  X,
+  Globe,
+  Lock,
+  Users,
+  Tag,
+  Calendar,
+  Video,
+  MessageCircle,
+  Star,
+  MapPin,
+  Baby,
+  Dog,
+} from 'lucide-react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "@/components/ui/command";
+} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { BasicDetailsFormValues } from './types';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { toast } from 'sonner';
 // import { Switch } from "@/components/ui/switch";
 // import { cn } from "@/lib/utils";
 import { Checkbox } from '@/components/ui/checkbox';
@@ -122,16 +135,17 @@ export const BasicDetailsSchema = Yup.object().shape({
     .min(5, 'Title must be at least 5 characters')
     .max(100, 'Title must be less than 100 characters')
     .required('Title is required'),
-  category: Yup.string()
-    .required('Category is required'),
+  category: Yup.string().required('Category is required'),
   description: Yup.string()
     .min(20, 'Description must be at least 20 characters')
     .required('Description is required'),
-  videoConferenceUrl: Yup.string()
-    .when('isOnline', {
-      is: true,
-      then: (schema) => schema.url('Please enter a valid URL').required('Video conference URL is required for online events'),
-    }),
+  videoConferenceUrl: Yup.string().when('isOnline', {
+    is: true,
+    then: (schema) =>
+      schema
+        .url('Please enter a valid URL')
+        .required('Video conference URL is required for online events'),
+  }),
 });
 
 interface BasicDetailsStepProps {
@@ -139,7 +153,10 @@ interface BasicDetailsStepProps {
   onSubmit: (values: BasicDetailsFormValues) => void;
 }
 
-export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValues, onSubmit }) => {
+export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({
+  initialValues,
+  onSubmit,
+}) => {
   const formik = useFormik({
     initialValues: {
       ...initialValues,
@@ -150,7 +167,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
     onSubmit: (values) => {
       // Extract helper fields before submission
       const { tagInput, highlightInput, ...formData } = values;
-      toast.success("Basic details saved successfully!");
+      toast.success('Basic details saved successfully!');
       onSubmit(formData);
     },
   });
@@ -165,20 +182,32 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
   };
 
   const removeTag = (tagToRemove: string) => {
-    formik.setFieldValue('tags', formik.values.tags.filter(tag => tag !== tagToRemove));
+    formik.setFieldValue(
+      'tags',
+      formik.values.tags.filter((tag) => tag !== tagToRemove)
+    );
   };
 
   // Highlight handling functions
   const addHighlight = () => {
     const newHighlight = formik?.values?.highlightInput.trim();
-    if (newHighlight && !formik?.values?.eventHighlights?.includes(newHighlight)) {
-      formik.setFieldValue('eventHighlights', [...formik.values.eventHighlights, newHighlight]);
+    if (
+      newHighlight &&
+      !formik?.values?.eventHighlights?.includes(newHighlight)
+    ) {
+      formik.setFieldValue('eventHighlights', [
+        ...formik.values.eventHighlights,
+        newHighlight,
+      ]);
       formik.setFieldValue('highlightInput', '');
     }
   };
 
   const removeHighlight = (highlightToRemove: string) => {
-    formik.setFieldValue('eventHighlights', formik.values.eventHighlights.filter(h => h !== highlightToRemove));
+    formik.setFieldValue(
+      'eventHighlights',
+      formik.values.eventHighlights.filter((h) => h !== highlightToRemove)
+    );
   };
 
   const addLanguage = (lang: string) => {
@@ -188,60 +217,70 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
   };
 
   const removeLanguage = (langToRemove: string) => {
-    formik.setFieldValue('language', formik.values.language.filter(lang => lang !== langToRemove));
+    formik.setFieldValue(
+      'language',
+      formik.values.language.filter((lang) => lang !== langToRemove)
+    );
   };
 
   const [categoryOpen, setCategoryOpen] = useState<boolean>(false);
 
   return (
-    <Card className="shadow-lg border-gray-200">
-      <CardContent className="pt-6">
+    <Card className='shadow-lg border-gray-200'>
+      <CardContent className='pt-6'>
         <form onSubmit={formik.handleSubmit}>
-          <h2 className="text-2xl font-bold mb-6 text-primary">Basic Event Details</h2>
+          <h2 className='text-2xl font-bold mb-6 text-primary'>
+            Basic Event Details
+          </h2>
 
           {/* Main Information Section */}
-          <div className="grid gap-6 sm:grid-cols-2 mb-8">
+          <div className='grid gap-6 sm:grid-cols-2 mb-8'>
             {/* Event Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-sm font-medium">
-                Event Title <span className="text-red-500">*</span>
+            <div className='space-y-2'>
+              <Label htmlFor='title' className='text-sm font-medium'>
+                Event Title <span className='text-red-500'>*</span>
               </Label>
               <Input
-                id="title"
-                name="title"
-                placeholder="Enter captivating event title"
+                id='title'
+                name='title'
+                placeholder='Enter captivating event title'
                 value={formik.values.title}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={`transition-all ${formik.errors.title && formik.touched.title ? "border-red-500 focus:ring-red-500" : "focus:ring-primary"}`}
+                className={`transition-all ${formik.errors.title && formik.touched.title ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'}`}
               />
               {formik.errors.title && formik.touched.title && (
-                <div className="text-red-500 text-sm">{formik.errors.title}</div>
+                <div className='text-red-500 text-sm'>
+                  {formik.errors.title}
+                </div>
               )}
             </div>
 
             {/* Category - Now with search functionality */}
-            <div className="space-y-2">
-              <Label htmlFor="category" className="text-sm font-medium">
-                Category <span className="text-red-500">*</span>
+            <div className='space-y-2'>
+              <Label htmlFor='category' className='text-sm font-medium'>
+                Category <span className='text-red-500'>*</span>
               </Label>
               <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
                 <PopoverTrigger asChild>
                   <Button
-                    variant="outline"
-                    role="combobox"
+                    variant='outline'
+                    role='combobox'
                     aria-expanded={categoryOpen}
-                    className={`w-full justify-between ${formik.errors.category && formik.touched.category ? "border-red-500" : ""}`}
+                    className={`w-full justify-between ${formik.errors.category && formik.touched.category ? 'border-red-500' : ''}`}
                   >
                     {formik.values.category
-                      ? EVENT_CATEGORIES.find((category) => category.value === formik.values.category)?.label
-                      : "Select event category"}
-                    <ChevronRight className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      ? EVENT_CATEGORIES.find(
+                          (category) =>
+                            category.value === formik.values.category
+                        )?.label
+                      : 'Select event category'}
+                    <ChevronRight className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
+                <PopoverContent className='w-full p-0'>
                   <Command>
-                    <CommandInput placeholder="Search category..." />
+                    <CommandInput placeholder='Search category...' />
                     <CommandEmpty>No category found.</CommandEmpty>
                     <CommandGroup>
                       {EVENT_CATEGORIES.map((category) => (
@@ -261,14 +300,16 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                 </PopoverContent>
               </Popover>
               {formik.errors.category && formik.touched.category && (
-                <div className="text-red-500 text-sm">{formik.errors.category}</div>
+                <div className='text-red-500 text-sm'>
+                  {formik.errors.category}
+                </div>
               )}
             </div>
 
             {/* Description */}
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="description" className="text-sm font-medium">
-                Event Description <span className="text-red-500">*</span>
+            <div className='space-y-2 sm:col-span-2'>
+              <Label htmlFor='description' className='text-sm font-medium'>
+                Event Description <span className='text-red-500'>*</span>
               </Label>
               {/* <Textarea
                 id="description"
@@ -282,14 +323,19 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
               /> */}
               <RichTextEditor
                 value={formik.values.description || ''}
-                onChange={(content) => formik.setFieldValue('description', content)}
-                placeholder="Describe your event in detail. What can attendees expect?"
+                onChange={(content) =>
+                  formik.setFieldValue('description', content)
+                }
+                placeholder='Describe your event in detail. What can attendees expect?'
               />
               {formik.errors.description && formik.touched.description && (
-                <div className="text-red-500 text-sm">{formik.errors.description}</div>
+                <div className='text-red-500 text-sm'>
+                  {formik.errors.description}
+                </div>
               )}
-              <p className="text-muted-foreground text-xs">
-                Minimum 20 characters. Provide detailed information to attract attendees.
+              <p className='text-muted-foreground text-xs'>
+                Minimum 20 characters. Provide detailed information to attract
+                attendees.
               </p>
             </div>
 
@@ -314,34 +360,68 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
           </div>
 
           {/* Event Type Section */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4 text-primary">Event Configuration</h3>
-            <div className="grid gap-6 sm:grid-cols-2">
+          <div className='mb-8'>
+            <h3 className='text-lg font-semibold mb-4 text-primary'>
+              Event Configuration
+            </h3>
+            <div className='grid gap-6 sm:grid-cols-2'>
               {/* Event Type - Public/Private - Improved for mobile */}
-              <div className="space-y-3 sm:col-span-2">
-                <Label className="text-sm font-medium">Event Visibility</Label>
+              <div className='space-y-3 sm:col-span-2'>
+                <Label className='text-sm font-medium'>Event Visibility</Label>
                 <RadioGroup
-                  className="flex flex-col sm:flex-row gap-4"
+                  className='flex flex-col sm:flex-row gap-4'
                   value={formik.values.eventType}
-                  onValueChange={(value) => formik.setFieldValue('eventType', value)}
+                  onValueChange={(value) =>
+                    formik.setFieldValue('eventType', value)
+                  }
                 >
-                  <div className="flex items-center space-x-2 bg-secondary/30 hover:bg-secondary/50 transition-colors p-3 rounded-lg flex-1 cursor-pointer" style={{ borderColor: "#24005b20" }}>
-                    <RadioGroupItem value="public" id="eventTypePublic" style={{ color: "#24005b" }} />
-                    <Label htmlFor="eventTypePublic" className="flex items-center cursor-pointer">
-                      <Globe className="h-5 w-5 mr-2" style={{ color: "#24005b" }} />
+                  <div
+                    className='flex items-center space-x-2 bg-secondary/30 hover:bg-secondary/50 transition-colors p-3 rounded-lg flex-1 cursor-pointer'
+                    style={{ borderColor: '#24005b20' }}
+                  >
+                    <RadioGroupItem
+                      value='public'
+                      id='eventTypePublic'
+                      style={{ color: '#24005b' }}
+                    />
+                    <Label
+                      htmlFor='eventTypePublic'
+                      className='flex items-center cursor-pointer'
+                    >
+                      <Globe
+                        className='h-5 w-5 mr-2'
+                        style={{ color: '#24005b' }}
+                      />
                       <div>
-                        <div className="font-medium">Public</div>
-                        <p className="text-xs text-muted-foreground">Visible to anyone on the platform</p>
+                        <div className='font-medium'>Public</div>
+                        <p className='text-xs text-muted-foreground'>
+                          Visible to anyone on the platform
+                        </p>
                       </div>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 bg-secondary/30 hover:bg-secondary/50 transition-colors p-3 rounded-lg flex-1 cursor-pointer" style={{ borderColor: "#24005b20" }}>
-                    <RadioGroupItem value="private" id="eventTypePrivate" style={{ color: "#24005b" }} />
-                    <Label htmlFor="eventTypePrivate" className="flex items-center cursor-pointer">
-                      <Lock className="h-5 w-5 mr-2" style={{ color: "#24005b" }} />
+                  <div
+                    className='flex items-center space-x-2 bg-secondary/30 hover:bg-secondary/50 transition-colors p-3 rounded-lg flex-1 cursor-pointer'
+                    style={{ borderColor: '#24005b20' }}
+                  >
+                    <RadioGroupItem
+                      value='private'
+                      id='eventTypePrivate'
+                      style={{ color: '#24005b' }}
+                    />
+                    <Label
+                      htmlFor='eventTypePrivate'
+                      className='flex items-center cursor-pointer'
+                    >
+                      <Lock
+                        className='h-5 w-5 mr-2'
+                        style={{ color: '#24005b' }}
+                      />
                       <div>
-                        <div className="font-medium">Private</div>
-                        <p className="text-xs text-muted-foreground">Only visible to invited attendees</p>
+                        <div className='font-medium'>Private</div>
+                        <p className='text-xs text-muted-foreground'>
+                          Only visible to invited attendees
+                        </p>
                       </div>
                     </Label>
                   </div>
@@ -349,20 +429,23 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
               </div>
 
               {/* Is Online */}
-              <div className="space-y-3 sm:col-span-2">
-                <div className="flex items-center space-x-2 p-4 border border-gray-200 rounded-md">
+              <div className='space-y-3 sm:col-span-2'>
+                <div className='flex items-center space-x-2 p-4 border border-gray-200 rounded-md'>
                   <Checkbox
-                    id="isOnline"
+                    id='isOnline'
                     checked={formik.values.isOnline}
-                    onCheckedChange={(checked) => formik.setFieldValue('isOnline', checked)}
-                    className="data-[state=checked]:bg-[#24005b]"
+                    onCheckedChange={(checked) =>
+                      formik.setFieldValue('isOnline', checked)
+                    }
+                    className='data-[state=checked]:bg-[#24005b]'
                   />
-                  <div className="ml-2">
-                    <Label htmlFor="isOnline" className="text-sm font-medium">
+                  <div className='ml-2'>
+                    <Label htmlFor='isOnline' className='text-sm font-medium'>
                       This is an online event
                     </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Virtual events use video conferencing platforms instead of physical venues
+                    <p className='text-xs text-muted-foreground'>
+                      Virtual events use video conferencing platforms instead of
+                      physical venues
                     </p>
                   </div>
                 </div>
@@ -370,24 +453,37 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
 
               {/* Online Event Details - Only show if isOnline is true */}
               {formik.values.isOnline && (
-                <div className="space-y-6 p-6 border border-gray-200 rounded-md sm:col-span-2">
-                  <h3 className="text-lg font-semibold">Online Event Details</h3>
+                <div className='space-y-6 p-6 border border-gray-200 rounded-md sm:col-span-2'>
+                  <h3 className='text-lg font-semibold'>
+                    Online Event Details
+                  </h3>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="videoConferenceProvider" className="text-sm font-medium">
+                  <div className='space-y-4'>
+                    <div className='space-y-2'>
+                      <Label
+                        htmlFor='videoConferenceProvider'
+                        className='text-sm font-medium'
+                      >
                         Video Conference Provider
                       </Label>
                       <Select
                         value={formik.values.videoConferenceProvider}
-                        onValueChange={value => formik.setFieldValue('videoConferenceProvider', value)}
+                        onValueChange={(value) =>
+                          formik.setFieldValue('videoConferenceProvider', value)
+                        }
                       >
-                        <SelectTrigger id="videoConferenceProvider" className="w-full">
-                          <SelectValue placeholder="Select provider" />
+                        <SelectTrigger
+                          id='videoConferenceProvider'
+                          className='w-full'
+                        >
+                          <SelectValue placeholder='Select provider' />
                         </SelectTrigger>
                         <SelectContent>
                           {VIDEO_PROVIDERS.map((provider) => (
-                            <SelectItem key={provider.value} value={provider.value}>
+                            <SelectItem
+                              key={provider.value}
+                              value={provider.value}
+                            >
                               {provider.label}
                             </SelectItem>
                           ))}
@@ -395,35 +491,47 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="videoConferenceUrl" className="text-sm font-medium">
-                        Meeting URL <span className="text-red-500">*</span>
+                    <div className='space-y-2'>
+                      <Label
+                        htmlFor='videoConferenceUrl'
+                        className='text-sm font-medium'
+                      >
+                        Meeting URL <span className='text-red-500'>*</span>
                       </Label>
                       <Input
-                        id="videoConferenceUrl"
-                        name="videoConferenceUrl"
-                        placeholder="https://..."
+                        id='videoConferenceUrl'
+                        name='videoConferenceUrl'
+                        placeholder='https://...'
                         value={formik.values.videoConferenceUrl}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        className={`transition-all ${formik.errors.videoConferenceUrl && formik.touched.videoConferenceUrl ? "border-red-500" : ""}`}
+                        className={`transition-all ${formik.errors.videoConferenceUrl && formik.touched.videoConferenceUrl ? 'border-red-500' : ''}`}
                       />
-                      {formik.errors.videoConferenceUrl && formik.touched.videoConferenceUrl && (
-                        <div className="text-red-500 text-sm">{formik.errors.videoConferenceUrl}</div>
-                      )}
-                      <p className="text-xs text-muted-foreground">
+                      {formik.errors.videoConferenceUrl &&
+                        formik.touched.videoConferenceUrl && (
+                          <div className='text-red-500 text-sm'>
+                            {formik.errors.videoConferenceUrl}
+                          </div>
+                        )}
+                      <p className='text-xs text-muted-foreground'>
                         This will be shared with attendees before the event
                       </p>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="videoConferencePassword" className="text-sm font-medium">
-                        Meeting Password <span className="text-muted-foreground text-xs">(Optional)</span>
+                    <div className='space-y-2'>
+                      <Label
+                        htmlFor='videoConferencePassword'
+                        className='text-sm font-medium'
+                      >
+                        Meeting Password{' '}
+                        <span className='text-muted-foreground text-xs'>
+                          (Optional)
+                        </span>
                       </Label>
                       <Input
-                        id="videoConferencePassword"
-                        name="videoConferencePassword"
-                        placeholder="Enter password if required"
+                        id='videoConferencePassword'
+                        name='videoConferencePassword'
+                        placeholder='Enter password if required'
                         value={formik.values.videoConferencePassword}
                         onChange={formik.handleChange}
                       />
@@ -436,38 +544,52 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
               {!formik.values.isOnline && (
                 <>
                   {/* Layout */}
-                  <div className="space-y-2">
-                    <Label htmlFor="layout" className="text-sm font-medium">Event Layout</Label>
+                  <div className='space-y-2'>
+                    <Label htmlFor='layout' className='text-sm font-medium'>
+                      Event Layout
+                    </Label>
                     <Select
                       value={formik.values.layout}
-                      onValueChange={value => formik.setFieldValue('layout', value)}
+                      onValueChange={(value) =>
+                        formik.setFieldValue('layout', value)
+                      }
                     >
-                      <SelectTrigger id="layout" className="w-full">
-                        <SelectValue placeholder="Select venue layout" />
+                      <SelectTrigger id='layout' className='w-full'>
+                        <SelectValue placeholder='Select venue layout' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="indoor">Indoor</SelectItem>
-                        <SelectItem value="outdoor">Outdoor</SelectItem>
-                        <SelectItem value="hybrid">Hybrid (Indoor & Outdoor)</SelectItem>
+                        <SelectItem value='indoor'>Indoor</SelectItem>
+                        <SelectItem value='outdoor'>Outdoor</SelectItem>
+                        <SelectItem value='hybrid'>
+                          Hybrid (Indoor & Outdoor)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      <MapPin className="inline h-3 w-3 mr-1" />
+                    <p className='text-xs text-muted-foreground'>
+                      <MapPin className='inline h-3 w-3 mr-1' />
                       Select the physical arrangement of your event venue
                     </p>
                   </div>
 
                   {/* Seating Arrangement */}
-                  <div className="space-y-2">
-                    <Label htmlFor="seatingArrangementOption" className="text-sm font-medium">
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='seatingArrangementOption'
+                      className='text-sm font-medium'
+                    >
                       Seating Arrangement
                     </Label>
                     <Select
                       value={formik.values.seatingArrangementOption}
-                      onValueChange={value => formik.setFieldValue('seatingArrangementOption', value)}
+                      onValueChange={(value) =>
+                        formik.setFieldValue('seatingArrangementOption', value)
+                      }
                     >
-                      <SelectTrigger id="seatingArrangementOption" className="w-full">
-                        <SelectValue placeholder="How will attendees be seated?" />
+                      <SelectTrigger
+                        id='seatingArrangementOption'
+                        className='w-full'
+                      >
+                        <SelectValue placeholder='How will attendees be seated?' />
                       </SelectTrigger>
                       <SelectContent>
                         {SEATING_ARRANGEMENTS.map((option) => (
@@ -480,16 +602,21 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                   </div>
 
                   {/* Kid Friendly */}
-                  <div className="space-y-2">
-                    <Label htmlFor="kidFriendly" className="text-sm font-medium">
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='kidFriendly'
+                      className='text-sm font-medium'
+                    >
                       Kid Friendly
                     </Label>
                     <Select
                       value={formik.values.kidFriendly}
-                      onValueChange={value => formik.setFieldValue('kidFriendly', value)}
+                      onValueChange={(value) =>
+                        formik.setFieldValue('kidFriendly', value)
+                      }
                     >
-                      <SelectTrigger id="kidFriendly" className="w-full">
-                        <SelectValue placeholder="Is the event kid friendly?" />
+                      <SelectTrigger id='kidFriendly' className='w-full'>
+                        <SelectValue placeholder='Is the event kid friendly?' />
                       </SelectTrigger>
                       <SelectContent>
                         {YES_NO_OPTIONS.map((option) => (
@@ -499,23 +626,28 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      <Baby className="inline h-3 w-3 mr-1" />
+                    <p className='text-xs text-muted-foreground'>
+                      <Baby className='inline h-3 w-3 mr-1' />
                       Specify if the event is suitable for children
                     </p>
                   </div>
 
                   {/* Pet Friendly */}
-                  <div className="space-y-2">
-                    <Label htmlFor="petFriendly" className="text-sm font-medium">
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='petFriendly'
+                      className='text-sm font-medium'
+                    >
                       Pet Friendly
                     </Label>
                     <Select
                       value={formik.values.petFriendly}
-                      onValueChange={value => formik.setFieldValue('petFriendly', value)}
+                      onValueChange={(value) =>
+                        formik.setFieldValue('petFriendly', value)
+                      }
                     >
-                      <SelectTrigger id="petFriendly" className="w-full">
-                        <SelectValue placeholder="Are pets allowed?" />
+                      <SelectTrigger id='petFriendly' className='w-full'>
+                        <SelectValue placeholder='Are pets allowed?' />
                       </SelectTrigger>
                       <SelectContent>
                         {YES_NO_OPTIONS.map((option) => (
@@ -525,8 +657,8 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      <Dog className="inline h-3 w-3 mr-1" />
+                    <p className='text-xs text-muted-foreground'>
+                      <Dog className='inline h-3 w-3 mr-1' />
                       Specify if attendees can bring pets
                     </p>
                   </div>
@@ -534,14 +666,18 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
               )}
 
               {/* Age Group - Always show regardless of online/offline */}
-              <div className="space-y-2">
-                <Label htmlFor="ageGroup" className="text-sm font-medium">Minimum Age Requirement</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='ageGroup' className='text-sm font-medium'>
+                  Minimum Age Requirement
+                </Label>
                 <Select
                   value={formik?.values?.ageGroup?.toString()}
-                  onValueChange={value => formik.setFieldValue('ageGroup', parseInt(value))}
+                  onValueChange={(value) =>
+                    formik.setFieldValue('ageGroup', parseInt(value))
+                  }
                 >
-                  <SelectTrigger id="ageGroup" className="w-full">
-                    <SelectValue placeholder="Select minimum age" />
+                  <SelectTrigger id='ageGroup' className='w-full'>
+                    <SelectValue placeholder='Select minimum age' />
                   </SelectTrigger>
                   <SelectContent>
                     {AGE_GROUPS.map((age) => (
@@ -551,23 +687,28 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  <Users className="inline h-3 w-3 mr-1" />
+                <p className='text-xs text-muted-foreground'>
+                  <Users className='inline h-3 w-3 mr-1' />
                   Specify the minimum age for attendees
                 </p>
               </div>
 
               {/* Ticket Needed For Ages - Always show regardless of online/offline */}
-              <div className="space-y-2">
-                <Label htmlFor="ticketNeededForAges" className="text-sm font-medium">
+              <div className='space-y-2'>
+                <Label
+                  htmlFor='ticketNeededForAges'
+                  className='text-sm font-medium'
+                >
                   Ticket Required From Age
                 </Label>
                 <Select
                   value={formik?.values?.ticketNeededForAges?.toString()}
-                  onValueChange={value => formik.setFieldValue('ticketNeededForAges', parseInt(value))}
+                  onValueChange={(value) =>
+                    formik.setFieldValue('ticketNeededForAges', parseInt(value))
+                  }
                 >
-                  <SelectTrigger id="ticketNeededForAges" className="w-full">
-                    <SelectValue placeholder="Select age" />
+                  <SelectTrigger id='ticketNeededForAges' className='w-full'>
+                    <SelectValue placeholder='Select age' />
                   </SelectTrigger>
                   <SelectContent>
                     {AGE_GROUPS.map((age) => (
@@ -577,8 +718,8 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  <Calendar className="inline h-3 w-3 mr-1" />
+                <p className='text-xs text-muted-foreground'>
+                  <Calendar className='inline h-3 w-3 mr-1' />
                   From what age is a ticket required?
                 </p>
               </div>
@@ -586,22 +727,26 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
           </div>
 
           {/* Tags and Highlights Section */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4 text-primary">Tags and Highlights</h3>
-            <div className="grid-rows-3 gap-6 sm:grid-cols-1">
+          <div className='mb-8'>
+            <h3 className='text-lg font-semibold mb-4 text-primary'>
+              Tags and Highlights
+            </h3>
+            <div className='grid-rows-3 gap-6 sm:grid-cols-1'>
               {/* Event Tags */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center">
-                  <Tag className="h-4 w-4 mr-1" style={{ color: "#24005b" }} />
+              <div className='space-y-2'>
+                <Label className='text-sm font-medium flex items-center'>
+                  <Tag className='h-4 w-4 mr-1' style={{ color: '#24005b' }} />
                   Event Tags
                 </Label>
-                <div className="flex items-center space-x-2">
+                <div className='flex items-center space-x-2'>
                   <Input
                     value={formik.values.tagInput}
-                    onChange={e => formik.setFieldValue('tagInput', e.target.value)}
-                    placeholder="Add relevant tags (e.g., music, outdoor, family-friendly)"
-                    className="flex-1 "
-                    onKeyDown={e => {
+                    onChange={(e) =>
+                      formik.setFieldValue('tagInput', e.target.value)
+                    }
+                    placeholder='Add relevant tags (e.g., music, outdoor, family-friendly)'
+                    className='flex-1 '
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         addTag();
@@ -609,31 +754,31 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                     }}
                   />
                   <Button
-                    type="button"
+                    type='button'
                     onClick={addTag}
-                    variant="secondary"
-                    size="sm"
-                    style={{ backgroundColor: "#24005b20" }}
+                    variant='secondary'
+                    size='sm'
+                    style={{ backgroundColor: '#24005b20' }}
                   >
                     Add
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className='flex flex-wrap gap-2 mt-2'>
                   {formik.values.tags.map((tag, index) => (
                     <Badge
                       key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1 py-1 px-2 bg-primary/10 hover:bg-primary/20 transition-colors"
+                      variant='secondary'
+                      className='flex items-center gap-1 py-1 px-2 bg-primary/10 hover:bg-primary/20 transition-colors'
                     >
                       {tag}
                       <X
-                        className="h-3 w-3 cursor-pointer hover:text-primary transition-colors"
+                        className='h-3 w-3 cursor-pointer hover:text-primary transition-colors'
                         onClick={() => removeTag(tag)}
                       />
                     </Badge>
                   ))}
                   {formik.values.tags.length === 0 && (
-                    <p className="text-xs text-muted-foreground italic">
+                    <p className='text-xs text-muted-foreground italic'>
                       No tags added yet. Tags help attendees find your event.
                     </p>
                   )}
@@ -641,18 +786,20 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
               </div>
 
               {/* Event Highlights */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center">
-                  <Star className="h-4 w-4 mr-1" style={{ color: "#24005b" }} />
+              <div className='space-y-2'>
+                <Label className='text-sm font-medium flex items-center'>
+                  <Star className='h-4 w-4 mr-1' style={{ color: '#24005b' }} />
                   Event Highlights
                 </Label>
-                <div className="flex items-center space-x-2">
+                <div className='flex items-center space-x-2'>
                   <Input
                     value={formik.values.highlightInput}
-                    onChange={e => formik.setFieldValue('highlightInput', e.target.value)}
-                    placeholder="Add key highlights of your event"
-                    className="flex-1"
-                    onKeyDown={e => {
+                    onChange={(e) =>
+                      formik.setFieldValue('highlightInput', e.target.value)
+                    }
+                    placeholder='Add key highlights of your event'
+                    className='flex-1'
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         addHighlight();
@@ -660,75 +807,80 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                     }}
                   />
                   <Button
-                    type="button"
+                    type='button'
                     onClick={addHighlight}
-                    variant="secondary"
-                    size="sm"
-                    style={{ backgroundColor: "#24005b20" }}
+                    variant='secondary'
+                    size='sm'
+                    style={{ backgroundColor: '#24005b20' }}
                   >
                     Add
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className='flex flex-wrap gap-2 mt-2'>
                   {formik.values.eventHighlights.map((highlight, index) => (
                     <Badge
                       key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1 py-1 px-2 bg-primary/10 hover:bg-primary/20 transition-colors"
+                      variant='secondary'
+                      className='flex items-center gap-1 py-1 px-2 bg-primary/10 hover:bg-primary/20 transition-colors'
                     >
                       {highlight}
                       <X
-                        className="h-3 w-3 cursor-pointer hover:text-primary transition-colors"
+                        className='h-3 w-3 cursor-pointer hover:text-primary transition-colors'
                         onClick={() => removeHighlight(highlight)}
                       />
                     </Badge>
                   ))}
                   {formik.values.eventHighlights.length === 0 && (
-                    <p className="text-xs text-muted-foreground italic">
-                      No highlights added yet. Highlights showcase what makes your event special.
+                    <p className='text-xs text-muted-foreground italic'>
+                      No highlights added yet. Highlights showcase what makes
+                      your event special.
                     </p>
                   )}
                 </div>
               </div>
 
-
               {/* Language Selection - now with Indian languages */}
-              <div className="space-y-2 sm:col-span-2">
-                <Label className="text-sm font-medium flex items-center">
-                  <MessageCircle className="h-4 w-4 mr-1" style={{ color: "#24005b" }} />
+              <div className='space-y-2 sm:col-span-2'>
+                <Label className='text-sm font-medium flex items-center'>
+                  <MessageCircle
+                    className='h-4 w-4 mr-1'
+                    style={{ color: '#24005b' }}
+                  />
                   Event Languages
                 </Label>
                 <Select
-                  value=""
+                  value=''
                   onValueChange={(value) => {
                     addLanguage(value);
                   }}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select languages" />
+                  <SelectTrigger className='w-full'>
+                    <SelectValue placeholder='Select languages' />
                   </SelectTrigger>
-                  <SelectContent className="max-h-60">
+                  <SelectContent className='max-h-60'>
                     {LANGUAGES.map((lang) => (
                       <SelectItem
                         key={lang.value}
                         value={lang.value}
-                        disabled={formik?.values?.language?.includes(lang.value)}
+                        disabled={formik?.values?.language?.includes(
+                          lang.value
+                        )}
                       >
                         {lang.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className='flex flex-wrap gap-2 mt-2'>
                   {formik?.values?.language?.map((lang, index) => (
                     <Badge
                       key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1 py-1 px-2 bg-primary/10 hover:bg-primary/20 transition-colors"
+                      variant='secondary'
+                      className='flex items-center gap-1 py-1 px-2 bg-primary/10 hover:bg-primary/20 transition-colors'
                     >
                       {lang}
                       <X
-                        className="h-3 w-3 cursor-pointer hover:text-red-500 transition-colors"
+                        className='h-3 w-3 cursor-pointer hover:text-red-500 transition-colors'
                         onClick={() => removeLanguage(lang)}
                       />
                     </Badge>
@@ -738,13 +890,13 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
             </div>
           </div>
           {/* Submit Button */}
-          <div className="flex justify-end mt-8">
+          <div className='flex justify-end mt-8'>
             <Button
-              type="submit"
-              className="flex items-center gap-2 px-6 py-2 bg-primary"
+              type='submit'
+              className='flex items-center gap-2 px-6 py-2 bg-primary'
               disabled={!formik.isValid || formik.isSubmitting}
             >
-              Next: Venues <ChevronRight className="h-4 w-4" />
+              Next: Venues <ChevronRight className='h-4 w-4' />
             </Button>
           </div>
         </form>

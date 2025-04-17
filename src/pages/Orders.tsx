@@ -1,20 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronUp, Filter } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
   Pagination,
@@ -23,10 +22,13 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
+} from '@/components/ui/pagination';
 import { OrderStatistics } from '@/components/orders/OrderStatistics';
 import { useAppContext } from '@/contexts/AppContext';
-import { OrdersContextProvider, useOrdersContext } from '@/contexts/OrdersContext';
+import {
+  OrdersContextProvider,
+  useOrdersContext,
+} from '@/contexts/OrdersContext';
 
 // Order status badge component
 const OrderStatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -38,7 +40,9 @@ const OrderStatusBadge: React.FC<{ status: string }> = ({ status }) => {
   };
 
   return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${statusStyles[status as keyof typeof statusStyles]}`}>
+    <span
+      className={`px-2.5 py-1 rounded-full text-xs font-medium border ${statusStyles[status as keyof typeof statusStyles]}`}
+    >
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
@@ -47,13 +51,13 @@ const OrderStatusBadge: React.FC<{ status: string }> = ({ status }) => {
 // Main Orders content component
 const OrdersContent = () => {
   const { scrollToTop } = useAppContext();
-  const { 
-    filteredOrders, 
-    filterOrders, 
-    currentPage, 
-    setCurrentPage, 
+  const {
+    filteredOrders,
+    filterOrders,
+    currentPage,
+    setCurrentPage,
     totalPages,
-    itemsPerPage 
+    itemsPerPage,
   } = useOrdersContext();
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -91,39 +95,43 @@ const OrdersContent = () => {
   };
 
   // Handle page navigation
-  const handlePageClick = (pageNum: number, e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handlePageClick = (
+    pageNum: number,
+    e: React.MouseEvent<HTMLAnchorElement>
+  ) => {
     e.preventDefault();
     setCurrentPage(pageNum);
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
       {/* Orders Statistics */}
-      <div className="lg:col-span-1">
-        <OrderStatistics 
-          title="Order Statistics" 
-          orders={filteredOrders} 
-        />
+      <div className='lg:col-span-1'>
+        <OrderStatistics title='Order Statistics' orders={filteredOrders} />
       </div>
-      
+
       {/* Orders Table */}
-      <div className="lg:col-span-3">
+      <div className='lg:col-span-3'>
         <Card>
           <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
               <div>
                 <CardTitle>Orders</CardTitle>
                 <CardDescription>Manage your event orders</CardDescription>
               </div>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="ml-auto flex items-center gap-2">
-                    <Filter className="h-4 w-4" />
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='ml-auto flex items-center gap-2'
+                  >
+                    <Filter className='h-4 w-4' />
                     <span>Filter</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align='end'>
                   <DropdownMenuItem onClick={() => filterOrders('all')}>
                     All Orders
                   </DropdownMenuItem>
@@ -144,64 +152,73 @@ const OrdersContent = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase bg-gray-50 dark:bg-gray-800">
+            <div className='overflow-x-auto'>
+              <table className='w-full text-sm text-left'>
+                <thead className='text-xs uppercase bg-gray-50 dark:bg-gray-800'>
                   <tr>
-                    <th className="px-4 py-3">Order ID</th>
-                    <th className="px-4 py-3">Customer</th>
-                    <th className="px-4 py-3">Event</th>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Amount</th>
-                    <th className="px-4 py-3">Tickets</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Actions</th>
+                    <th className='px-4 py-3'>Order ID</th>
+                    <th className='px-4 py-3'>Customer</th>
+                    <th className='px-4 py-3'>Event</th>
+                    <th className='px-4 py-3'>Date</th>
+                    <th className='px-4 py-3'>Amount</th>
+                    <th className='px-4 py-3'>Tickets</th>
+                    <th className='px-4 py-3'>Status</th>
+                    <th className='px-4 py-3'>Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
-                  {paginatedOrders.map(order => (
-                    <tr key={order.id} className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-4 py-3 font-medium">{order.id}</td>
-                      <td className="px-4 py-3">{order.customer}</td>
-                      <td className="px-4 py-3">{order.event}</td>
-                      <td className="px-4 py-3">{order.date}</td>
-                      <td className="px-4 py-3">${order.amount.toFixed(2)}</td>
-                      <td className="px-4 py-3">{order.tickets}</td>
-                      <td className="px-4 py-3">
+                <tbody className='divide-y'>
+                  {paginatedOrders.map((order) => (
+                    <tr
+                      key={order.id}
+                      className='bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    >
+                      <td className='px-4 py-3 font-medium'>{order.id}</td>
+                      <td className='px-4 py-3'>{order.customer}</td>
+                      <td className='px-4 py-3'>{order.event}</td>
+                      <td className='px-4 py-3'>{order.date}</td>
+                      <td className='px-4 py-3'>${order.amount.toFixed(2)}</td>
+                      <td className='px-4 py-3'>{order.tickets}</td>
+                      <td className='px-4 py-3'>
                         <OrderStatusBadge status={order.status} />
                       </td>
-                      <td className="px-4 py-3">
-                        <Button variant="ghost" size="sm">View</Button>
+                      <td className='px-4 py-3'>
+                        <Button variant='ghost' size='sm'>
+                          View
+                        </Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            
+
             {/* Pagination */}
-            <div className="mt-6">
+            <div className='mt-6'>
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious 
-                      href="#"
+                    <PaginationPrevious
+                      href='#'
                       onClick={(e) => {
                         e.preventDefault();
                         handlePrevPage();
                       }}
                       aria-disabled={currentPage === 1}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      className={
+                        currentPage === 1
+                          ? 'pointer-events-none opacity-50'
+                          : ''
+                      }
                     />
                   </PaginationItem>
-                  
+
                   {/* Show a limited number of page links */}
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     const pageNum = i + 1;
                     return (
                       <PaginationItem key={pageNum}>
                         <PaginationLink
-                          href="#"
+                          href='#'
                           isActive={currentPage === pageNum}
                           onClick={(e) => handlePageClick(pageNum, e)}
                         >
@@ -210,17 +227,17 @@ const OrdersContent = () => {
                       </PaginationItem>
                     );
                   })}
-                  
+
                   {totalPages > 5 && currentPage < totalPages - 2 && (
                     <PaginationItem>
-                      <span className="px-2">...</span>
+                      <span className='px-2'>...</span>
                     </PaginationItem>
                   )}
-                  
+
                   {totalPages > 5 && (
                     <PaginationItem>
                       <PaginationLink
-                        href="#"
+                        href='#'
                         isActive={currentPage === totalPages}
                         onClick={(e) => handlePageClick(totalPages, e)}
                       >
@@ -228,16 +245,20 @@ const OrdersContent = () => {
                       </PaginationLink>
                     </PaginationItem>
                   )}
-                  
+
                   <PaginationItem>
-                    <PaginationNext 
-                      href="#"
+                    <PaginationNext
+                      href='#'
                       onClick={(e) => {
                         e.preventDefault();
                         handleNextPage();
                       }}
                       aria-disabled={currentPage === totalPages}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      className={
+                        currentPage === totalPages
+                          ? 'pointer-events-none opacity-50'
+                          : ''
+                      }
                     />
                   </PaginationItem>
                 </PaginationContent>
@@ -246,7 +267,7 @@ const OrdersContent = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Scroll to top button */}
       <AnimatePresence>
         {showScrollTop && (
@@ -254,15 +275,15 @@ const OrdersContent = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-8 right-8 z-50"
+            className='fixed bottom-8 right-8 z-50'
           >
             <Button
-              variant="secondary"
-              size="icon"
-              className="rounded-full shadow-md"
+              variant='secondary'
+              size='icon'
+              className='rounded-full shadow-md'
               onClick={scrollToTop}
             >
-              <ChevronUp className="h-5 w-5" />
+              <ChevronUp className='h-5 w-5' />
             </Button>
           </motion.div>
         )}

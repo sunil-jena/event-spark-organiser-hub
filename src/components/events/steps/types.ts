@@ -1,13 +1,13 @@
-
 // This file defines the types used in event creation steps
 
 export interface BasicDetailsFormValues {
+  aboutMessage: any;
   title: string;
   category: string;
   description: string;
   additionalInfo?: string;
   // terms?: string;
-  eventType: "public" | "private";
+  eventType: 'public' | 'private';
   // aboutMessage: string;
   eventHighlights: string[];
   tags: string[];
@@ -42,7 +42,7 @@ export interface VenueFormValues {
 
 export interface DateFormValues {
   id: string;
-  venueId: string,
+  venueId: string;
   // This extra field comes from your context; for example, if you need to support multiple dates.
   dateType: 'single' | 'multiple' | 'range' | 'recurring';
   // For multiple dates (if needed), stored as numbers.
@@ -89,26 +89,26 @@ export interface TicketFormValues {
   description: string[];
   price: number;
   quantity: number;
-  ticketType: "free" | "paid"; // Only free or paid tickets allowed
+  ticketType: 'free' | 'paid'; // Only free or paid tickets allowed
   ticketCategory: 'standard' | 'early-bird' | 'vip' | 'season-pass' | string;
   entryPerTicket: number;
   bookingPerTicket: number;
   ticketStatus:
-  | "active"
-  | "inactive"
-  | "sold out"
-  | "expired"
-  | "filling fast"
-  | "coming soon"
-  | "few tickets left"
-  | "offline sell";
+    | 'active'
+    | 'inactive'
+    | 'sold out'
+    | 'expired'
+    | 'filling fast'
+    | 'coming soon'
+    | 'few tickets left'
+    | 'offline sell';
   isAllDates: boolean;
   availableDateIds: string[];
   isAllTimeSlots: boolean;
   availableTimeSlotIds: string[];
   isAllVenues: boolean;
-  venueIds: string[],
-  isCombo: boolean
+  venueIds: string[];
+  isCombo: boolean;
   dateIds: string[]; // Associated dates
   timeSlotIds?: string[]; // Optional associated time slots
   isLimited: boolean; // Required property
@@ -222,9 +222,8 @@ export const COMMON_PROHIBITED_ITEMS: ProhibitedItem[] = [
   { id: 'skateboards', label: 'Skateboards, scooters, or bicycles' },
   { id: 'markers', label: 'Permanent markers or spray paint' },
   { id: 'instruments', label: 'Musical instruments' },
-  { id: 'flammable', label: 'Flammable materials' }
+  { id: 'flammable', label: 'Flammable materials' },
 ];
-
 
 export type EventCreationStep =
   | 'basicDetails'

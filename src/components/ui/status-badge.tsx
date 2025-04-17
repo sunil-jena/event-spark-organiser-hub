@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -28,17 +27,25 @@ export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   };
 
   return (
-    <Badge 
-      variant="outline" 
-      className={cn("px-2.5 py-0.5 text-xs font-medium border", getStatusStyles(), className)}
+    <Badge
+      variant='outline'
+      className={cn(
+        'px-2.5 py-0.5 text-xs font-medium border',
+        getStatusStyles(),
+        className
+      )}
     >
       {label}
     </Badge>
   );
 }
 
-export function Status({ status, children }: { status: StatusType; children: React.ReactNode }) {
-  return (
-    <StatusBadge status={status} label={children as string} />
-  );
+export function Status({
+  status,
+  children,
+}: {
+  status: StatusType;
+  children: React.ReactNode;
+}) {
+  return <StatusBadge status={status} label={children as string} />;
 }

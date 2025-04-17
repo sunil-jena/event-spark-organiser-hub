@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -23,8 +22,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import './App.css';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
 // Create a client
 const queryClient = new QueryClient();
 
@@ -38,29 +37,29 @@ function App() {
           <BrowserRouter>
             <Routes>
               {/* Auth routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path='/login' element={<Login />} />
+              <Route path='/forgot-password' element={<ForgotPassword />} />
+              <Route path='/reset-password' element={<ResetPassword />} />
 
               {/* App routes */}
-              <Route path="/" element={<Layout />}>
+              <Route path='/' element={<Layout />}>
                 <Route index element={<Dashboard />} />
-                <Route path="events" element={<Events />} />
-                <Route path="events/create" element={<CreateEvent />} />
-                <Route path="events/:id" element={<EventDetails />} />
-                <Route path="tickets/types" element={<TicketTypes />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="sales" element={<Sales />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="customers" element={<Customers />} />
-                <Route path="payouts" element={<Payouts />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="profile" element={<Profile />} />
+                <Route path='events' element={<Events />} />
+                <Route path='events/create' element={<CreateEvent />} />
+                <Route path='events/:id' element={<EventDetails />} />
+                <Route path='tickets/types' element={<TicketTypes />} />
+                <Route path='orders' element={<Orders />} />
+                <Route path='sales' element={<Sales />} />
+                <Route path='analytics' element={<Analytics />} />
+                <Route path='customers' element={<Customers />} />
+                <Route path='payouts' element={<Payouts />} />
+                <Route path='reports' element={<Reports />} />
+                <Route path='settings' element={<Settings />} />
+                <Route path='profile' element={<Profile />} />
               </Route>
 
               {/* 404 route */}
-              <Route path="*" element={<NotFound />} />
+              <Route path='*' element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </EventContextProvider>

@@ -1,13 +1,12 @@
-
 import React from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogFooter,
-  DialogClose
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -44,36 +43,43 @@ export function ModalForm({
 
   const getMaxWidthClass = () => {
     switch (size) {
-      case 'sm': return 'max-w-sm';
-      case 'md': return 'max-w-md';
-      case 'lg': return 'max-w-lg';
-      case 'xl': return 'max-w-xl';
-      case '2xl': return 'max-w-2xl';
-      case 'full': return 'max-w-[95vw]';
-      default: return 'max-w-md';
+      case 'sm':
+        return 'max-w-sm';
+      case 'md':
+        return 'max-w-md';
+      case 'lg':
+        return 'max-w-lg';
+      case 'xl':
+        return 'max-w-xl';
+      case '2xl':
+        return 'max-w-2xl';
+      case 'full':
+        return 'max-w-[95vw]';
+      default:
+        return 'max-w-md';
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${getMaxWidthClass()} overflow-y-auto max-h-[90vh]`}>
+      <DialogContent
+        className={`${getMaxWidthClass()} overflow-y-auto max-h-[90vh]`}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="py-4">
-            {children}
-          </div>
+          <div className='py-4'>{children}</div>
 
-          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+          <DialogFooter className='flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2'>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type='button' variant='outline'>
                 {cancelLabel}
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={loading}>
+            <Button type='submit' disabled={loading}>
               {loading ? 'Loading...' : submitLabel}
             </Button>
           </DialogFooter>

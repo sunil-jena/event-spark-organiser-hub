@@ -1,4 +1,3 @@
-
 @keyframes float {
   0% {
     transform: translateY(0px);
@@ -96,7 +95,9 @@
 
 /* Card hover effects */
 .hover-lift {
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  transition:
+    transform 0.3s ease-in-out,
+    box-shadow 0.3s ease-in-out;
 }
 
 .hover-lift:hover {
@@ -106,9 +107,17 @@
 
 /* Main container styling */
 .bg-main-background {
-  background-image: 
-    radial-gradient(circle at top right, rgba(139, 92, 246, 0.05) 0%, transparent 60%),
-    radial-gradient(circle at bottom left, rgba(217, 70, 239, 0.05) 0%, transparent 40%);
+  background-image:
+    radial-gradient(
+      circle at top right,
+      rgba(139, 92, 246, 0.05) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(217, 70, 239, 0.05) 0%,
+      transparent 40%
+    );
   background-attachment: fixed;
 }
 
@@ -173,7 +182,12 @@
   top: 0;
   height: 100%;
   width: 2px;
-  background: linear-gradient(to bottom, transparent, rgba(139, 92, 246, 0.3), transparent);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(139, 92, 246, 0.3),
+    transparent
+  );
   border-radius: 4px;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -229,7 +243,8 @@
   transform: rotateY(180deg);
 }
 
-.flip-card-front, .flip-card-back {
+.flip-card-front,
+.flip-card-back {
   backface-visibility: hidden;
 }
 

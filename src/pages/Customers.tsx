@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
-import { 
-  Calendar, 
-  ChevronDown, 
-  Download, 
-  FilterIcon, 
+import {
+  Calendar,
+  ChevronDown,
+  Download,
+  FilterIcon,
   Printer,
   FileText,
   ArrowRight,
@@ -55,20 +55,20 @@ import { AdvancedSearch, Filter } from '@/components/ui/advanced-search';
 import { FilterDropdown, FilterGroup } from '@/components/ui/filter-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { CustomModalForm, FormField } from '@/components/ui/custom-modal-form';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,7 +97,9 @@ const Customers = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  );
 
   const customers: Customer[] = [
     {
@@ -259,25 +261,37 @@ const Customers = () => {
   ];
 
   // Helper function to safely check if a value includes a search string
-  const safeIncludes = (value: string | number | boolean | string[], search: string): boolean => {
+  const safeIncludes = (
+    value: string | number | boolean | string[],
+    search: string
+  ): boolean => {
     if (typeof value === 'string') {
       return value.toLowerCase().includes(search.toLowerCase());
-    } else if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
-      return value.some(item => item.toLowerCase().includes(search.toLowerCase()));
+    } else if (
+      Array.isArray(value) &&
+      value.every((item) => typeof item === 'string')
+    ) {
+      return value.some((item) =>
+        item.toLowerCase().includes(search.toLowerCase())
+      );
     }
     return String(value).includes(search);
   };
 
-  const matchesDateFilter = (customerDate: string, operator: string, filterValue: string): boolean => {
+  const matchesDateFilter = (
+    customerDate: string,
+    operator: string,
+    filterValue: string
+  ): boolean => {
     // Convert both dates to Date objects for comparison
     const dateToCheck = new Date(customerDate);
     const filterDate = new Date(filterValue);
-    
+
     // Check if both dates are valid
     if (isNaN(dateToCheck.getTime()) || isNaN(filterDate.getTime())) {
       return false;
     }
-    
+
     // Now compare dates based on operator
     if (operator === 'equals') {
       return dateToCheck.toDateString() === filterDate.toDateString();
@@ -287,31 +301,37 @@ const Customers = () => {
       return dateToCheck < filterDate;
     } else if (operator === 'between') {
       // For between operator, we expect filterValue to be in format "start,end"
-      const [start, end] = filterValue.split(',').map(d => new Date(d.trim()));
+      const [start, end] = filterValue
+        .split(',')
+        .map((d) => new Date(d.trim()));
       if (isNaN(start.getTime()) || isNaN(end.getTime())) {
         return false;
       }
       return dateToCheck >= start && dateToCheck <= end;
     }
-    
+
     return false;
   };
 
-  const filteredCustomers = customers.filter(customer => {
-    const matchesSearch = 
+  const filteredCustomers = customers.filter((customer) => {
+    const matchesSearch =
       safeIncludes(customer.id, searchQuery) ||
       safeIncludes(customer.name, searchQuery) ||
       safeIncludes(customer.email, searchQuery) ||
       safeIncludes(customer.phone, searchQuery);
-    
-    const matchesFilters = activeFilters.every(filter => {
+
+    const matchesFilters = activeFilters.every((filter) => {
       const field = filter.field as keyof Customer;
       const value = customer[field];
-      
+
       if (field === 'joinDate' || field === 'lastActive') {
-        return matchesDateFilter(value as string, filter.operator, filter.value);
+        return matchesDateFilter(
+          value as string,
+          filter.operator,
+          filter.value
+        );
       }
-      
+
       if (typeof value === 'string') {
         if (filter.operator === 'equals') {
           return value === filter.value;
@@ -330,28 +350,31 @@ const Customers = () => {
       } else if (Array.isArray(value)) {
         return value.includes(filter.value);
       }
-      
+
       return true;
     });
-    
+
     return matchesSearch && matchesFilters;
   });
 
   const totalCustomers = filteredCustomers.length;
   const totalPages = Math.ceil(totalCustomers / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedCustomers = filteredCustomers.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const getStatusBadge = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'active':
-        return <StatusBadge status="success" label="Active" />;
+        return <StatusBadge status='success' label='Active' />;
       case 'inactive':
-        return <StatusBadge status="warning" label="Inactive" />;
+        return <StatusBadge status='warning' label='Inactive' />;
       case 'new':
-        return <StatusBadge status="info" label="New" />;
+        return <StatusBadge status='info' label='New' />;
       default:
-        return <StatusBadge status="default" label={status} />;
+        return <StatusBadge status='default' label={status} />;
     }
   };
 
@@ -366,22 +389,32 @@ const Customers = () => {
     },
   ];
 
-  const handleFilterChange = (filterName: string, option: string, isSelected: boolean) => {
-    setActiveFilters(prev => {
+  const handleFilterChange = (
+    filterName: string,
+    option: string,
+    isSelected: boolean
+  ) => {
+    setActiveFilters((prev) => {
       if (isSelected) {
-        return [...prev, {
-          field: filterName === 'Status' ? 'status' : 'tags',
-          operator: filterName === 'Status' ? 'equals' : 'contains',
-          value: option
-        }];
+        return [
+          ...prev,
+          {
+            field: filterName === 'Status' ? 'status' : 'tags',
+            operator: filterName === 'Status' ? 'equals' : 'contains',
+            value: option,
+          },
+        ];
       } else {
-        return prev.filter(filter => 
-          !(filter.field === (filterName === 'Status' ? 'status' : 'tags') && 
-          filter.value === option)
+        return prev.filter(
+          (filter) =>
+            !(
+              filter.field === (filterName === 'Status' ? 'status' : 'tags') &&
+              filter.value === option
+            )
         );
       }
     });
-    
+
     setCurrentPage(1);
   };
 
@@ -397,13 +430,13 @@ const Customers = () => {
   };
 
   const handleSubmitDetails = async (data: Record<string, any>) => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     toast({
-      title: "Customer updated",
+      title: 'Customer updated',
       description: `Customer ${selectedCustomer?.name} has been updated successfully`,
     });
-    
+
     setDetailsModalOpen(false);
   };
 
@@ -452,51 +485,59 @@ const Customers = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className='space-y-6'>
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
         <div>
-          <h1 className="text-2xl font-bold">Customers</h1>
-          <p className="text-muted-foreground">Manage your customer database</p>
+          <h1 className='text-2xl font-bold'>Customers</h1>
+          <p className='text-muted-foreground'>Manage your customer database</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className='flex flex-wrap gap-2'>
           <Select defaultValue={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[160px]">
-              <Calendar className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Select range" />
+            <SelectTrigger className='w-[160px]'>
+              <Calendar className='mr-2 h-4 w-4' />
+              <SelectValue placeholder='Select range' />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="yesterday">Yesterday</SelectItem>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="year">This year</SelectItem>
+              <SelectItem value='today'>Today</SelectItem>
+              <SelectItem value='yesterday'>Yesterday</SelectItem>
+              <SelectItem value='7d'>Last 7 days</SelectItem>
+              <SelectItem value='30d'>Last 30 days</SelectItem>
+              <SelectItem value='90d'>Last 90 days</SelectItem>
+              <SelectItem value='year'>This year</SelectItem>
             </SelectContent>
           </Select>
           <Button>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className='mr-2 h-4 w-4' />
             Add Customer
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
+              <Button variant='outline'>
+                <Download className='mr-2 h-4 w-4' />
                 Export
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => toast({ title: "Exporting PDF" })}>
-                <FileText className="mr-2 h-4 w-4" /> Export as PDF
+            <DropdownMenuContent align='end'>
+              <DropdownMenuItem
+                onClick={() => toast({ title: 'Exporting PDF' })}
+              >
+                <FileText className='mr-2 h-4 w-4' /> Export as PDF
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast({ title: "Exporting CSV" })}>
-                <FileText className="mr-2 h-4 w-4" /> Export as CSV
+              <DropdownMenuItem
+                onClick={() => toast({ title: 'Exporting CSV' })}
+              >
+                <FileText className='mr-2 h-4 w-4' /> Export as CSV
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast({ title: "Exporting Excel" })}>
-                <FileText className="mr-2 h-4 w-4" /> Export as Excel
+              <DropdownMenuItem
+                onClick={() => toast({ title: 'Exporting Excel' })}
+              >
+                <FileText className='mr-2 h-4 w-4' /> Export as Excel
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => toast({ title: "Print initiated" })}>
-                <Printer className="mr-2 h-4 w-4" /> Print Customer List
+              <DropdownMenuItem
+                onClick={() => toast({ title: 'Print initiated' })}
+              >
+                <Printer className='mr-2 h-4 w-4' /> Print Customer List
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -504,18 +545,18 @@ const Customers = () => {
       </div>
 
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className='pb-3'>
           <CardTitle>Customer Database</CardTitle>
           <CardDescription>
             Showing {filteredCustomers.length} customers for the selected period
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div className="flex-grow w-full md:w-auto">
-              <AdvancedSearch 
-                onSearch={handleSearch} 
-                placeholder="Search customers..." 
+          <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6'>
+            <div className='flex-grow w-full md:w-auto'>
+              <AdvancedSearch
+                onSearch={handleSearch}
+                placeholder='Search customers...'
                 fields={[
                   { name: 'id', label: 'Customer ID' },
                   { name: 'name', label: 'Name' },
@@ -529,30 +570,42 @@ const Customers = () => {
                 ]}
               />
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className='flex gap-2 flex-wrap'>
               {filterOptions.map((filterGroup) => (
-                <FilterDropdown 
+                <FilterDropdown
                   key={filterGroup.name}
                   triggerText={filterGroup.name}
-                  icon={<FilterIcon className="h-4 w-4" />}
+                  icon={<FilterIcon className='h-4 w-4' />}
                 >
                   <FilterGroup>
                     {filterGroup.options.map((option) => {
-                      const field = filterGroup.name === 'Status' ? 'status' : 'tags';
-                      const isActive = activeFilters.some(f => f.field === field && f.value === option);
-                      
+                      const field =
+                        filterGroup.name === 'Status' ? 'status' : 'tags';
+                      const isActive = activeFilters.some(
+                        (f) => f.field === field && f.value === option
+                      );
+
                       return (
-                        <div key={option} className="flex items-center space-x-2">
+                        <div
+                          key={option}
+                          className='flex items-center space-x-2'
+                        >
                           <input
-                            type="checkbox"
+                            type='checkbox'
                             id={`filter-${filterGroup.name}-${option}`}
                             checked={isActive}
-                            onChange={(e) => handleFilterChange(filterGroup.name, option, e.target.checked)}
-                            className="rounded text-primary focus:ring-primary"
+                            onChange={(e) =>
+                              handleFilterChange(
+                                filterGroup.name,
+                                option,
+                                e.target.checked
+                              )
+                            }
+                            className='rounded text-primary focus:ring-primary'
                           />
-                          <Label 
+                          <Label
                             htmlFor={`filter-${filterGroup.name}-${option}`}
-                            className="text-sm cursor-pointer"
+                            className='text-sm cursor-pointer'
                           >
                             {option}
                           </Label>
@@ -562,23 +615,23 @@ const Customers = () => {
                   </FilterGroup>
                 </FilterDropdown>
               ))}
-              
-              <Button 
-                variant="ghost" 
-                size="icon"
+
+              <Button
+                variant='ghost'
+                size='icon'
                 onClick={() => {
                   setActiveFilters([]);
                   setSearchQuery('');
                 }}
                 disabled={activeFilters.length === 0 && searchQuery === ''}
-                title="Clear filters"
+                title='Clear filters'
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className='h-4 w-4' />
               </Button>
             </div>
           </div>
-          
-          <div className="border rounded-md">
+
+          <div className='border rounded-md'>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -589,47 +642,58 @@ const Customers = () => {
                   <TableHead>Total Spent</TableHead>
                   <TableHead>Orders</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className='text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedCustomers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                    <TableCell
+                      colSpan={8}
+                      className='text-center py-8 text-gray-500'
+                    >
                       No customers found. Try a different search or filter.
                     </TableCell>
                   </TableRow>
                 ) : (
                   paginatedCustomers.map((customer) => (
-                    <TableRow key={customer.id} className="table-row-hover">
-                      <TableCell className="font-medium">{customer.id}</TableCell>
+                    <TableRow key={customer.id} className='table-row-hover'>
+                      <TableCell className='font-medium'>
+                        {customer.id}
+                      </TableCell>
                       <TableCell>{customer.name}</TableCell>
                       <TableCell>{customer.email}</TableCell>
-                      <TableCell>{new Date(customer.joinDate).toLocaleDateString()}</TableCell>
-                      <TableCell>₹{customer.totalSpent.toLocaleString()}</TableCell>
+                      <TableCell>
+                        {new Date(customer.joinDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        ₹{customer.totalSpent.toLocaleString()}
+                      </TableCell>
                       <TableCell>{customer.ordersCount}</TableCell>
                       <TableCell>{getStatusBadge(customer.status)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className='text-right'>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Actions</span>
+                            <Button variant='ghost' size='sm'>
+                              <MoreHorizontal className='h-4 w-4' />
+                              <span className='sr-only'>Actions</span>
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenDetailsModal(customer)}>
-                              <User className="mr-2 h-4 w-4" /> View Details
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem
+                              onClick={() => handleOpenDetailsModal(customer)}
+                            >
+                              <User className='mr-2 h-4 w-4' /> View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" /> Edit Customer
+                              <Edit className='mr-2 h-4 w-4' /> Edit Customer
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Mail className="mr-2 h-4 w-4" /> Send Email
+                              <Mail className='mr-2 h-4 w-4' /> Send Email
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
-                              <X className="mr-2 h-4 w-4" /> Delete Customer
+                            <DropdownMenuItem className='text-red-600'>
+                              <X className='mr-2 h-4 w-4' /> Delete Customer
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -640,72 +704,85 @@ const Customers = () => {
               </TableBody>
             </Table>
           </div>
-          
-          <div className="mt-4">
+
+          <div className='mt-4'>
             <DataPagination
               currentPage={currentPage}
               totalItems={filteredCustomers.length}
               pageSize={itemsPerPage}
               onPageChange={setCurrentPage}
               onPageSizeChange={setItemsPerPage}
-              showingText="customers"
+              showingText='customers'
             />
           </div>
         </CardContent>
       </Card>
 
       <CustomModalForm
-        title="Customer Details"
-        description="View and edit customer information"
+        title='Customer Details'
+        description='View and edit customer information'
         fields={customerDetailFields}
         onSubmit={handleSubmitDetails}
-        submitText="Update Customer"
-        cancelText="Close"
+        submitText='Update Customer'
+        cancelText='Close'
         isOpen={detailsModalOpen}
         onOpenChange={setDetailsModalOpen}
-        width="lg"
+        width='lg'
       >
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className='grid gap-4 py-4'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div>
-              <h3 className="text-lg font-semibold">Customer Information</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
+              <h3 className='text-lg font-semibold'>Customer Information</h3>
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2'>
+                  <User className='h-4 w-4 text-muted-foreground' />
                   <span>{selectedCustomer?.name}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
+                <div className='flex items-center gap-2'>
+                  <Mail className='h-4 w-4 text-muted-foreground' />
                   <span>{selectedCustomer?.email}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
+                <div className='flex items-center gap-2'>
+                  <Phone className='h-4 w-4 text-muted-foreground' />
                   <span>{selectedCustomer?.phone}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                <div className='flex items-center gap-2'>
+                  <MapPin className='h-4 w-4 text-muted-foreground' />
                   <span>{selectedCustomer?.address}</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold">Account Information</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  <span>Joined: {new Date(selectedCustomer?.joinDate || '').toLocaleDateString()}</span>
+              <h3 className='text-lg font-semibold'>Account Information</h3>
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2'>
+                  <CalendarIcon className='h-4 w-4 text-muted-foreground' />
+                  <span>
+                    Joined:{' '}
+                    {new Date(
+                      selectedCustomer?.joinDate || ''
+                    ).toLocaleDateString()}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  <span>Last Active: {new Date(selectedCustomer?.lastActive || '').toLocaleDateString()}</span>
+                <div className='flex items-center gap-2'>
+                  <CalendarIcon className='h-4 w-4 text-muted-foreground' />
+                  <span>
+                    Last Active:{' '}
+                    {new Date(
+                      selectedCustomer?.lastActive || ''
+                    ).toLocaleDateString()}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span>Total Spent: ₹{selectedCustomer?.totalSpent.toLocaleString()}</span>
+                <div className='flex items-center gap-2'>
+                  <DollarSign className='h-4 w-4 text-muted-foreground' />
+                  <span>
+                    Total Spent: ₹
+                    {selectedCustomer?.totalSpent.toLocaleString()}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                <div className='flex items-center gap-2'>
+                  <ShoppingCart className='h-4 w-4 text-muted-foreground' />
                   <span>Orders: {selectedCustomer?.ordersCount}</span>
                 </div>
               </div>
@@ -713,13 +790,13 @@ const Customers = () => {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold">Tags</h3>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <h3 className='text-lg font-semibold'>Tags</h3>
+            <div className='flex flex-wrap gap-2 mt-2'>
               {selectedCustomer?.tags.length === 0 ? (
-                <span className="text-muted-foreground">No tags</span>
+                <span className='text-muted-foreground'>No tags</span>
               ) : (
                 selectedCustomer?.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
+                  <Badge key={tag} variant='secondary'>
                     {tag}
                   </Badge>
                 ))
@@ -728,8 +805,8 @@ const Customers = () => {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold">Recent Orders</h3>
-            <div className="border rounded-md mt-2">
+            <h3 className='text-lg font-semibold'>Recent Orders</h3>
+            <div className='border rounded-md mt-2'>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -741,7 +818,10 @@ const Customers = () => {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                    <TableCell
+                      colSpan={4}
+                      className='text-center py-4 text-gray-500'
+                    >
                       No recent orders to display
                     </TableCell>
                   </TableRow>

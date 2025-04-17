@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Input } from './input';
 import { Label } from './label';
@@ -17,9 +16,9 @@ declare global {
           PlacesServiceStatus: {
             OK: string;
           };
-        }
-      }
-    }
+        };
+      };
+    };
   }
 }
 
@@ -37,7 +36,10 @@ interface VenueSelectorProps {
   defaultValue?: string;
 }
 
-export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProps) {
+export function VenueSelector({
+  onSelectVenue,
+  defaultValue,
+}: VenueSelectorProps) {
   const [searchQuery, setSearchQuery] = useState(defaultValue || '');
   const [predictions, setPredictions] = useState<any[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
@@ -47,15 +49,18 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
 
   useEffect(() => {
     if (window.google && window.google.maps) {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      
+      autocompleteService.current =
+        new window.google.maps.places.AutocompleteService();
+
       // Create a dummy div for PlacesService (required by the API)
       if (mapRef.current) {
         const map = new window.google.maps.Map(mapRef.current, {
           center: { lat: 0, lng: 0 },
-          zoom: 1
+          zoom: 1,
         });
-        placesService.current = new window.google.maps.places.PlacesService(map);
+        placesService.current = new window.google.maps.places.PlacesService(
+          map
+        );
       }
     }
   }, []);
@@ -68,13 +73,16 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
 
     const request = {
       input: searchQuery,
-      types: ['establishment', 'geocode']
+      types: ['establishment', 'geocode'],
     };
 
     autocompleteService.current.getPlacePredictions(
       request,
       (predictions: any, status: string) => {
-        if (status !== window.google.maps.places.PlacesServiceStatus.OK || !predictions) {
+        if (
+          status !== window.google.maps.places.PlacesServiceStatus.OK ||
+          !predictions
+        ) {
           setPredictions([]);
           return;
         }
@@ -89,11 +97,12 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
 
     const request = {
       placeId,
-      fields: ['name', 'formatted_address', 'address_components', 'geometry']
+      fields: ['name', 'formatted_address', 'address_components', 'geometry'],
     };
 
     placesService.current.getDetails(request, (place: any, status: string) => {
-      if (status !== window.google.maps.places.PlacesServiceStatus.OK || !place) return;
+      if (status !== window.google.maps.places.PlacesServiceStatus.OK || !place)
+        return;
 
       let city = '';
       let state = '';
@@ -120,7 +129,7 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
         country,
         postalCode,
         lat: place.geometry?.location?.lat() || 0,
-        lng: place.geometry?.location?.lng() || 0
+        lng: place.geometry?.location?.lng() || 0,
       });
 
       setSearchQuery(place.name || '');
@@ -129,15 +138,15 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
   };
 
   return (
-    <div className="space-y-2 w-full">
-      <div className="flex items-center space-x-2">
-        <div className="flex-1">
+    <div className='space-y-2 w-full'>
+      <div className='flex items-center space-x-2'>
+        <div className='flex-1'>
           <Input
-            type="text"
+            type='text'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for venue by name or address"
-            className="w-full"
+            placeholder='Search for venue by name or address'
+            className='w-full'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -146,29 +155,33 @@ export function VenueSelector({ onSelectVenue, defaultValue }: VenueSelectorProp
             }}
           />
         </div>
-        <Button type="button" variant="outline" onClick={handleSearch}>
-          <Search className="h-4 w-4" />
+        <Button type='button' variant='outline' onClick={handleSearch}>
+          <Search className='h-4 w-4' />
         </Button>
       </div>
-      
+
       {showPredictions && predictions.length > 0 && (
-        <div className="absolute z-10 w-full bg-white rounded-md border shadow-lg max-h-60 overflow-auto mt-1">
+        <div className='absolute z-10 w-full bg-white rounded-md border shadow-lg max-h-60 overflow-auto mt-1'>
           {predictions.map((prediction) => (
-            <div 
+            <div
               key={prediction.place_id}
-              className="p-2 hover:bg-gray-100 cursor-pointer flex items-center"
+              className='p-2 hover:bg-gray-100 cursor-pointer flex items-center'
               onClick={() => handleSelectPrediction(prediction.place_id)}
             >
-              <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+              <MapPin className='h-4 w-4 mr-2 text-gray-500' />
               <div>
-                <div className="font-medium">{prediction.structured_formatting.main_text}</div>
-                <div className="text-sm text-gray-500">{prediction.structured_formatting.secondary_text}</div>
+                <div className='font-medium'>
+                  {prediction.structured_formatting.main_text}
+                </div>
+                <div className='text-sm text-gray-500'>
+                  {prediction.structured_formatting.secondary_text}
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
-      
+
       {/* Hidden map div for PlacesService */}
       <div ref={mapRef} style={{ display: 'none' }}></div>
     </div>

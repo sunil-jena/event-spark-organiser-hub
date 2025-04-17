@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,12 +11,8 @@ import { Button } from '@/components/ui/button';
 const Layout = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
-  const {
-    sidebarMinimized,
-    toggleSidebar,
-    scrollToTop,
-    setActiveRoute
-  } = useAppContext();
+  const { sidebarMinimized, toggleSidebar, scrollToTop, setActiveRoute } =
+    useAppContext();
 
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
@@ -94,12 +89,16 @@ const Layout = () => {
 
   // Calculate main content width based on sidebar state
   const mainContentStyle = {
-    width: isMobile ? '100%' : sidebarMinimized ? 'calc(100% - 80px)' : 'calc(100% - 280px)',
+    width: isMobile
+      ? '100%'
+      : sidebarMinimized
+        ? 'calc(100% - 80px)'
+        : 'calc(100% - 280px)',
     transition: 'margin-left 0.3s ease, width 0.3s ease',
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+    <div className='flex min-h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden'>
       <Sidebar
         isMobile={isMobile}
         isOpen={sidebarOpen}
@@ -109,7 +108,7 @@ const Layout = () => {
       />
 
       <div
-        className="flex flex-col flex-1 overflow-hidden"
+        className='flex flex-col flex-1 overflow-hidden'
         style={!isMobile ? mainContentStyle : undefined}
       >
         <Header
@@ -125,7 +124,7 @@ const Layout = () => {
         />
 
         <motion.main
-          className="flex-1 overflow-y-auto p-4 md:p-6 bg-purple-50 bg-main-background"
+          className='flex-1 overflow-y-auto p-4 md:p-6 bg-purple-50 bg-main-background'
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -134,13 +133,14 @@ const Layout = () => {
 
           {/* Scroll to top button */}
           <Button
-            variant="outline"
-            size="icon"
-            className={`fixed bottom-6 right-6 rounded-full shadow-lg transition-opacity duration-300 bg-primary text-white hover:bg-primary/90  hover:text-white z-10 ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              }`}
+            variant='outline'
+            size='icon'
+            className={`fixed bottom-6 right-6 rounded-full shadow-lg transition-opacity duration-300 bg-primary text-white hover:bg-primary/90  hover:text-white z-10 ${
+              showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
             onClick={scrollToTop}
           >
-            <ArrowUp className="h-5 w-5" />
+            <ArrowUp className='h-5 w-5' />
           </Button>
         </motion.main>
       </div>

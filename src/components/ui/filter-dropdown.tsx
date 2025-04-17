@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Popover,
@@ -23,11 +22,14 @@ export interface FilterGroupProps {
   children?: React.ReactNode;
 }
 
-export const FilterGroup: React.FC<FilterGroupProps> = ({ title, children }) => {
+export const FilterGroup: React.FC<FilterGroupProps> = ({
+  title,
+  children,
+}) => {
   return (
-    <div className="space-y-2">
-      {title && <div className="text-sm font-medium">{title}</div>}
-      <div className="space-y-1">{children}</div>
+    <div className='space-y-2'>
+      {title && <div className='text-sm font-medium'>{title}</div>}
+      <div className='space-y-1'>{children}</div>
     </div>
   );
 };
@@ -46,18 +48,22 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
-          role="combobox"
+          variant='outline'
+          role='combobox'
           aria-expanded={open}
           className={cn('justify-between', className)}
         >
-          {icon && <span className="mr-1">{icon}</span>}
+          {icon && <span className='mr-1'>{icon}</span>}
           {triggerText}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 min-w-48" align={align} sideOffset={sideOffset}>
-        <div className="p-2 space-y-4 max-h-[300px] overflow-auto">
+      <PopoverContent
+        className='p-0 min-w-48'
+        align={align}
+        sideOffset={sideOffset}
+      >
+        <div className='p-2 space-y-4 max-h-[300px] overflow-auto'>
           {children}
         </div>
       </PopoverContent>
@@ -79,7 +85,7 @@ export const FilterItem: React.FC<FilterItemProps> = ({
   value,
 }) => {
   return (
-    <div className="flex items-center space-x-2">
+    <div className='flex items-center space-x-2'>
       <div
         className={cn(
           'h-4 w-4 rounded border flex items-center justify-center',
@@ -87,11 +93,11 @@ export const FilterItem: React.FC<FilterItemProps> = ({
         )}
         onClick={() => onCheckedChange(!checked)}
       >
-        {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+        {checked && <Check className='h-3 w-3 text-primary-foreground' />}
       </div>
       <label
         htmlFor={`filter-${value}`}
-        className="text-sm cursor-pointer"
+        className='text-sm cursor-pointer'
         onClick={() => onCheckedChange(!checked)}
       >
         {label}

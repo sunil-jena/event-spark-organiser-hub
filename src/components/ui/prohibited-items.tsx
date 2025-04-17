@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from './label';
 import { Checkbox } from './checkbox';
@@ -28,7 +27,7 @@ const COMMON_PROHIBITED_ITEMS: ProhibitedItem[] = [
   { id: 'skateboards', label: 'Skateboards, scooters, or bicycles' },
   { id: 'markers', label: 'Permanent markers or spray paint' },
   { id: 'instruments', label: 'Musical instruments' },
-  { id: 'flammable', label: 'Flammable materials' }
+  { id: 'flammable', label: 'Flammable materials' },
 ];
 
 interface ProhibitedItemsProps {
@@ -36,33 +35,37 @@ interface ProhibitedItemsProps {
   onChange: (selectedItems: string[]) => void;
 }
 
-export function ProhibitedItems({ selectedItems, onChange }: ProhibitedItemsProps) {
+export function ProhibitedItems({
+  selectedItems,
+  onChange,
+}: ProhibitedItemsProps) {
   const toggleItem = (itemId: string) => {
     if (selectedItems.includes(itemId)) {
-      onChange(selectedItems.filter(id => id !== itemId));
+      onChange(selectedItems.filter((id) => id !== itemId));
     } else {
       onChange([...selectedItems, itemId]);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <Label className="text-base font-medium">Prohibited Items</Label>
-      <p className="text-sm text-muted-foreground">
-        Select items that are prohibited at your event. This will be displayed on the event details page.
+    <div className='space-y-4'>
+      <Label className='text-base font-medium'>Prohibited Items</Label>
+      <p className='text-sm text-muted-foreground'>
+        Select items that are prohibited at your event. This will be displayed
+        on the event details page.
       </p>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+
+      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-2'>
         {COMMON_PROHIBITED_ITEMS.map((item) => (
-          <div key={item.id} className="flex items-center space-x-2">
+          <div key={item.id} className='flex items-center space-x-2'>
             <Checkbox
               id={`prohibited-${item.id}`}
               checked={selectedItems.includes(item.id)}
               onCheckedChange={() => toggleItem(item.id)}
             />
-            <Label 
+            <Label
               htmlFor={`prohibited-${item.id}`}
-              className="text-sm cursor-pointer"
+              className='text-sm cursor-pointer'
             >
               {item.label}
             </Label>

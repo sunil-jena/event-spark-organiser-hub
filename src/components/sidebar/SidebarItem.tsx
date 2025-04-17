@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
@@ -8,7 +7,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
+  TooltipTrigger,
 } from '@/components/ui/tooltip';
 
 export interface SidebarItemProps {
@@ -40,16 +39,16 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   onToggleExpand,
   depth = 0,
   moduleName,
-  isEventStep = false
+  isEventStep = false,
 }) => {
   const location = useLocation();
-  const { 
-    sidebarMinimized, 
-    activeRoute, 
-    setActiveRoute, 
+  const {
+    sidebarMinimized,
+    activeRoute,
+    setActiveRoute,
     hasPermission,
     eventStepStatuses, // Get event step statuses from AppContext
-    isEditingEvent // Flag to check if user is editing an event
+    isEditingEvent, // Flag to check if user is editing an event
   } = useAppContext();
 
   // Check if user has permission to view this item
@@ -62,34 +61,38 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
 
   // Check if current path exactly matches this item's href
   const isExactPathMatch = href && location.pathname === href;
-  
+
   // For event creation steps, check if the hash matches
-  const isHashMatch = href && href.includes('#') && location.hash === href.substring(href.indexOf('#'));
-  
+  const isHashMatch =
+    href &&
+    href.includes('#') &&
+    location.hash === href.substring(href.indexOf('#'));
+
   // Only consider "active" based on EXACT path matches, not partial ones
   // For event steps, we ONLY use hash-based activation
-  const isActiveRoute = isEventStep 
-    ? isHashMatch 
-    : isExactPathMatch;
-  
+  const isActiveRoute = isEventStep ? isHashMatch : isExactPathMatch;
+
   // For parent items, check if any child is active
-  const isChildActive = hasChildren && children?.some(
-    child => {
+  const isChildActive =
+    hasChildren &&
+    children?.some((child) => {
       if (child.isEventStep) {
         // For event step children, only check hash match
-        return child.href && location.hash === child.href.substring(child.href.indexOf('#'));
+        return (
+          child.href &&
+          location.hash === child.href.substring(child.href.indexOf('#'))
+        );
       }
       // For regular children, check EXACT path match only
       return child.href && location.pathname === child.href;
-    }
-  );
+    });
 
   // Combine active states
   const isActive = isActiveRoute || isChildActive;
 
   // Determine if this step is clickable based on the event context
   let isClickable = !disabled;
-  
+
   // If this is an event creation step, check its clickable status
   if (isEventStep && href) {
     const stepId = href.split('#')[1] as keyof typeof eventStepStatuses;
@@ -122,36 +125,44 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   };
 
   // Classes for active and hover states
-  const activeClass = "bg-white/20 font-medium";
-  const hoverClass = "hover:bg-white/10";
+  const activeClass = 'bg-white/20 font-medium';
+  const hoverClass = 'hover:bg-white/10';
 
   // The content of the item
   const itemContent = (
-    <div className={cn(
-      "flex items-center w-full gap-2 px-3 py-2 rounded-md text-sm",
-      "transition-colors duration-200",
-      isActive ? activeClass : hoverClass,
-      !isClickable && "pointer-events-none opacity-60",
-      sidebarMinimized && "justify-center px-2"
-    )}>
+    <div
+      className={cn(
+        'flex items-center w-full gap-2 px-3 py-2 rounded-md text-sm',
+        'transition-colors duration-200',
+        isActive ? activeClass : hoverClass,
+        !isClickable && 'pointer-events-none opacity-60',
+        sidebarMinimized && 'justify-center px-2'
+      )}
+    >
       {icon && (
-        <span className={cn(
-          "flex items-center justify-center",
-          sidebarMinimized && "mx-auto"
-        )}>
+        <span
+          className={cn(
+            'flex items-center justify-center',
+            sidebarMinimized && 'mx-auto'
+          )}
+        >
           {icon}
         </span>
       )}
       {!sidebarMinimized && (
         <>
-          <span className="truncate">{title}</span>
+          <span className='truncate'>{title}</span>
           {hasChildren && (
-            <span className="ml-auto">
-              {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            <span className='ml-auto'>
+              {expanded ? (
+                <ChevronDown className='h-4 w-4' />
+              ) : (
+                <ChevronRight className='h-4 w-4' />
+              )}
             </span>
           )}
           {label && (
-            <span className="ml-auto text-xs font-medium bg-white/20 px-1.5 py-0.5 rounded">
+            <span className='ml-auto text-xs font-medium bg-white/20 px-1.5 py-0.5 rounded'>
               {label}
             </span>
           )}
@@ -168,14 +179,14 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
           {href ? (
             <NavLink
               to={href}
-              target={external ? "_blank" : undefined}
-              rel={external ? "noreferrer" : undefined}
+              target={external ? '_blank' : undefined}
+              rel={external ? 'noreferrer' : undefined}
               onClick={handleClick}
               className={cn(
-                "flex items-center justify-center gap-2 px-2 py-2 rounded-md text-sm",
-                "transition-colors duration-200",
+                'flex items-center justify-center gap-2 px-2 py-2 rounded-md text-sm',
+                'transition-colors duration-200',
                 isActive ? activeClass : hoverClass,
-                !isClickable && "pointer-events-none opacity-60",
+                !isClickable && 'pointer-events-none opacity-60'
               )}
             >
               {icon}
@@ -184,67 +195,64 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
             <button
               onClick={handleClick}
               disabled={!isClickable}
-              className="w-full flex items-center justify-center"
+              className='w-full flex items-center justify-center'
             >
               {itemContent}
             </button>
           )}
         </TooltipTrigger>
-        <TooltipContent side="right">
+        <TooltipContent side='right'>
           <p>{title}</p>
           {label && (
-            <span className="ml-1 text-xs font-medium bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">
+            <span className='ml-1 text-xs font-medium bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded'>
               {label}
             </span>
           )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  ) : (
-    href ? (
-      <NavLink
-        to={href}
-        target={external ? "_blank" : undefined}
-        rel={external ? "noreferrer" : undefined}
-        onClick={handleClick}
-        className={({ isActive: linkActive }) => {
-          // For event steps, only use hash-based activation
-          if (isEventStep) {
-            const stepMatch = href && href.includes('#') && location.hash === href.substring(href.indexOf('#'));
-            return cn(
-              "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
-              "transition-colors duration-200",
-              stepMatch ? activeClass : hoverClass,
-              !isClickable && "pointer-events-none opacity-60"
-            );
-          }
-          
-          // For regular items, use exact path match only
+  ) : href ? (
+    <NavLink
+      to={href}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noreferrer' : undefined}
+      onClick={handleClick}
+      className={({ isActive: linkActive }) => {
+        // For event steps, only use hash-based activation
+        if (isEventStep) {
+          const stepMatch =
+            href &&
+            href.includes('#') &&
+            location.hash === href.substring(href.indexOf('#'));
           return cn(
-            "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
-            "transition-colors duration-200",
-            (linkActive && isExactPathMatch) ? activeClass : hoverClass,
-            !isClickable && "pointer-events-none opacity-60"
+            'flex items-center gap-2 px-3 py-2 rounded-md text-sm',
+            'transition-colors duration-200',
+            stepMatch ? activeClass : hoverClass,
+            !isClickable && 'pointer-events-none opacity-60'
           );
-        }}
-      >
-        {icon && <span className="flex items-center justify-center">{icon}</span>}
-        <span className="truncate">{title}</span>
-        {label && (
-          <span className="ml-auto text-xs font-medium bg-white/20 px-1.5 py-0.5 rounded">
-            {label}
-          </span>
-        )}
-      </NavLink>
-    ) : (
-      <button
-        onClick={handleClick}
-        disabled={!isClickable}
-        className="w-full"
-      >
-        {itemContent}
-      </button>
-    )
+        }
+
+        // For regular items, use exact path match only
+        return cn(
+          'flex items-center gap-2 px-3 py-2 rounded-md text-sm',
+          'transition-colors duration-200',
+          linkActive && isExactPathMatch ? activeClass : hoverClass,
+          !isClickable && 'pointer-events-none opacity-60'
+        );
+      }}
+    >
+      {icon && <span className='flex items-center justify-center'>{icon}</span>}
+      <span className='truncate'>{title}</span>
+      {label && (
+        <span className='ml-auto text-xs font-medium bg-white/20 px-1.5 py-0.5 rounded'>
+          {label}
+        </span>
+      )}
+    </NavLink>
+  ) : (
+    <button onClick={handleClick} disabled={!isClickable} className='w-full'>
+      {itemContent}
+    </button>
   );
 
   return wrappedContent;

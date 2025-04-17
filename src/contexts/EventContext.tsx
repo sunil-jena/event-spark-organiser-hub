@@ -1,6 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from 'react';
 import {
   BasicDetailsFormValues,
   VenueFormValues,
@@ -11,7 +17,7 @@ import {
   AdditionalInfoFormValues,
   ArtistFormValues,
   EventCreationStep,
-  StepStatus
+  StepStatus,
 } from '@/components/events/steps/types';
 
 // Define initial form values
@@ -46,7 +52,7 @@ const initialAdditionalInfo: AdditionalInfoFormValues = {
   termsAndConditions: '',
   prohibitedItems: [],
   sponsors: [],
-  faqItems: []
+  faqItems: [],
   // tags: [],
   // sponsor: [],
   // isPromoted: {
@@ -106,10 +112,12 @@ const EventContext = createContext<EventContextState | undefined>(undefined);
 // Create the provider component
 export const EventContextProvider = ({ children }: { children: ReactNode }) => {
   // Form data state
-  const [basicDetails, setBasicDetails] = useState<BasicDetailsFormValues>(() => {
-    const saved = localStorage.getItem('event_basicDetails');
-    return saved ? JSON.parse(saved) : initialBasicDetails;
-  });
+  const [basicDetails, setBasicDetails] = useState<BasicDetailsFormValues>(
+    () => {
+      const saved = localStorage.getItem('event_basicDetails');
+      return saved ? JSON.parse(saved) : initialBasicDetails;
+    }
+  );
 
   const [venues, setVenues] = useState<VenueFormValues[]>(() => {
     const saved = localStorage.getItem('event_venues');
@@ -136,10 +144,11 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     return saved ? JSON.parse(saved) : initialMedia;
   });
 
-  const [additionalInfo, setAdditionalInfo] = useState<AdditionalInfoFormValues>(() => {
-    const saved = localStorage.getItem('event_additionalInfo');
-    return saved ? JSON.parse(saved) : initialAdditionalInfo;
-  });
+  const [additionalInfo, setAdditionalInfo] =
+    useState<AdditionalInfoFormValues>(() => {
+      const saved = localStorage.getItem('event_additionalInfo');
+      return saved ? JSON.parse(saved) : initialAdditionalInfo;
+    });
 
   const [artists, setArtists] = useState<ArtistFormValues[]>(() => {
     const saved = localStorage.getItem('event_artists');
@@ -149,7 +158,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
   // Current step state
   const [currentStep, setCurrentStep] = useState<EventCreationStep>(() => {
     const saved = localStorage.getItem('event_currentStep');
-    return saved ? saved as EventCreationStep : 'basicDetails';
+    return saved ? (saved as EventCreationStep) : 'basicDetails';
   });
 
   // Persist state to localStorage whenever it changes
@@ -178,7 +187,10 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
   }, [media]);
 
   useEffect(() => {
-    localStorage.setItem('event_additionalInfo', JSON.stringify(additionalInfo));
+    localStorage.setItem(
+      'event_additionalInfo',
+      JSON.stringify(additionalInfo)
+    );
   }, [additionalInfo]);
 
   useEffect(() => {
@@ -223,7 +235,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
       tickets,
       media,
       additionalInfo,
-      artists
+      artists,
     };
   };
 
@@ -248,7 +260,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     resetEventData,
     getEventData,
     currentStep,
-    setCurrentStep
+    setCurrentStep,
   };
 
   return (
@@ -262,7 +274,9 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
 export const useEventContext = (): EventContextState => {
   const context = useContext(EventContext);
   if (context === undefined) {
-    throw new Error('useEventContext must be used within an EventContextProvider');
+    throw new Error(
+      'useEventContext must be used within an EventContextProvider'
+    );
   }
   return context;
 };
@@ -276,5 +290,5 @@ export type {
   TicketFormValues,
   MediaFormValues,
   AdditionalInfoFormValues,
-  ArtistFormValues
+  ArtistFormValues,
 };

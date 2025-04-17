@@ -1,12 +1,22 @@
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, ArrowUp, CalendarIcon, FileText, ImagePlus, MapPin, Ticket } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowUp,
+  CalendarIcon,
+  FileText,
+  ImagePlus,
+  MapPin,
+  Ticket,
+} from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEventContext } from '@/contexts/EventContext';
-import { EventCreationStep, EventData, TicketFormValues } from '@/components/events/steps/types';
+import {
+  EventCreationStep,
+  EventData,
+  TicketFormValues,
+} from '@/components/events/steps/types';
 
 // Import the step components
 import { VenueStep } from '@/components/events/steps/VenueStep';
@@ -25,7 +35,7 @@ const CreateEvent = () => {
     setActiveRoute,
     eventStepStatuses,
     setEventStepStatuses,
-    setIsEditingEvent
+    setIsEditingEvent,
   } = useAppContext();
 
   const {
@@ -51,12 +61,14 @@ const CreateEvent = () => {
 
   // const navigate = useNavigate();
   const location = useLocation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   // Show scroll top button state
   // const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
 
   // Current step tracking (synced with EventContext)
-  const [currentStep, setCurrentStep] = useState<EventCreationStep>(eventContextCurrentStep);
+  const [currentStep, setCurrentStep] = useState<EventCreationStep>(
+    eventContextCurrentStep
+  );
 
   // Update EventContext currentStep when local state changes
   useEffect(() => {
@@ -98,7 +110,7 @@ const CreateEvent = () => {
       // Update step statuses
       const updateStatuses = { ...eventStepStatuses };
 
-      Object.keys(updateStatuses).forEach(key => {
+      Object.keys(updateStatuses).forEach((key) => {
         const stepKey = key as EventCreationStep;
         if (stepKey === step) {
           updateStatuses[stepKey].status = 'current';
@@ -107,9 +119,8 @@ const CreateEvent = () => {
         }
       });
 
-      navigate(`/events/create#${step}`)
+      navigate(`/events/create#${step}`);
       setEventStepStatuses(updateStatuses);
-
     }
   };
 
@@ -117,14 +128,21 @@ const CreateEvent = () => {
   const completeStep = (nextStep: EventCreationStep) => {
     // Update step statuses
     const updateStatuses = { ...eventStepStatuses };
-    updateStatuses[currentStep] = { ...eventStepStatuses[currentStep], status: 'complete' };
-    updateStatuses[nextStep] = { ...eventStepStatuses[nextStep], status: 'current', isClickable: true };
+    updateStatuses[currentStep] = {
+      ...eventStepStatuses[currentStep],
+      status: 'complete',
+    };
+    updateStatuses[nextStep] = {
+      ...eventStepStatuses[nextStep],
+      status: 'current',
+      isClickable: true,
+    };
 
     setEventStepStatuses(updateStatuses);
 
     // Update URL hash
     // window.history.pushState(null, '', `/events/create#${nextStep}`);
-    navigate(`/events/create#${nextStep}`)
+    navigate(`/events/create#${nextStep}`);
     setCurrentStep(nextStep);
   };
 
@@ -133,7 +151,7 @@ const CreateEvent = () => {
     // Update step statuses
     const updateStatuses = { ...eventStepStatuses };
 
-    Object.keys(updateStatuses).forEach(key => {
+    Object.keys(updateStatuses).forEach((key) => {
       const stepKey = key as EventCreationStep;
       updateStatuses[stepKey].isClickable = true;
       if (updateStatuses[stepKey].status === 'incomplete') {
@@ -162,7 +180,7 @@ const CreateEvent = () => {
     // Make sure the type property is set correctly for compatibility
     const updatedValues = values.map((date: any) => ({
       ...date,
-      type: date.dateType === 'multiple' ? 'single' : date.dateType
+      type: date.dateType === 'multiple' ? 'single' : date.dateType,
     }));
 
     setDates(updatedValues);
@@ -183,7 +201,7 @@ const CreateEvent = () => {
       availableDateIds: t.availableDateIds || [],
       isAllTimeSlots: t.isAllTimeSlots || false,
       availableTimeSlotIds: t.availableTimeSlotIds || [],
-      isLimited: t.isLimited || false
+      isLimited: t.isLimited || false,
     }));
 
     setTickets(updatedValues);
@@ -199,7 +217,10 @@ const CreateEvent = () => {
     // Ensure faqItems is a string if needed
     const updatedValues = {
       ...values,
-      faqItems: typeof values.faqItems === 'object' ? JSON.stringify(values.faqItems) : values.faqItems
+      faqItems:
+        typeof values.faqItems === 'object'
+          ? JSON.stringify(values.faqItems)
+          : values.faqItems,
     };
 
     setAdditionalInfo(updatedValues);
@@ -211,26 +232,26 @@ const CreateEvent = () => {
     const eventData: EventData = {
       basicDetails,
       venues,
-      dates: dates.map(d => ({
+      dates: dates.map((d) => ({
         ...d,
-        type: d.dateType === 'multiple' ? 'single' : d.dateType
+        type: d.dateType === 'multiple' ? 'single' : d.dateType,
       })),
       timeSlots,
-      tickets: tickets.map(t => ({
+      tickets: tickets.map((t) => ({
         ...t,
         ticketType: t.ticketType || 'standard',
         isAllDates: t.isAllDates || false,
         availableDateIds: t.availableDateIds || [],
         isAllTimeSlots: t.isAllTimeSlots || false,
         availableTimeSlotIds: t.availableTimeSlotIds || [],
-        isLimited: t.isLimited || false
+        isLimited: t.isLimited || false,
       })) as TicketFormValues[],
       media,
       additionalInfo: {
         ...additionalInfo,
-        faqItems: additionalInfo.faqItems
+        faqItems: additionalInfo.faqItems,
       },
-      artists
+      artists,
     };
 
     // Simulate API call
@@ -238,8 +259,8 @@ const CreateEvent = () => {
       console.log('Event data submitted:', eventData);
 
       toast({
-        title: "Success",
-        description: "Your event has been created successfully!",
+        title: 'Success',
+        description: 'Your event has been created successfully!',
       });
 
       // Enable all steps for review or editing
@@ -249,7 +270,6 @@ const CreateEvent = () => {
       // navigate(`/events/${eventId}`);
     }, 1500);
   };
-
 
   // Render the current step content
   const renderStepContent = () => {
@@ -272,9 +292,9 @@ const CreateEvent = () => {
       case 'dates':
         return (
           <DateStep
-            dates={dates.map(d => ({
+            dates={dates.map((d) => ({
               ...d,
-              type: d.dateType === 'multiple' ? 'single' : d.dateType
+              type: d.dateType === 'multiple' ? 'single' : d.dateType,
             }))}
             venues={venues}
             onSubmit={handleDatesSubmit}
@@ -285,9 +305,9 @@ const CreateEvent = () => {
         return (
           <TimeSlotStep
             timeSlots={timeSlots}
-            dates={dates.map(d => ({
+            dates={dates.map((d) => ({
               ...d,
-              dateType: d.dateType === 'multiple' ? 'single' : d.dateType
+              dateType: d.dateType === 'multiple' ? 'single' : d.dateType,
             }))}
             venues={venues}
             // artists={artists}
@@ -330,25 +350,25 @@ const CreateEvent = () => {
             eventData={{
               basicDetails,
               venues,
-              dates: dates.map(d => ({
+              dates: dates.map((d) => ({
                 ...d,
-                type: d.dateType === 'multiple' ? 'single' : d.dateType
+                type: d.dateType === 'multiple' ? 'single' : d.dateType,
               })),
               timeSlots,
-              tickets: tickets.map(t => ({
+              tickets: tickets.map((t) => ({
                 ...t,
                 ticketType: t.ticketType || 'standard',
                 isAllDates: t.isAllDates || false,
                 availableDateIds: t.availableDateIds || [],
                 isAllTimeSlots: t.isAllTimeSlots || false,
                 availableTimeSlotIds: t.availableTimeSlotIds || [],
-                isLimited: t.isLimited || false
+                isLimited: t.isLimited || false,
               })) as TicketFormValues[],
               media,
               additionalInfo: {
                 ...additionalInfo,
-                faqItems: additionalInfo.faqItems
-              }
+                faqItems: additionalInfo.faqItems,
+              },
             }}
             onSubmit={handleFinalSubmit}
             onBack={() => handleStepClick('additionalInfo')}
@@ -360,89 +380,90 @@ const CreateEvent = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto pb-20 px-4 sm:px-6">
-      <h1 className="text-3xl font-bold mb-6">Create Event</h1>
+    <div className='max-w-7xl mx-auto pb-20 px-4 sm:px-6'>
+      <h1 className='text-3xl font-bold mb-6'>Create Event</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3">
-          {renderStepContent()}
-
-        </div>
+      <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
+        <div className='lg:col-span-3'>{renderStepContent()}</div>
         {/* Step Content */}
 
-        <div className="space-y-4">
+        <div className='space-y-4'>
           <Card>
             <CardHeader>
               <CardTitle>Quick Tips</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <CalendarIcon className="h-4 w-4 text-primary" />
+            <CardContent className='space-y-4'>
+              <div className='flex items-start gap-2'>
+                <div className='bg-primary/10 p-2 rounded-full'>
+                  <CalendarIcon className='h-4 w-4 text-primary' />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Choose multiple dates</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className='text-sm font-medium'>Choose multiple dates</h4>
+                  <p className='text-sm text-muted-foreground'>
                     Add multiple sessions for multi-day events.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <MapPin className="h-4 w-4 text-primary" />
+              <div className='flex items-start gap-2'>
+                <div className='bg-primary/10 p-2 rounded-full'>
+                  <MapPin className='h-4 w-4 text-primary' />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Google Maps integration</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className='text-sm font-medium'>
+                    Google Maps integration
+                  </h4>
+                  <p className='text-sm text-muted-foreground'>
                     Find venues easily with location search.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <Ticket className="h-4 w-4 text-primary" />
+              <div className='flex items-start gap-2'>
+                <div className='bg-primary/10 p-2 rounded-full'>
+                  <Ticket className='h-4 w-4 text-primary' />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Multiple ticket types</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className='text-sm font-medium'>Multiple ticket types</h4>
+                  <p className='text-sm text-muted-foreground'>
                     Create different pricing tiers for your event.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <ImagePlus className="h-4 w-4 text-primary" />
+              <div className='flex items-start gap-2'>
+                <div className='bg-primary/10 p-2 rounded-full'>
+                  <ImagePlus className='h-4 w-4 text-primary' />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Upload multiple images</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className='text-sm font-medium'>
+                    Upload multiple images
+                  </h4>
+                  <p className='text-sm text-muted-foreground'>
                     Add banner, card, and gallery images.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <AlertCircle className="h-4 w-4 text-primary" />
+              <div className='flex items-start gap-2'>
+                <div className='bg-primary/10 p-2 rounded-full'>
+                  <AlertCircle className='h-4 w-4 text-primary' />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Prohibited Items</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className='text-sm font-medium'>Prohibited Items</h4>
+                  <p className='text-sm text-muted-foreground'>
                     Clearly list what attendees cannot bring.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <FileText className="h-4 w-4 text-primary" />
+              <div className='flex items-start gap-2'>
+                <div className='bg-primary/10 p-2 rounded-full'>
+                  <FileText className='h-4 w-4 text-primary' />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium">Add FAQ section</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className='text-sm font-medium'>Add FAQ section</h4>
+                  <p className='text-sm text-muted-foreground'>
                     Answer common questions in advance.
                   </p>
                 </div>
@@ -454,18 +475,19 @@ const CreateEvent = () => {
             <CardHeader>
               <CardTitle>Need Help?</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                If you're having trouble creating your event, check out our resources:
+            <CardContent className='space-y-2'>
+              <p className='text-sm text-muted-foreground'>
+                If you're having trouble creating your event, check out our
+                resources:
               </p>
-              <ul className="text-sm space-y-1">
-                <li className="text-primary hover:underline cursor-pointer">
+              <ul className='text-sm space-y-1'>
+                <li className='text-primary hover:underline cursor-pointer'>
                   Event creation guide
                 </li>
-                <li className="text-primary hover:underline cursor-pointer">
+                <li className='text-primary hover:underline cursor-pointer'>
                   Best practices for event promotion
                 </li>
-                <li className="text-primary hover:underline cursor-pointer">
+                <li className='text-primary hover:underline cursor-pointer'>
                   Contact customer support
                 </li>
               </ul>
@@ -473,7 +495,6 @@ const CreateEvent = () => {
           </Card>
         </div>
       </div>
-
     </div>
   );
 };

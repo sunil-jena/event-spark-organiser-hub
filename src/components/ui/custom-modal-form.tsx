@@ -1,19 +1,18 @@
-
 import React from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogFooter,
-  DialogClose
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Input } from './input';
 import { Textarea } from './textarea';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,7 +23,7 @@ import { Switch } from './switch';
 import { Label } from './label';
 
 // Define FieldType to include all supported field types
-export type FieldType = 
+export type FieldType =
   | 'text'
   | 'textarea'
   | 'number'
@@ -81,8 +80,8 @@ export function CustomModalForm({
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const formValues: Record<string, any> = {};
-    
-    fields.forEach(field => {
+
+    fields.forEach((field) => {
       if (field.type === 'switch') {
         formValues[field.id] = formData.get(field.id) === 'on';
       } else if (field.type === 'file') {
@@ -91,25 +90,34 @@ export function CustomModalForm({
         formValues[field.id] = formData.get(field.id);
       }
     });
-    
+
     onSubmit(formValues);
   };
 
   const getMaxWidthClass = () => {
     switch (width) {
-      case 'sm': return 'max-w-sm';
-      case 'md': return 'max-w-md';
-      case 'lg': return 'max-w-lg';
-      case 'xl': return 'max-w-xl';
-      case '2xl': return 'max-w-2xl';
-      case 'full': return 'max-w-[95vw]';
-      default: return 'max-w-md';
+      case 'sm':
+        return 'max-w-sm';
+      case 'md':
+        return 'max-w-md';
+      case 'lg':
+        return 'max-w-lg';
+      case 'xl':
+        return 'max-w-xl';
+      case '2xl':
+        return 'max-w-2xl';
+      case 'full':
+        return 'max-w-[95vw]';
+      default:
+        return 'max-w-md';
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className={`${getMaxWidthClass()} overflow-y-auto max-h-[90vh]`}>
+      <DialogContent
+        className={`${getMaxWidthClass()} overflow-y-auto max-h-[90vh]`}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
@@ -117,14 +125,14 @@ export function CustomModalForm({
 
         <form onSubmit={handleSubmit}>
           {children}
-          
-          <div className="py-4">
+
+          <div className='py-4'>
             {fields.map((field) => (
-              <div key={field.id} className="grid gap-2 mb-4">
+              <div key={field.id} className='grid gap-2 mb-4'>
                 <Label htmlFor={field.id}>{field.label}</Label>
                 {field.type === 'text' && (
                   <Input
-                    type="text"
+                    type='text'
                     id={field.id}
                     name={field.id}
                     placeholder={field.placeholder}
@@ -143,7 +151,7 @@ export function CustomModalForm({
                 )}
                 {field.type === 'number' && (
                   <Input
-                    type="number"
+                    type='number'
                     id={field.id}
                     name={field.id}
                     placeholder={field.placeholder}
@@ -153,7 +161,7 @@ export function CustomModalForm({
                 )}
                 {field.type === 'email' && (
                   <Input
-                    type="email"
+                    type='email'
                     id={field.id}
                     name={field.id}
                     placeholder={field.placeholder}
@@ -163,7 +171,7 @@ export function CustomModalForm({
                 )}
                 {field.type === 'password' && (
                   <Input
-                    type="password"
+                    type='password'
                     id={field.id}
                     name={field.id}
                     placeholder={field.placeholder}
@@ -174,7 +182,9 @@ export function CustomModalForm({
                 {field.type === 'select' && field.options && (
                   <Select defaultValue={field.defaultValue} name={field.id}>
                     <SelectTrigger id={field.id}>
-                      <SelectValue placeholder={field.placeholder || field.label} />
+                      <SelectValue
+                        placeholder={field.placeholder || field.label}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {field.options.map((option) => (
@@ -186,14 +196,18 @@ export function CustomModalForm({
                   </Select>
                 )}
                 {field.type === 'switch' && (
-                  <div className="flex items-center space-x-2">
-                    <Switch id={field.id} name={field.id} defaultChecked={field.defaultValue} />
+                  <div className='flex items-center space-x-2'>
+                    <Switch
+                      id={field.id}
+                      name={field.id}
+                      defaultChecked={field.defaultValue}
+                    />
                     <Label htmlFor={field.id}>{field.label}</Label>
                   </div>
                 )}
                 {field.type === 'file' && (
                   <Input
-                    type="file"
+                    type='file'
                     id={field.id}
                     name={field.id}
                     accept={field.accept}
@@ -201,33 +215,33 @@ export function CustomModalForm({
                   />
                 )}
                 {field.type === 'checkbox' && (
-                  <div className="flex items-center space-x-2">
+                  <div className='flex items-center space-x-2'>
                     <Input
-                      type="checkbox"
+                      type='checkbox'
                       id={field.id}
                       name={field.id}
-                      className="h-4 w-4"
+                      className='h-4 w-4'
                       defaultChecked={field.defaultValue}
                     />
                     <Label htmlFor={field.id}>{field.label}</Label>
                   </div>
                 )}
                 {field.helperText && (
-                  <p className="text-sm text-muted-foreground">{field.helperText}</p>
+                  <p className='text-sm text-muted-foreground'>
+                    {field.helperText}
+                  </p>
                 )}
               </div>
             ))}
           </div>
 
-          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+          <DialogFooter className='flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2'>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type='button' variant='outline'>
                 {cancelText}
               </Button>
             </DialogClose>
-            <Button type="submit">
-              {submitText}
-            </Button>
+            <Button type='submit'>{submitText}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
