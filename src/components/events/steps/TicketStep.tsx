@@ -72,6 +72,7 @@ interface TicketConfiguratorProps {
   timeSlots: TimeSlotFormValues[];
   venues: VenueFormValues[];
   onSubmit: (tickets: TicketFormValues[]) => void;
+  onBack: () => void;
 }
 
 // Helper function to format Indian price
@@ -162,6 +163,8 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
 }) => {
   const { toast } = useToast();
 
+  console.log(dates , 'dates');
+  
   // Local state for tickets and edit mode
   const [ticketList, setTicketList] = useState<TicketFormValues[]>(ticketTypes || []);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);

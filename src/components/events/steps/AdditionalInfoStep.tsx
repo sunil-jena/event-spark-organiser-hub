@@ -104,9 +104,7 @@ export const AdditionalInfoStep: React.FC<AdditionalInfoStepProps> = ({
             <Collapsible open={isFaqOpen} onOpenChange={setIsFaqOpen} className="border rounded-md p-4">
               <CollapsibleTrigger className="flex items-center justify-between w-full">
                 <h3 className="text-lg font-medium">Frequently Asked Questions</h3>
-                <Button variant="ghost" size="sm" onClick={(e) => e.preventDefault()}>
-                  {isFaqOpen ? "Hide" : "Show"} FAQ Editor
-                </Button>
+                {isFaqOpen ? "Hide" : "Show"} FAQ Editor
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-4 space-y-4">
                 <p className="text-sm text-gray-500">

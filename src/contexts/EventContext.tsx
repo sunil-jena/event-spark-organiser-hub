@@ -9,9 +9,10 @@ import {
   TicketFormValues,
   MediaFormValues,
   AdditionalInfoFormValues,
-  ArtistFormValues
+  ArtistFormValues,
+  EventCreationStep,
+  StepStatus
 } from '@/components/events/steps/types';
-import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
 
 // Define initial form values
 const initialBasicDetails: BasicDetailsFormValues = {
@@ -19,10 +20,10 @@ const initialBasicDetails: BasicDetailsFormValues = {
   category: '',
   description: '',
   eventType: 'public',
-  aboutMessage: '',
+  // aboutMessage: '',
   eventHighlights: [],
   tags: [],
-  language: ['English'],
+  language: [],
   ageGroup: 5,
   ticketNeededForAges: 5,
   layout: 'outdoor',
@@ -42,18 +43,22 @@ const initialMedia: MediaFormValues = {
 };
 
 const initialAdditionalInfo: AdditionalInfoFormValues = {
-  tags: [],
-  sponsor: [],
-  isPromoted: {
-    isActive: false,
-    priority: 1,
-  },
-  trendingShow: {
-    isTrending: false,
-    priority: 0,
-  },
-  bookingStatus: 'open',
-  isFillingFast: false,
+  termsAndConditions: '',
+  prohibitedItems: [],
+  sponsors: [],
+  faqItems: []
+  // tags: [],
+  // sponsor: [],
+  // isPromoted: {
+  //   isActive: false,
+  //   priority: 1,
+  // },
+  // trendingShow: {
+  //   isTrending: false,
+  //   priority: 0,
+  // },
+  // bookingStatus: 'open',
+  // isFillingFast: false,
 };
 
 // Define default step statuses

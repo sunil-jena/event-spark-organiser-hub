@@ -31,9 +31,10 @@ import { Badge } from '@/components/ui/badge';
 import { BasicDetailsFormValues } from './types';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
+// import { Switch } from "@/components/ui/switch";
+// import { cn } from "@/lib/utils";
 import { Checkbox } from '@/components/ui/checkbox';
+import { RichTextEditor } from './RichTextEditor';
 
 // Define the event categories
 const EVENT_CATEGORIES = [
@@ -142,9 +143,6 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
   const formik = useFormik({
     initialValues: {
       ...initialValues,
-      tags: [],
-      eventHighlights: [],
-      language: [],
       tagInput: '', // Helper field for tag input
       highlightInput: '', // Helper field for event highlights
     },
@@ -272,7 +270,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
               <Label htmlFor="description" className="text-sm font-medium">
                 Event Description <span className="text-red-500">*</span>
               </Label>
-              <Textarea
+              {/* <Textarea
                 id="description"
                 name="description"
                 placeholder="Describe your event in detail. What can attendees expect?"
@@ -281,6 +279,11 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 className={`transition-all ${formik.errors.description && formik.touched.description ? "border-red-500 focus:ring-red-500" : "focus:ring-primary"}`}
+              /> */}
+              <RichTextEditor
+                value={formik.values.description || ''}
+                onChange={(content) => formik.setFieldValue('description', content)}
+                placeholder="Describe your event in detail. What can attendees expect?"
               />
               {formik.errors.description && formik.touched.description && (
                 <div className="text-red-500 text-sm">{formik.errors.description}</div>
@@ -291,7 +294,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
             </div>
 
             {/* About Message */}
-            <div className="space-y-2 sm:col-span-2">
+            {/* <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="aboutMessage" className="text-sm font-medium">
                 About Message <span className="text-muted-foreground text-xs">(Optional)</span>
               </Label>
@@ -307,7 +310,7 @@ export const BasicDetailsStep: React.FC<BasicDetailsStepProps> = ({ initialValue
               <p className="text-muted-foreground text-xs">
                 This message will appear in the "About" section of your event page.
               </p>
-            </div>
+            </div> */}
           </div>
 
           {/* Event Type Section */}

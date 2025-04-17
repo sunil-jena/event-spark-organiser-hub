@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Clock, Plus, Trash2 } from 'lucide-react';
+import { ChevronRight, Clock, Plus, Trash2, Edit as EditIcon } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -17,29 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from '@/components/ui/input';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { DateFormValues, VenueFormValues, ArtistFormValues } from './types';
-
-export interface TimeSlotFormValues {
-  id: string;
-  startTime: string;
-  endTime: string;
-  gateOpensBeforeStart: boolean;
-  gateOpenType?: 'minute' | 'hour';
-  gateOpenDuration?: number;
-  artists?: {
-    artistId: string;
-    bannerImage: string;
-  }[];
-}
-
-interface TimeSlotStepProps {
-  timeSlots: TimeSlotFormValues[];
-  // dates: DateFormValues[];
-  // venues: VenueFormValues[];
-  // artists: ArtistFormValues[];
-  onSubmit: (timeSlots: TimeSlotFormValues[]) => void;
-  onBack: () => void;
-}
+import { DateFormValues, VenueFormValues, TimeSlotFormValues } from './types';
 
 // Generate time options every 30 minutes in the day.
 const generateTimeOptions = () => {
@@ -59,7 +37,46 @@ const generateTimeOptions = () => {
 };
 const TIME_OPTIONS = generateTimeOptions();
 
-// Yup validation schema for the new time slot form.
+// Convert a numeric date (in ddMMyyyy format) to a Date object.
+const parseDateNumber = (dateNumber: number): Date => {
+  const str = dateNumber.toString().padStart(8, '0');
+  const day = parseInt(str.slice(0, 2), 10);
+  const month = parseInt(str.slice(2, 4), 10) - 1; // Month is 0-indexed
+  const year = parseInt(str.slice(4, 8), 10);
+  return new Date(year, month, day);
+};
+
+/**
+ * getDateDisplay returns a friendly string based on the dateType.
+ * It shows a single formatted date for 'single' and 'multiple',
+ * a range for 'range' and a recurring message for 'recurring'.
+ */
+const getDateDisplay = (dateId: string, dates: DateFormValues[]) => {
+  const dateObj = dates.find(d => d.id === dateId);
+  if (!dateObj) return 'Unknown date';
+  switch (dateObj.dateType) {
+    case 'single':
+    case 'multiple':
+      return format(parseDateNumber(dateObj.startDate), 'PPP');
+    case 'range':
+      return dateObj.endDate
+        ? `${format(parseDateNumber(dateObj.startDate), 'MMM d, yyyy')} - ${format(parseDateNumber(dateObj.endDate), 'MMM d, yyyy')}`
+        : format(parseDateNumber(dateObj.startDate), 'PPP');
+    case 'recurring':
+      return dateObj.recurringUntil
+        ? `Recurring: ${format(parseDateNumber(dateObj.startDate), 'MMM d, yyyy')} until ${format(parseDateNumber(dateObj.recurringUntil), 'MMM d, yyyy')}`
+        : `Recurring: ${format(parseDateNumber(dateObj.startDate), 'PPP')}`;
+    default:
+      return format(parseDateNumber(dateObj.startDate), 'PPP');
+  }
+};
+
+const getVenueDisplay = (venueId: string, venues: VenueFormValues[]) => {
+  const venue = venues.find(v => v.id === venueId);
+  return venue ? (venue.tba ? `TBA Venue in ${venue.city}` : venue.name) : 'Unknown venue';
+};
+
+// Yup validation schema for the time slot form.
 const timeSlotValidationSchema = Yup.object().shape({
   startTime: Yup.string().required('Start time is required'),
   endTime: Yup.string()
@@ -70,46 +87,37 @@ const timeSlotValidationSchema = Yup.object().shape({
       function (value) {
         const { startTime } = this.parent;
         if (!startTime || !value) return false;
-        // Convert times to minutes after midnight for comparison.
         const [startH, startM] = startTime.split(':').map(Number);
         const [endH, endM] = value.split(':').map(Number);
         return endH * 60 + endM > startH * 60 + startM;
       }
     ),
-  // dateId: Yup.string().required('Date is required'),
-  // venueId: Yup.string().required('Venue is required'),
+  dateId: Yup.string().required('Date is required'),
+  venueId: Yup.string().required('Venue is required'),
 });
 
-// const getDateDisplay = (dateId: string, dates: DateFormValues[]) => {
-//   const date = dates.find(d => d.id === dateId);
-//   return date ? format(date.startDate, 'PPP') : 'Unknown date';
-// };
-
-// const getVenueDisplay = (venueId: string, venues: VenueFormValues[]) => {
-//   const venue = venues.find(v => v.id === venueId);
-//   return venue ? (venue.tba ? `TBA Venue in ${venue.city}` : venue.name) : 'Unknown venue';
-// };
-
-export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
-  timeSlots,
-  // dates,
-  // venues,
-  onSubmit,
-  onBack
-}) => {
+export const TimeSlotStep: React.FC<{
+  timeSlots: TimeSlotFormValues[];
+  dates: DateFormValues[];
+  venues: VenueFormValues[];
+  onSubmit: (timeSlots: TimeSlotFormValues[]) => void;
+  onBack: () => void;
+}> = ({ timeSlots, dates, venues, onSubmit, onBack }) => {
   const [timeSlotList, setTimeSlotList] = React.useState<TimeSlotFormValues[]>(timeSlots);
+  // Track the ID of the time slot being edited (if any).
+  const [editingSlotId, setEditingSlotId] = React.useState<string | null>(null);
 
-  // Generate minute options from 1 to 59
+  // Generate minute options from 1 to 59 and hour options from 1 to 4.
   const minuteOptions = Array.from({ length: 59 }, (_, i) => i + 1);
-
-  // Generate hour options from 1 to 4
   const hourOptions = [1, 2, 3, 4];
-  // Formik hook to manage the new time slot form.
+
   const formik = useFormik<TimeSlotFormValues>({
     initialValues: {
       id: uuidv4(),
       startTime: '09:00',
       endTime: '17:00',
+      venueId: '',
+      dateId: '',
       gateOpensBeforeStart: false,
       gateOpenType: undefined,
       gateOpenDuration: undefined,
@@ -117,10 +125,31 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
     },
     validationSchema: timeSlotValidationSchema,
     onSubmit: (values, { resetForm }) => {
-      setTimeSlotList([...timeSlotList, { ...values, id: uuidv4() }]);
+      if (editingSlotId) {
+        // Update the time slot in the list.
+        const updatedList = timeSlotList.map(slot =>
+          slot.id === editingSlotId ? { ...values, id: editingSlotId } : slot
+        );
+        setTimeSlotList(updatedList);
+        toast({
+          title: "Time slot updated",
+          description: "Your time slot has been updated."
+        });
+        setEditingSlotId(null);
+      } else {
+        // Add new time slot.
+        setTimeSlotList([...timeSlotList, { ...values, id: uuidv4() }]);
+        toast({
+          title: "Time slot added",
+          description: "The time slot has been added to your event."
+        });
+      }
+      // Reset form regardless of the operation.
       resetForm({
         values: {
           id: uuidv4(),
+          venueId: '',
+          dateId: '',
           startTime: '09:00',
           endTime: '17:00',
           gateOpensBeforeStart: false,
@@ -129,17 +158,38 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
           artists: []
         }
       });
-      toast({
-        title: "Time slot added",
-        description: "The time slot has been added to your event."
-      });
     },
     validateOnChange: false,
     validateOnBlur: false,
   });
 
+  // Populate form with an existing time slot's values for editing.
+  const handleEditTimeSlot = (slot: TimeSlotFormValues) => {
+    setEditingSlotId(slot.id);
+    formik.setValues({
+      ...slot
+    });
+  };
+
   const handleRemoveTimeSlot = (id: string) => {
     setTimeSlotList(timeSlotList.filter(slot => slot.id !== id));
+    // If we were editing this slot, cancel edit.
+    if (editingSlotId === id) {
+      setEditingSlotId(null);
+      formik.resetForm({
+        values: {
+          id: uuidv4(),
+          venueId: '',
+          dateId: '',
+          startTime: '09:00',
+          endTime: '17:00',
+          gateOpensBeforeStart: false,
+          gateOpenType: undefined,
+          gateOpenDuration: undefined,
+          artists: []
+        }
+      });
+    }
     toast({
       title: "Time slot removed",
       description: "The time slot has been removed from your event."
@@ -158,7 +208,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
     onSubmit(timeSlotList);
   };
 
-  // Toggle gate opens option and set default values if enabled.
+  // Toggle gate opens option.
   const handleGateOpensChange = (checked: boolean) => {
     formik.setFieldValue('gateOpensBeforeStart', checked);
     if (checked) {
@@ -170,6 +220,24 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
     }
   };
 
+  // Cancel editing and reset the form.
+  const handleCancelEdit = () => {
+    setEditingSlotId(null);
+    formik.resetForm({
+      values: {
+        id: uuidv4(),
+        venueId: '',
+        dateId: '',
+        startTime: '09:00',
+        endTime: '17:00',
+        gateOpensBeforeStart: false,
+        gateOpenType: undefined,
+        gateOpenDuration: undefined,
+        artists: []
+      }
+    });
+  };
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -178,7 +246,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
         <form onSubmit={formik.handleSubmit} className="mb-6 border rounded-lg p-4 bg-gray-50">
           <h3 className="font-medium mb-3 flex items-center">
             <Clock className="h-4 w-4 mr-2" />
-            Add New Time Slot
+            {editingSlotId ? "Edit Time Slot" : "Add New Time Slot"}
           </h3>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -225,7 +293,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
             </div>
 
             {/* Date Selection */}
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="dateId">Date</Label>
               <Select
                 value={formik.values.dateId}
@@ -237,17 +305,16 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
                 <SelectContent className="max-h-60">
                   {dates.map((date) => (
                     <SelectItem key={date.id} value={date.id}>
-                      {date.isSingleDay ? 'Single: ' : date.isDateRange ? 'Range: ' : ''}
-                      {format(date.startDate, 'M/d/yyyy')}
+                      {getDateDisplay(date.id, dates)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {formik.errors.dateId && <p className="text-red-500 text-sm">{formik.errors.dateId}</p>}
-            </div> */}
+            </div>
 
             {/* Venue Selection */}
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="venueId">Venue</Label>
               <Select
                 value={formik.values.venueId}
@@ -265,7 +332,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
                 </SelectContent>
               </Select>
               {formik.errors.venueId && <p className="text-red-500 text-sm">{formik.errors.venueId}</p>}
-            </div> */}
+            </div>
           </div>
 
           {/* Gate Opens Option */}
@@ -338,40 +405,64 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
             )}
           </div>
 
-          <Button type="submit" className="mt-4 flex items-center" variant="secondary">
-            <Plus className="h-4 w-4 mr-2" /> Add Time Slot
-          </Button>
+          <div className="mt-4 flex items-center space-x-2">
+            <Button type="submit" variant="secondary"
+              className="mt-4 flex items-center text-white bg-[#24005b] hover:bg-[#24005b]/90"
+            >
+              <Plus className="h-4 w-4 mr-2" /> {editingSlotId ? "Update Time Slot" : "Add Time Slot"}
+            </Button>
+            {editingSlotId && (
+              <Button type="button" onClick={handleCancelEdit} variant="outline" className='mt-4'>
+                Cancel Edit
+              </Button>
+            )}
+          </div>
         </form>
 
         {timeSlotList.length > 0 && (
           <div className="mb-6">
             <h3 className="font-medium mb-3">Added Time Slots</h3>
             <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-              {timeSlotList.map((slot) => {
+              {timeSlotList?.map((slot) => {
                 const startTimeOption = TIME_OPTIONS.find(t => t.value === slot.startTime);
                 const endTimeOption = TIME_OPTIONS.find(t => t.value === slot.endTime);
                 return (
-                  <div key={slot.id} className="border rounded-lg p-3 bg-white flex justify-between items-start">
+                  <div
+                    key={slot.id}
+                    className="border rounded-lg p-3 bg-white flex justify-between items-start"
+                  >
                     <div>
                       <h4 className="font-medium">
                         {startTimeOption?.label} - {endTimeOption?.label}
                       </h4>
-                      {/* <p className="text-sm text-gray-600">{getDateDisplay(slot.dateId, dates)}</p>
-                      <p className="text-xs text-gray-500">Venue: {getVenueDisplay(slot.venueId, venues)}</p> */}
+                      <p className="text-sm text-gray-600">{getDateDisplay(slot.dateId, dates)}</p>
+                      <p className="text-xs text-gray-500">
+                        Venue: {getVenueDisplay(slot.venueId, venues)}
+                      </p>
                       {slot.gateOpensBeforeStart && (
                         <p className="text-xs text-gray-500">
                           Gate opens {slot.gateOpenDuration} {slot.gateOpenType === 'hour' ? 'hour(s)' : 'minute(s)'} before start
                         </p>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveTimeSlot(slot.id)}
-                      className="text-gray-500 hover:text-red-500"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditTimeSlot(slot)}
+                        className="text-purple-950"
+                      >
+                        <EditIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveTimeSlot(slot.id)}
+                        className="text-purple-950"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 );
               })}

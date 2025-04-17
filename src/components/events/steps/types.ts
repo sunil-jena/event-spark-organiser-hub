@@ -6,9 +6,9 @@ export interface BasicDetailsFormValues {
   category: string;
   description: string;
   additionalInfo?: string;
-  terms?: string;
+  // terms?: string;
   eventType: "public" | "private";
-  aboutMessage: string;
+  // aboutMessage: string;
   eventHighlights: string[];
   tags: string[];
   language: string[];
@@ -37,15 +37,12 @@ export interface VenueFormValues {
   longitude?: number;
   capacity?: number;
   tba?: boolean; // To Be Determined flag
-  venueToBeAnnounced: boolean;
   isActiveLocation: boolean;
 }
 
 export interface DateFormValues {
   id: string;
-  venueId: string;
-  // The “type” here is the one your DateStep uses (single, range, or recurring)
-  type: 'single' | 'range' | 'recurring';
+  venueId: string,
   // This extra field comes from your context; for example, if you need to support multiple dates.
   dateType: 'single' | 'multiple' | 'range' | 'recurring';
   // For multiple dates (if needed), stored as numbers.
@@ -57,17 +54,17 @@ export interface DateFormValues {
   isDateRange: boolean;
   isSingleDay: boolean;
   // Optional recurring details using numeric values.
-  recurring?: {
-    startDate: number;
-    recurrencePattern: 'daily' | 'weekly' | 'monthly';
-    occurrences: number;
-    generatedDates: number[];
-  };
-  // Simplified recurring fields for this step
+  // recurring?: {
+  //   startDate: number;
+  //   recurrencePattern: 'daily' | 'weekly' | 'monthly';
+  //   occurrences: number;
+  //   generatedDates: number[];
+  // };
+  // // Simplified recurring fields for this step
   recurringType?: 'daily' | 'weekly' | 'monthly';
   recurringUntil?: number;
   recurringDays?: number[]; // 0 = Sunday, 1 = Monday, etc.
-  notes?: string;
+  // notes?: string;
 }
 
 export interface TimeSlotFormValues {
@@ -177,7 +174,6 @@ export interface AdditionalInfoFormValues {
   faqItems?: FaqItem[];
 }
 
-
 // Define an event data interface to include all form values
 export interface EventData {
   basicDetails: BasicDetailsFormValues;
@@ -228,3 +224,27 @@ export const COMMON_PROHIBITED_ITEMS: ProhibitedItem[] = [
   { id: 'instruments', label: 'Musical instruments' },
   { id: 'flammable', label: 'Flammable materials' }
 ];
+
+
+export type EventCreationStep =
+  | 'basicDetails'
+  | 'venues'
+  | 'dates'
+  | 'times'
+  | 'tickets'
+  | 'media'
+  | 'additionalInfo'
+  | 'review';
+
+export type StepStatus = {
+  status: 'incomplete' | 'current' | 'complete';
+  isClickable: boolean;
+};
+
+export type EventCreationStepStatus = Record<EventCreationStep, StepStatus>;
+
+// interface CreateEventSidebarProps {
+//   currentStep: EventCreationStep;
+//   stepStatuses: Record<EventCreationStep, StepStatus>;
+//   onStepClick: (step: EventCreationStep) => void;
+// }

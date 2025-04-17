@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Plus, Trash2, MapPin, Map, Search } from 'lucide-react';
+import { ChevronRight, Plus, Trash2, MapPin, Map, Search, Edit, Edit2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -113,7 +113,7 @@ const CITIES = [
   { value: 'guntur', label: 'Guntur' }
 ];
 
-// Validation schema for a single venue
+// Extend the validation schema to require latitude and longitude in non‑TBA cases.
 const venueSchema = Yup.object().shape({
   name: Yup.string().when('tba', {
     is: false,
@@ -138,6 +138,23 @@ const venueSchema = Yup.object().shape({
   }),
   country: Yup.string().required('Country is required'),
   capacity: Yup.number().min(1, 'Capacity must be greater than 0').nullable(),
+  // Require latitude and longitude when TBA is false
+  latitude: Yup.number().when('tba', {
+    is: false,
+    then: (schema) =>
+      schema
+        .typeError('Latitude must be a number')
+        .required('Latitude is required'),
+    otherwise: (schema) => schema.nullable(),
+  }),
+  longitude: Yup.number().when('tba', {
+    is: false,
+    then: (schema) =>
+      schema
+        .typeError('Longitude must be a number')
+        .required('Longitude is required'),
+    otherwise: (schema) => schema.nullable(),
+  }),
   tba: Yup.boolean(),
 });
 
@@ -154,6 +171,8 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const { toast } = useToast();
+  // To track whether a venue is being edited.
+  const [editingVenueId, setEditingVenueId] = useState<string | null>(null);
 
   // Map related refs
   const mapRef = useRef<HTMLDivElement>(null);
@@ -161,7 +180,7 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
   const markersRef = useRef<google.maps.Marker[]>([]);
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
 
-  // Formik for new venue form
+  // Formik for the venue form
   const venueFormik = useFormik({
     initialValues: {
       id: uuidv4(),
@@ -178,22 +197,36 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
     },
     validationSchema: venueSchema,
     onSubmit: (values, { resetForm }) => {
-      
-      setVenueList(prev => [...prev, { ...values, id: uuidv4() }]);
-      toast({
-        title: "Venue added",
-        description: `${values.name || 'Venue'} has been added to your event venues.`
-      });
+      if (editingVenueId) {
+        // Update an existing venue.
+        setVenueList(prev =>
+          prev.map(venue =>
+            venue.id === editingVenueId ? { ...values, id: editingVenueId } : venue
+          )
+        );
+        toast({
+          title: "Venue updated",
+          description: `${values.name || 'Venue'} has been updated.`
+        });
+        setEditingVenueId(null);
+      } else {
+        // Add a new venue.
+        setVenueList(prev => [...prev, { ...values, id: uuidv4() }]);
+        toast({
+          title: "Venue added",
+          description: `${values.name || 'Venue'} has been added to your event venues.`
+        });
+      }
       resetForm();
 
-      // Clear map markers if in map mode
+      // Clear map markers if in map mode.
       if (addMethod === 'map') {
         clearMapMarkers();
       }
     },
   });
 
-  // Effect to handle tba changes
+  // When TBA is checked, auto-clear some fields.
   useEffect(() => {
     if (venueFormik.values.tba) {
       venueFormik.setFieldValue('name', 'tba');
@@ -201,18 +234,42 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
       venueFormik.setFieldValue('state', '');
       venueFormik.setFieldValue('zipCode', '');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [venueFormik.values.tba]);
 
-  // Handle venue removal
+  // Remove a venue.
   const handleRemoveVenue = (id: string) => {
     setVenueList(venueList.filter(venue => venue.id !== id));
     toast({
       title: "Venue removed",
       description: "The venue has been removed from your event."
     });
+    if (editingVenueId === id) {
+      setEditingVenueId(null);
+      venueFormik.resetForm();
+    }
   };
 
-  // Handle final submission
+  // Edit a venue: load its values into the form and switch to the manual tab.
+  const handleEditVenue = (venue: VenueFormValues) => {
+    setEditingVenueId(venue.id);
+    venueFormik.setValues({
+      id: venue.id,
+      name: venue.name,
+      address: venue.address,
+      city: venue.city,
+      state: venue.state,
+      zipCode: venue.zipCode,
+      country: venue.country,
+      capacity: venue.capacity,
+      latitude: venue.latitude,
+      longitude: venue.longitude,
+      tba: venue.tba || false,
+    });
+    setAddMethod('manual');
+  };
+
+  // Final submission handler.
   const handleSubmit = () => {
     if (venueList.length === 0) {
       toast({
@@ -225,7 +282,7 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
     onSubmit(venueList);
   };
 
-  // Clear all markers from the map
+  // Clear all markers from the map.
   const clearMapMarkers = () => {
     if (markersRef.current.length > 0) {
       markersRef.current.forEach(marker => marker.setMap(null));
@@ -233,12 +290,10 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
     }
   };
 
-  // Initialize Google Maps when map tab is selected
+  // Initialize Google Maps when the map tab is active.
   useEffect(() => {
     if (addMethod === 'map' && isLoaded && !loadError && mapRef.current && !googleMapRef.current) {
-      // Default center: India
       const defaultCenter = { lat: 20.5937, lng: 78.9629 };
-
       const mapOptions: google.maps.MapOptions = {
         center: defaultCenter,
         zoom: 5,
@@ -246,27 +301,21 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
         streetViewControl: false,
         fullscreenControl: true,
       };
-
       const map = new google.maps.Map(mapRef.current, mapOptions);
       googleMapRef.current = map;
 
-      // Set up the SearchBox
       const input = document.getElementById('venue-map-search') as HTMLInputElement;
       if (input) {
         const searchBox = new google.maps.places.SearchBox(input);
         searchBoxRef.current = searchBox;
-
-        // Auto-fill form immediately when a place is selected from the SearchBox suggestions.
         searchBox.addListener('places_changed', () => {
           const places = searchBox.getPlaces();
           if (!places || places.length === 0) return;
 
           clearMapMarkers();
-          // Use the first result automatically
           const place = places[0];
           if (!place.geometry || !place.geometry.location) return;
 
-          // If a city filter is active, check if the place is within the selected city
           if (selectedCity) {
             const addressComponents = place.address_components || [];
             const cityComponent = addressComponents.find(component =>
@@ -286,12 +335,8 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
             }
           }
 
-          // Extract and update form values automatically
           const addressComponents = place.address_components || [];
-          let city = '';
-          let state = '';
-          let country = '';
-          let postalCode = '';
+          let city = '', state = '', country = '', postalCode = '';
           addressComponents.forEach(component => {
             const types = component.types;
             if (types.includes('locality')) {
@@ -312,11 +357,8 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
           venueFormik.setFieldValue('country', country || 'India');
           venueFormik.setFieldValue('latitude', place.geometry.location.lat());
           venueFormik.setFieldValue('longitude', place.geometry.location.lng());
-
-          // Optionally, update the search query with the place name
           setSearchQuery(place.name || '');
 
-          // Update the map view to focus on the found place
           const bounds = new google.maps.LatLngBounds();
           if (place.geometry.viewport) {
             bounds.union(place.geometry.viewport);
@@ -325,7 +367,6 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
           }
           map.fitBounds(bounds);
 
-          // Add a marker without a click event – auto-fill has already happened.
           const marker = new google.maps.Marker({
             map,
             position: place.geometry.location,
@@ -333,14 +374,11 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
           });
           markersRef.current.push(marker);
         });
-
-        // Bias the SearchBox results toward current map's viewport.
         map.addListener('bounds_changed', () => {
           searchBox.setBounds(map.getBounds() as google.maps.LatLngBounds);
         });
       }
 
-      // If a city is selected, try to center the map on that city.
       if (selectedCity) {
         const cityObj = CITIES.find(c => c.value === selectedCity);
         if (cityObj) {
@@ -358,15 +396,14 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
     return () => {
       clearMapMarkers();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addMethod, isLoaded, loadError, selectedCity]);
 
-  // Handle city selection for map filter
+  // Handle city selection.
   const handleCitySelect = (cityValue: string) => {
     venueFormik.setFieldValue('city', cityValue);
     setSelectedCity(cityValue);
     setCityOpen(false);
-
-    // If map is loaded, center map on selected city.
     if (googleMapRef.current && isLoaded) {
       const cityObj = CITIES.find(c => c.value === cityValue);
       if (cityObj) {
@@ -381,7 +418,7 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
     }
   };
 
-  // Handle map search via geocoder (triggered by the Search button)
+  // Handle map search via geocoder.
   const handleMapSearch = () => {
     if (!isLoaded || !searchQuery) return;
     const geocoder = new google.maps.Geocoder();
@@ -399,12 +436,8 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
         googleMapRef.current.setZoom(15);
         clearMapMarkers();
 
-        // Extract and auto-fill form values immediately.
         const addressComponents = place.address_components || [];
-        let city = '';
-        let state = '';
-        let country = '';
-        let postalCode = '';
+        let city = '', state = '', country = '', postalCode = '';
         addressComponents.forEach(component => {
           const types = component.types;
           if (types.includes('locality')) {
@@ -426,7 +459,6 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
         venueFormik.setFieldValue('latitude', place.geometry.location.lat());
         venueFormik.setFieldValue('longitude', place.geometry.location.lng());
 
-        // Add a marker for visual context.
         const marker = new google.maps.Marker({
           map: googleMapRef.current,
           position: place.geometry.location,
@@ -454,10 +486,11 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
             <TabsTrigger value="map">Select from Map</TabsTrigger>
           </TabsList>
 
+          {/* Manually Adding or Editing a Venue */}
           <TabsContent value="manual" className="border rounded-lg p-4 bg-gray-50">
             <h3 className="font-medium mb-3 flex items-center">
               <MapPin className="h-4 w-4 mr-2" />
-              Add New Venue
+              {editingVenueId ? "Edit Venue" : "Add New Venue"}
             </h3>
 
             <form onSubmit={venueFormik.handleSubmit}>
@@ -494,23 +527,6 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                         <p className="text-red-500 text-sm">{venueFormik.errors.name}</p>
                       }
                     </div>
-                    {/* 
-                    <div className="space-y-2">
-                      <Label htmlFor="capacity">Capacity (optional)</Label>
-                      <Input
-                        id="capacity"
-                        name="capacity"
-                        type="number"
-                        value={venueFormik.values.capacity || ''}
-                        onChange={venueFormik.handleChange}
-                        onBlur={venueFormik.handleBlur}
-                        placeholder="Enter maximum capacity"
-                        className={venueFormik.errors.capacity && venueFormik.touched.capacity ? "border-red-500" : ""}
-                      />
-                      {venueFormik.errors.capacity && venueFormik.touched.capacity &&
-                        <p className="text-red-500 text-sm">{venueFormik.errors.capacity}</p>
-                      }
-                    </div> */}
                   </>
                 )}
 
@@ -606,20 +622,59 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                 )}
               </div>
 
+              {/* Additional Latitude and Longitude Fields for manual entry when not TBA */}
+              {!venueFormik.values.tba && (
+                <div className="grid gap-4 sm:grid-cols-2 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="latitude">Latitude</Label>
+                    <Input
+                      id="latitude"
+                      name="latitude"
+                      type="number"
+                      value={venueFormik.values.latitude ?? ''}
+                      onChange={venueFormik.handleChange}
+                      onBlur={venueFormik.handleBlur}
+                      placeholder="Enter latitude"
+                      className={venueFormik.errors.latitude && venueFormik.touched.latitude ? "border-red-500" : ""}
+                    />
+                    {venueFormik.errors.latitude && venueFormik.touched.latitude &&
+                      <p className="text-red-500 text-sm">{venueFormik.errors.latitude}</p>
+                    }
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="longitude">Longitude</Label>
+                    <Input
+                      id="longitude"
+                      name="longitude"
+                      type="number"
+                      value={venueFormik.values.longitude ?? ''}
+                      onChange={venueFormik.handleChange}
+                      onBlur={venueFormik.handleBlur}
+                      placeholder="Enter longitude"
+                      className={venueFormik.errors.longitude && venueFormik.touched.longitude ? "border-red-500" : ""}
+                    />
+                    {venueFormik.errors.longitude && venueFormik.touched.longitude &&
+                      <p className="text-red-500 text-sm">{venueFormik.errors.longitude}</p>
+                    }
+                  </div>
+                </div>
+              )}
+
               <Button
                 type="submit"
                 className="mt-4 flex items-center"
                 variant="secondary"
               >
-                <Plus className="h-4 w-4 mr-2" /> Add Venue
+                <Plus className="h-4 w-4 mr-2" /> {editingVenueId ? "Update Venue" : "Add Venue"}
               </Button>
             </form>
           </TabsContent>
 
+          {/* Adding Venue via Map */}
           <TabsContent value="map" className="border rounded-lg p-4 bg-gray-50">
             <h3 className="font-medium mb-3 flex items-center">
               <Map className="h-4 w-4 mr-2" />
-              Select Venue from Map
+              {editingVenueId ? "Edit Venue (Map)" : "Select Venue from Map"}
             </h3>
 
             <div className="mb-4">
@@ -681,7 +736,6 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
               {!isLoaded && (
                 <p className="text-xs text-amber-600 mt-1">Loading Google Maps API...</p>
               )}
-
               {loadError && (
                 <p className="text-xs text-red-500 mt-1">Error loading Google Maps: {loadError.message}</p>
               )}
@@ -719,18 +773,6 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                         <p className="text-red-500 text-sm">{venueFormik.errors.name}</p>
                       }
                     </div>
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="capacity">Capacity (optional)</Label>
-                      <Input
-                        id="capacity"
-                        name="capacity"
-                        type="number"
-                        value={venueFormik.values.capacity || ''}
-                        onChange={venueFormik.handleChange}
-                        onBlur={venueFormik.handleBlur}
-                        placeholder="Enter maximum capacity"
-                      />
-                    </div> */}
                     <div className="space-y-2">
                       <Label htmlFor="address">Address</Label>
                       <Input
@@ -785,14 +827,41 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                     </div>
                   </div>
 
-                  {venueFormik.values.latitude && venueFormik.values.longitude && (
-                    <div className="flex items-start space-x-2 text-sm text-gray-500">
-                      <div className="flex-shrink-0 mt-0.5">
-                        <MapPin className="h-4 w-4" />
+                  {/* Additional Latitude and Longitude Fields */}
+                  {!venueFormik.values.tba && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="latitude">Latitude</Label>
+                        <Input
+                          id="latitude"
+                          name="latitude"
+                          type="number"
+                          value={venueFormik.values.latitude ?? ''}
+                          onChange={venueFormik.handleChange}
+                          onBlur={venueFormik.handleBlur}
+                          placeholder="Enter latitude"
+                          className={venueFormik.errors.latitude && venueFormik.touched.latitude ? "border-red-500" : ""}
+                        />
+                        {venueFormik.errors.latitude && venueFormik.touched.latitude &&
+                          <p className="text-red-500 text-sm">{venueFormik.errors.latitude}</p>
+                        }
                       </div>
-                      <span>
-                        Latitude: {venueFormik.values.latitude.toFixed(6)}, Longitude: {venueFormik.values.longitude.toFixed(6)}
-                      </span>
+                      <div className="space-y-2">
+                        <Label htmlFor="longitude">Longitude</Label>
+                        <Input
+                          id="longitude"
+                          name="longitude"
+                          type="number"
+                          value={venueFormik.values.longitude ?? ''}
+                          onChange={venueFormik.handleChange}
+                          onBlur={venueFormik.handleBlur}
+                          placeholder="Enter longitude"
+                          className={venueFormik.errors.longitude && venueFormik.touched.longitude ? "border-red-500" : ""}
+                        />
+                        {venueFormik.errors.longitude && venueFormik.touched.longitude &&
+                          <p className="text-red-500 text-sm">{venueFormik.errors.longitude}</p>
+                        }
+                      </div>
                     </div>
                   )}
 
@@ -802,7 +871,7 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                     variant="secondary"
                     disabled={!venueFormik.values.name || !venueFormik.values.city}
                   >
-                    <Plus className="h-4 w-4 mr-2" /> Add Selected Venue
+                    <Plus className="h-4 w-4 mr-2" /> {editingVenueId ? "Update Selected Venue" : "Add Selected Venue"}
                   </Button>
                 </div>
               </form>
@@ -817,9 +886,13 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
               {venueList.map((venue) => (
                 <div key={venue.id} className="border rounded-lg p-3 bg-white flex justify-between items-start">
                   <div>
-                    <h4 className="font-medium">{venue.tba ? `tba Venue in ${venue.city}` : venue.name}</h4>
+                    <h4 className="font-medium">
+                      {venue.tba ? `tba Venue in ${venue.city}` : venue.name}
+                    </h4>
                     {!venue.tba && (
-                      <p className="text-sm text-gray-600">{venue.address}, {venue.city}, {venue.state} {venue.zipCode}</p>
+                      <p className="text-sm text-gray-600">
+                        {venue.address}, {venue.city}, {venue.state} {venue.zipCode}
+                      </p>
                     )}
                     {venue.tba && (
                       <p className="text-sm text-gray-600">Location will be determined later</p>
@@ -831,14 +904,24 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
                       </p>
                     )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveVenue(venue.id)}
-                    className="text-gray-500 hover:text-red-500"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditVenue(venue)}
+                      className="text-purple-950"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveVenue(venue.id)}
+                      className="text-purple-950"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -846,18 +929,10 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
         )}
 
         <div className="flex justify-between mt-6">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onBack}
-          >
+          <Button type="button" variant="outline" onClick={onBack}>
             Back
           </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            className="flex items-center"
-          >
+          <Button type="button" onClick={handleSubmit} className="flex items-center">
             Next: Dates <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -866,4 +941,3 @@ export const VenueStep: React.FC<VenueStepProps> = ({ venues, onSubmit, onBack }
   );
 };
 
-export default VenueStep;

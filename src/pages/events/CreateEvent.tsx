@@ -6,8 +6,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEventContext } from '@/contexts/EventContext';
-import { EventCreationStep, StepStatus } from '@/components/events/CreateEventSidebar';
-import { EventData, TicketFormValues } from '@/components/events/steps/types';
+import { EventCreationStep, EventData, TicketFormValues } from '@/components/events/steps/types';
 
 // Import the step components
 import { VenueStep } from '@/components/events/steps/VenueStep';
@@ -19,6 +18,7 @@ import { AdditionalInfoStep } from '@/components/events/steps/AdditionalInfoStep
 import { ReviewStep } from '@/components/events/steps/ReviewStep';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BasicDetailsStep } from '@/components/events/steps/BasicDetailsStep';
+// import TicketTypes from '../tickets/TicketTypes';
 
 const CreateEvent = () => {
   const {
@@ -108,7 +108,6 @@ const CreateEvent = () => {
       });
 
       navigate(`/events/create#${step}`)
-
       setEventStepStatuses(updateStatuses);
 
     }
@@ -197,10 +196,10 @@ const CreateEvent = () => {
   };
 
   const handleAdditionalInfoSubmit = (values: any) => {
-    // Ensure faq is a string if needed
+    // Ensure faqItems is a string if needed
     const updatedValues = {
       ...values,
-      faq: typeof values.faq === 'object' ? JSON.stringify(values.faq) : values.faq
+      faqItems: typeof values.faqItems === 'object' ? JSON.stringify(values.faqItems) : values.faqItems
     };
 
     setAdditionalInfo(updatedValues);
@@ -229,7 +228,7 @@ const CreateEvent = () => {
       media,
       additionalInfo: {
         ...additionalInfo,
-        faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
+        faqItems: additionalInfo.faqItems
       },
       artists
     };
@@ -251,8 +250,6 @@ const CreateEvent = () => {
     }, 1500);
   };
 
-
-  console.log(dates);
 
   // Render the current step content
   const renderStepContent = () => {
@@ -279,7 +276,7 @@ const CreateEvent = () => {
               ...d,
               type: d.dateType === 'multiple' ? 'single' : d.dateType
             }))}
-            // venues={venues}
+            venues={venues}
             onSubmit={handleDatesSubmit}
             onBack={() => handleStepClick('venues')}
           />
@@ -288,11 +285,11 @@ const CreateEvent = () => {
         return (
           <TimeSlotStep
             timeSlots={timeSlots}
-            // dates={dates.map(d => ({
-            //   ...d,
-            //   type: d.dateType === 'multiple' ? 'single' : d.dateType
-            // }))}
-            // venues={venues}
+            dates={dates.map(d => ({
+              ...d,
+              dateType: d.dateType === 'multiple' ? 'single' : d.dateType
+            }))}
+            venues={venues}
             // artists={artists}
             onSubmit={handleTimeSlotSubmit}
             onBack={() => handleStepClick('dates')}
@@ -301,7 +298,9 @@ const CreateEvent = () => {
       case 'tickets':
         return (
           <TicketStep
-            tickets={tickets}
+            // tickets={tickets}
+            ticketTypes={tickets}
+            setTicketTypes={setTickets}
             dates={dates}
             timeSlots={timeSlots}
             venues={venues}
@@ -312,7 +311,7 @@ const CreateEvent = () => {
       case 'media':
         return (
           <MediaStep
-            media={media}
+            initialValues={media}
             onSubmit={handleMediaSubmit}
             onBack={() => handleStepClick('tickets')}
           />
@@ -348,7 +347,7 @@ const CreateEvent = () => {
               media,
               additionalInfo: {
                 ...additionalInfo,
-                faq: typeof additionalInfo.faq === 'object' ? JSON.stringify(additionalInfo.faq) : additionalInfo.faq
+                faqItems: additionalInfo.faqItems
               }
             }}
             onSubmit={handleFinalSubmit}
