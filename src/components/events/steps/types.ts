@@ -1,14 +1,13 @@
 // This file defines the types used in event creation steps
 
 export interface BasicDetailsFormValues {
-  aboutMessage: any;
   title: string;
   category: string;
   description: string;
   additionalInfo?: string;
   // terms?: string;
   eventType: 'public' | 'private';
-  // aboutMessage: string;
+  aboutMessage?: string;
   eventHighlights: string[];
   tags: string[];
   language: string[];
@@ -102,18 +101,18 @@ export interface TicketFormValues {
     | 'coming soon'
     | 'few tickets left'
     | 'offline sell';
-  isAllDates: boolean;
-  availableDateIds: string[];
-  isAllTimeSlots: boolean;
-  availableTimeSlotIds: string[];
-  isAllVenues: boolean;
-  venueIds: string[];
+  isAllDates?: boolean;
+  availableDateIds?: string[];
+  isAllTimeSlots?: boolean;
+  availableTimeSlotIds?: string[];
+  isAllVenues?: boolean;
+  venueIds?: string[];
   isCombo: boolean;
-  dateIds: string[]; // Associated dates
+  dateIds?: string[]; // Associated dates
   timeSlotIds?: string[]; // Optional associated time slots
-  isLimited: boolean; // Required property
-  saleStartDate?: Date;
-  saleEndDate?: Date;
+  isLimited?: boolean; // Required property
+  saleStartDate?: number;
+  saleEndDate?: number;
   // promoCodes?: {
   //   code: string;
   //   discountPercentage: number;

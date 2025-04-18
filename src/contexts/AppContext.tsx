@@ -1,17 +1,15 @@
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable react-hooks/exhaustive-deps */
 
+import { EventCreationStep, StepStatus } from '@/components/events/steps/types';
 import React, {
   createContext,
   useContext,
   useState,
   ReactNode,
   useMemo,
+  useEffect,
 } from 'react';
-import {
-  EventCreationStep,
-  StepStatus,
-} from '@/components/events/CreateEventSidebar';
 
 // Define the user permission types
 export type ModulePermission = {
@@ -105,15 +103,60 @@ const AppContext = createContext<AppContextState | undefined>(undefined);
 
 // Create a provider component
 export const AppContextProvider = ({ children }: { children: ReactNode }) => {
-  const [sidebarMinimized, setSidebarMinimized] = useState(false);
-  const [activeRoute, setActiveRoute] = useState('/');
+  const [sidebarMinimized, setSidebarMinimized] = useState<boolean>(false);
+  const [activeRoute, setActiveRoute] = useState<string>('/');
   const [userPermissions, setUserPermissions] =
     useState<UserPermissions>(defaultPermissions);
   const [eventStepStatuses, setEventStepStatuses] = useState<
     Record<EventCreationStep, StepStatus>
-  >(defaultEventStepStatuses);
-  const [isEditingEvent, setIsEditingEvent] = useState(false);
+  >(() => {
+    try {
+      const raw = localStorage.getItem('eventStepStatuses');
+      return raw
+        ? (JSON.parse(raw) as Record<EventCreationStep, StepStatus>)
+        : defaultEventStepStatuses;
+    } catch {
+      return defaultEventStepStatuses;
+    }
+  });
 
+  const [isEditingEvent, setIsEditingEvent] = useState<boolean>(false);
+
+  // Persist state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(
+      'eventStepStatuses',
+      JSON.stringify(eventStepStatuses)
+    );
+  }, [eventStepStatuses]);
+
+  useEffect(() => {
+    const allComplete = Object.values(eventStepStatuses).every(
+      (step) => step.status === 'complete'
+    );
+
+    if (allComplete) {
+      // only clear these specific step‐storage keys:
+      const keysToClear = [
+        'event_basicDetails',
+        'event_venues',
+        'event_dates',
+        'event_timeSlots',
+        'event_tickets',
+        'event_media',
+        'event_additionalInfo',
+        'event_currentStep',
+      ];
+
+      keysToClear.forEach((key) => {
+        try {
+          localStorage.removeItem(key);
+        } catch {
+          /* ignore quota errors */
+        }
+      });
+    }
+  }, [eventStepStatuses]);
   // Function to toggle the sidebar
   const toggleSidebar = () => {
     setSidebarMinimized((prev) => !prev);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import { v4 as uuidv4 } from 'uuid';
-import { format } from 'date-fns';
+import { addDays, format, isBefore } from 'date-fns';
 
 // UI Components
 import {
@@ -10,6 +10,7 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
+  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +57,7 @@ import {
   IndianRupee,
   Info,
   CalendarRange,
+  Calendar,
 } from 'lucide-react';
 import * as Yup from 'yup';
 
@@ -69,6 +71,7 @@ import {
   TimeSlotFormValues,
   VenueFormValues,
 } from './types';
+import { DatePickerCalendar } from './DatePickerCalendar';
 
 interface TicketConfiguratorProps {
   ticketTypes: TicketFormValues[];
@@ -124,7 +127,11 @@ const getTicketCategoryLabel = (category: string): string => {
 // Helper function to format event date
 // In this example, we assume the date is provided as a number (e.g. 21122023 for Dec 21, 2023)
 // Adjust this function if you already have Date objects.
-const formatEventDate = (dateNumber: number): Date => {
+const formatDateNumber = (date: Date): number => {
+  return Number(format(date, 'ddMMyyyy'));
+};
+
+const parseDateNumber = (dateNumber: number): Date => {
   const str = dateNumber.toString().padStart(8, '0');
   const day = parseInt(str.slice(0, 2), 10);
   const month = parseInt(str.slice(2, 4), 10) - 1; // Month is 0-indexed
@@ -136,7 +143,7 @@ const formatEventDate = (dateNumber: number): Date => {
 const ticketValidationSchema = Yup.object().shape({
   name: Yup.string().required('Ticket name is required'),
   price: Yup.number()
-    .min(0, 'Price cannot be negative')
+    .moreThan(0, 'Price cannot be negative')
     .required('Price is required'),
   quantity: Yup.number()
     .min(1, 'Quantity must be at least 1')
@@ -191,6 +198,8 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
 
   // Handle description items (array of strings)
   const [descriptionItems, setDescriptionItems] = useState<string[]>(['']);
+  const [showStartCalendar, setShowStartCalendar] = React.useState(false);
+  const [showEndCalendar, setShowEndCalendar] = React.useState(false);
 
   // Initial form values for the ticket form
   const initialValues: TicketFormValues = {
@@ -202,20 +211,20 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
     ticketType: 'paid',
     ticketCategory: 'standard',
     entryPerTicket: 1,
-    bookingPerTicket: 1,
+    bookingPerTicket: 10,
     ticketStatus: 'active',
-    isAllDates: true,
-    availableDateIds: [],
-    isAllTimeSlots: true,
-    availableTimeSlotIds: [],
-    dateIds: [],
-    timeSlotIds: [],
+    // isAllDates: true,
+    // availableDateIds: [],
+    // isAllTimeSlots: true,
+    // availableTimeSlotIds: [],
+    // dateIds: [],
+    // timeSlotIds: [],
     isAllVenues: true,
-    venueIds: [],
+    // venueIds: [],
     isLimited: false,
     isCombo: false,
-    saleStartDate: new Date(),
-    saleEndDate: undefined,
+    saleStartDate: formatDateNumber(new Date()),
+    saleEndDate: formatDateNumber(new Date()),
   };
 
   // Formik hook
@@ -247,13 +256,15 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
         updatedValues.saleStartDate &&
         typeof updatedValues.saleStartDate === 'string'
       ) {
-        updatedValues.saleStartDate = new Date(updatedValues.saleStartDate);
+        updatedValues.saleStartDate = formatDateNumber(
+          updatedValues.saleStartDate
+        );
       }
       if (
         updatedValues.saleEndDate &&
         typeof updatedValues.saleEndDate === 'string'
       ) {
-        updatedValues.saleEndDate = new Date(updatedValues.saleEndDate);
+        updatedValues.saleEndDate = formatDateNumber(updatedValues.saleEndDate);
       }
 
       // Update description from items
@@ -323,12 +334,8 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
       setIsEditMode(true);
       formik.setValues({
         ...ticket,
-        saleStartDate: ticket.saleStartDate
-          ? new Date(ticket.saleStartDate)
-          : new Date(),
-        saleEndDate: ticket.saleEndDate
-          ? new Date(ticket.saleEndDate)
-          : undefined,
+        saleStartDate: formatDateNumber(new Date()),
+        saleEndDate: formatDateNumber(new Date()),
       });
       setDescriptionItems(
         ticket.description && ticket.description.length > 0
@@ -719,7 +726,7 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
               </div>
 
               {/* Combo Ticket Switch */}
-              <div className='space-y-2 sm:col-span-2 bg-blue-50 p-4 rounded-md shadow-inner hover:bg-blue-100 transition-colors duration-300'>
+              {/* <div className='space-y-2 sm:col-span-2 bg-blue-50 p-4 rounded-md shadow-inner hover:bg-blue-100 transition-colors duration-300'>
                 <div className='flex items-center justify-between'>
                   <Label
                     htmlFor='isCombo'
@@ -757,7 +764,7 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                     applies to.
                   </p>
                 )}
-              </div>
+              </div> */}
 
               {/* Description Items */}
               <div className='space-y-2 sm:col-span-2'>
@@ -800,16 +807,16 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                 </Button>
               </div>
 
-              <div className='space-y-4 sm:col-span-2'>
+              {/* <div className='space-y-4 sm:col-span-2'>
                 <Separator className='my-4' />
                 <h4 className='font-medium text-gray-700 flex items-center bg-slate-100 p-2 rounded-md'>
                   <Tag className='h-4 w-4 mr-2 text-gray-600' />
                   Availability Settings
                 </h4>
-              </div>
+              </div> */}
 
               {/* Date Availability Section with Badge Selection */}
-              <div className='space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300'>
+              {/* <div className='space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300'>
                 <Label className='flex items-center space-x-2 mb-2 font-medium'>
                   <CalendarRange className='h-4 w-4 text-indigo-600' />
                   <span>Date Availability</span>
@@ -845,10 +852,10 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                     </p>
                   )}
                 </div>
-              </div>
+              </div> */}
 
               {/* Venue Availability Section with Badge Selection */}
-              <div className='space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300'>
+              {/* <div className='space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300'>
                 <Label className='flex items-center space-x-2 mb-2 font-medium'>
                   <MapPin className='h-4 w-4 text-emerald-600' />
                   <span>Venue Availability</span>
@@ -881,10 +888,10 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                     </p>
                   )}
                 </div>
-              </div>
+              </div> */}
 
               {/* Time Slot Availability Section with Badge Selection */}
-              <div className='space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300'>
+              {/* <div className='space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300'>
                 <Label className='flex items-center space-x-2 mb-2 font-medium'>
                   <Clock className='h-4 w-4 text-violet-600' />
                   <span>Time Slot Availability</span>
@@ -918,12 +925,12 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                     </p>
                   )}
                 </div>
-              </div>
+              </div> */}
 
               {/* Limited Time Offer Section */}
               <div className='space-y-2 sm:col-span-2 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300'>
                 <Label className='flex items-center space-x-2 mb-2 font-medium'>
-                  <Tag className='h-4 w-4 text-amber-600' />
+                  <Tag className='h-4 w-4 text-[#24005b]' />
                   <span>Limited Time Offer</span>
                 </Label>
                 <div className='flex items-center space-x-2 mb-3'>
@@ -933,7 +940,7 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                     onCheckedChange={(checked) =>
                       formik.setFieldValue('isLimited', checked)
                     }
-                    className='data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600'
+                    className='data-[state=checked]:bg-[#24005b] data-[state=checked]:border-[#24005b]'
                   />
                   <Label htmlFor='isLimited' className='cursor-pointer'>
                     Set sale period
@@ -949,26 +956,42 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                         Sale Start Date{' '}
                         <span className='text-destructive ml-1'>*</span>
                       </Label>
-                      <Input
-                        id='saleStartDate'
-                        name='saleStartDate'
-                        type='date'
-                        value={
-                          formik.values.saleStartDate
-                            ? format(
-                                new Date(formik.values.saleStartDate),
-                                'yyyy-MM-dd'
-                              )
-                            : ''
-                        }
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`hover:border-amber-400 focus:border-amber-500 transition-colors ${
-                          getFieldError('saleStartDate')
-                            ? 'border-destructive'
-                            : ''
-                        }`}
-                      />
+                      <div className='relative'>
+                        <Input
+                          id='saleStartDate'
+                          value={format(
+                            parseDateNumber(formik.values.saleStartDate),
+                            'MMMM dd, yyyy'
+                          )}
+                          onClick={() => {
+                            setShowStartCalendar(!showStartCalendar);
+                            setShowEndCalendar(false);
+                          }}
+                          readOnly
+                          className={`cursor-pointer ${formik.errors.saleStartDate ? 'border-red-500' : ''}`}
+                        />
+                        <Calendar
+                          className='absolute right-3 top-1/2 transform -translate-y-1/2 text-[#24005b] pointer-events-none'
+                          size={16}
+                        />
+                      </div>
+                      {showStartCalendar && (
+                        <div className='relative z-10 mt-1'>
+                          <DatePickerCalendar
+                            selected={parseDateNumber(
+                              formik.values.saleStartDate
+                            )}
+                            onSelect={(date: Date) => {
+                              formik.setFieldValue(
+                                'saleStartDate',
+                                formatDateNumber(date)
+                              );
+                              setShowStartCalendar(false);
+                            }}
+                            onClose={() => setShowStartCalendar(false)}
+                          />
+                        </div>
+                      )}
                       {getFieldError('saleStartDate') && (
                         <p className='text-destructive text-xs mt-1'>
                           {getFieldError('saleStartDate')}
@@ -983,26 +1006,53 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                         Sale End Date{' '}
                         <span className='text-destructive ml-1'>*</span>
                       </Label>
-                      <Input
-                        id='saleEndDate'
-                        name='saleEndDate'
-                        type='date'
-                        value={
-                          formik.values.saleEndDate
-                            ? format(
-                                new Date(formik.values.saleEndDate),
-                                'yyyy-MM-dd'
-                              )
-                            : ''
-                        }
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`hover:border-amber-400 focus:border-amber-500 transition-colors ${
-                          getFieldError('saleEndDate')
-                            ? 'border-destructive'
-                            : ''
-                        }`}
-                      />
+                      <div className='relative'>
+                        <Input
+                          id='saleEndDate'
+                          value={format(
+                            parseDateNumber(formik.values.saleEndDate),
+                            'MMMM dd, yyyy'
+                          )}
+                          onClick={() => {
+                            setShowEndCalendar(!showEndCalendar);
+                            setShowStartCalendar(false);
+                          }}
+                          readOnly
+                          className={`cursor-pointer ${formik.errors.saleEndDate ? 'border-red-500' : ''}`}
+                        />
+                        <Calendar
+                          className='absolute right-3 top-1/2 transform -translate-y-1/2 text-[#24005b] pointer-events-none'
+                          size={16}
+                        />
+                      </div>
+                      {showEndCalendar && (
+                        <div className='relative z-10 mt-1'>
+                          <DatePickerCalendar
+                            selected={
+                              formik.values.saleEndDate
+                                ? parseDateNumber(formik.values.saleEndDate)
+                                : addDays(
+                                    parseDateNumber(
+                                      formik.values.saleStartDate
+                                    ),
+                                    1
+                                  )
+                            }
+                            onSelect={(date: Date) => {
+                              formik.setFieldValue(
+                                'saleEndDate',
+                                formatDateNumber(date)
+                              );
+                              setShowEndCalendar(false);
+                            }}
+                            onClose={() => setShowEndCalendar(false)}
+                            minDate={addDays(
+                              parseDateNumber(formik.values.saleStartDate),
+                              1
+                            )}
+                          />
+                        </div>
+                      )}
                       {getFieldError('saleEndDate') && (
                         <p className='text-destructive text-xs mt-1'>
                           {getFieldError('saleEndDate')}
@@ -1041,7 +1091,7 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
             </div>
           </form>
 
-          <Card
+          {/* <Card
             className='mt-8 border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300 animate-fade-in'
             style={{ animationDelay: '0.3s' }}
           >
@@ -1193,10 +1243,143 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                 </div>
               )}
             </CardContent>
-          </Card>
+          </Card> */}
 
-          <div className='mt-8 flex items-center justify-between'>
-            <div className='flex flex-wrap gap-4'>
+          <div className='space-y-4 mt-8'>
+            <h3 className='text-lg font-semibold text-[#24005b] flex items-center'>
+              <Tag className='h-5 w-5 mr-2 text-[#24005b]' />
+              Ticket List ({ticketList.length})
+            </h3>
+
+            {ticketList.length === 0 ? (
+              <div className='py-16 text-center text-muted-foreground border rounded-lg bg-slate-50'>
+                <div className='flex flex-col items-center justify-center space-y-4'>
+                  <Tag className='h-16 w-16 text-slate-300' strokeWidth={1.5} />
+                  <div className='space-y-2'>
+                    <p className='text-lg'>No tickets added yet</p>
+                    <p className='text-sm'>
+                      Use the form above to add tickets to your event
+                    </p>
+                  </div>
+                  <Button
+                    variant='outline'
+                    onClick={() => document.getElementById('name')?.focus()}
+                    className='mt-4 hover:bg-[#E5DEFF] transition-colors text-[#24005b]'
+                  >
+                    <PlusCircle className='mr-2 h-4 w-4' /> Start Adding Tickets
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid gap-4'>
+                {ticketList.map((ticket) => (
+                  <Card
+                    key={ticket.id}
+                    className={`hover:shadow-md transition-all ${
+                      activeTicketId === ticket.id
+                        ? 'ring-2 ring-[#24005b]'
+                        : ''
+                    }`}
+                  >
+                    <CardHeader className='pb-2 bg-gradient-to-r from-[#E5DEFF]/50 to-white'>
+                      <CardTitle className='text-lg font-semibold text-[#24005b] flex justify-between items-start'>
+                        <span className='truncate pr-2'>{ticket.name}</span>
+                        <Badge
+                          variant={
+                            ticket.ticketType === 'free' ? 'outline' : 'default'
+                          }
+                          className={
+                            ticket.ticketType === 'free'
+                              ? 'border-green-300 text-green-700 bg-green-50'
+                              : 'bg-[#24005b]'
+                          }
+                        >
+                          {ticket.ticketType === 'free' ? 'Free' : 'Paid'}
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription className='flex justify-between items-center'>
+                        <span>
+                          {getTicketCategoryLabel(ticket.ticketCategory)}
+                        </span>
+                        {ticket.isCombo && (
+                          <Badge
+                            variant='outline'
+                            className='text-xs bg-[#E5DEFF] text-[#24005b] border-[#24005b]/20'
+                          >
+                            Combo
+                          </Badge>
+                        )}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className='pt-4'>
+                      <div className='space-y-2'>
+                        <div className='flex justify-between text-sm'>
+                          <span className='text-muted-foreground'>Price:</span>
+                          <span className='font-medium'>
+                            {ticket.ticketType === 'free'
+                              ? 'Free'
+                              : formatIndianPrice(ticket.price)}
+                          </span>
+                        </div>
+                        <div className='flex justify-between text-sm'>
+                          <span className='text-muted-foreground'>
+                            Quantity:
+                          </span>
+                          <span className='font-medium'>
+                            {ticket.quantity.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className='flex justify-between text-sm'>
+                          <span className='text-muted-foreground'>
+                            Total Value:
+                          </span>
+                          <span className='font-semibold'>
+                            {formatIndianPrice(ticket.price * ticket.quantity)}
+                          </span>
+                        </div>
+                        {ticket.description &&
+                          ticket.description.length > 0 &&
+                          ticket.description[0] !== '' && (
+                            <div className='mt-3 pt-3 border-t text-sm'>
+                              <p className='text-muted-foreground mb-1'>
+                                Description:
+                              </p>
+                              <ul className='list-disc list-inside space-y-1 text-sm'>
+                                {ticket.description.map((desc, i) => (
+                                  <li key={i} className='text-gray-800'>
+                                    {desc}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                      </div>
+                    </CardContent>
+                    <CardFooter className='flex justify-end gap-2 pt-2 border-t'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => editTicket(ticket.id)}
+                        className='h-8 text-xs text-[#24005b] hover:bg-[#E5DEFF] hover:text-[#24005b] transition-colors'
+                      >
+                        <Edit className='h-3.5 w-3.5 mr-1' /> Edit
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => deleteTicket(ticket.id)}
+                        className='h-8 text-xs text-red-600 hover:bg-red-50 transition-colors'
+                      >
+                        <Trash2 className='h-3.5 w-3.5 mr-1' /> Delete
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className='mt-8 flex items-center justify-end'>
+            {/* <div className='flex flex-wrap gap-4'>
               <div className='flex items-center bg-white px-3 py-2 rounded-md shadow-sm'>
                 <Badge variant='outline' className='mr-2 bg-primary text-white'>
                   {ticketList.length}
@@ -1209,7 +1392,7 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                 </Badge>
                 <span className='text-gray-700'>Total Value</span>
               </div>
-            </div>
+            </div> */}
             <Button
               type='button'
               onClick={() => {

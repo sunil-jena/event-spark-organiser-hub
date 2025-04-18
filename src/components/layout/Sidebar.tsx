@@ -35,12 +35,9 @@ import { cn } from '@/lib/utils';
 import { SidebarItemProps } from '@/components/sidebar/SidebarItem';
 import { SidebarMenu } from '@/components/sidebar/SidebarMenu';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import {
-  EventCreationStep,
-  StepStatus,
-} from '@/components/events/CreateEventSidebar';
 import { useAppContext } from '@/contexts/AppContext';
 import { useEventContext } from '@/contexts/EventContext';
+import { EventCreationStep } from '../events/steps/types';
 
 interface SidebarProps {
   isMobile: boolean;

@@ -26,7 +26,7 @@ const initialBasicDetails: BasicDetailsFormValues = {
   category: '',
   description: '',
   eventType: 'public',
-  // aboutMessage: '',
+  aboutMessage: '',
   eventHighlights: [],
   tags: [],
   language: [],
@@ -68,16 +68,16 @@ const initialAdditionalInfo: AdditionalInfoFormValues = {
 };
 
 // Define default step statuses
-const defaultEventStepStatuses: Record<EventCreationStep, StepStatus> = {
-  basicDetails: { status: 'current', isClickable: true },
-  venues: { status: 'incomplete', isClickable: false },
-  dates: { status: 'incomplete', isClickable: false },
-  times: { status: 'incomplete', isClickable: false },
-  tickets: { status: 'incomplete', isClickable: false },
-  media: { status: 'incomplete', isClickable: false },
-  additionalInfo: { status: 'incomplete', isClickable: false },
-  review: { status: 'incomplete', isClickable: false },
-};
+// const defaultEventStepStatuses: Record<EventCreationStep, StepStatus> = {
+//   basicDetails: { status: 'current', isClickable: true },
+//   venues: { status: 'incomplete', isClickable: false },
+//   dates: { status: 'incomplete', isClickable: false },
+//   times: { status: 'incomplete', isClickable: false },
+//   tickets: { status: 'incomplete', isClickable: false },
+//   media: { status: 'incomplete', isClickable: false },
+//   additionalInfo: { status: 'incomplete', isClickable: false },
+//   review: { status: 'incomplete', isClickable: false },
+// };
 
 // Define the context state interface
 interface EventContextState {
