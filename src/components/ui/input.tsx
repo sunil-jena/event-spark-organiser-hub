@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-
 import * as React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -15,7 +14,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <motion.div
         initial={{ scale: 1 }}
         whileTap={{ scale: 0.99 }}
-        className='relative w-full'
+        className=' w-full'
       >
         <input
           type={type}
@@ -28,14 +27,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           onBlur={() => setIsFocused(false)}
           {...props}
         />
-        {isFocused && (
+        {/* {isFocused && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className='absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded'
             layoutId='input-highlight'
           />
-        )}
+        )} */}
       </motion.div>
     );
   }
