@@ -323,11 +323,15 @@ export const TimeSlotStep: React.FC<{
             </div>
 
             {/* Date Selection */}
-            <div className='space-y-2'>
-              <Label htmlFor='dateId'>Date</Label>
+            <div className='space-y-2 col-span-2'>
+              <Label htmlFor='dateId'>Date & Venue</Label>
               <Select
                 value={formik.values.dateId}
-                onValueChange={(value) => formik.setFieldValue('dateId', value)}
+                onValueChange={(value) => {
+                  formik.setFieldValue('dateId', value);
+                  const dateObj = dates.find((d) => d.id === value);
+                  formik.setFieldValue('venueId', dateObj.venueId);
+                }}
               >
                 <SelectTrigger
                   id='dateId'
@@ -338,7 +342,14 @@ export const TimeSlotStep: React.FC<{
                 <SelectContent className='max-h-60'>
                   {dates.map((date) => (
                     <SelectItem key={date.id} value={date.id}>
-                      {getDateDisplay(date.id, dates)}
+                      <div className='flex flex-col justify-start items-start'>
+                        <span className='font-semibold text-gray-800'>
+                          {getDateDisplay(date.id, dates)}
+                        </span>
+                        <span className='text-xs font-semibold text-gray-600'>
+                          venue: {getVenueDisplay(date.venueId, venues)}
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -349,7 +360,7 @@ export const TimeSlotStep: React.FC<{
             </div>
 
             {/* Venue Selection */}
-            <div className='space-y-2'>
+            {/* <div className='space-y-2'>
               <Label htmlFor='venueId'>Venue</Label>
               <Select
                 value={formik.values.venueId}
@@ -374,7 +385,7 @@ export const TimeSlotStep: React.FC<{
               {formik.errors.venueId && (
                 <p className='text-red-500 text-sm'>{formik.errors.venueId}</p>
               )}
-            </div>
+            </div> */}
           </div>
 
           {/* Gate Opens Option */}
