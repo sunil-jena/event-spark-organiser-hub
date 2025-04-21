@@ -17,13 +17,13 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import TicketTypes from './pages/tickets/TicketTypes';
-import Login from './pages/Login';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
+import Login from './modules/auth/component/Login';
+import ForgotPassword from './modules/auth/component/ForgotPassword';
+import ResetPassword from './modules/auth/component/ResetPassword';
 // Create a client
 const queryClient = new QueryClient();
 
