@@ -28,6 +28,7 @@ import {
   FileImage,
   Info,
   CheckCircle,
+  TicketCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -48,43 +49,43 @@ interface SidebarProps {
 }
 
 // Define the event creation step configuration
-const eventStepConfig: Record<
-  EventCreationStep,
-  { label: string; icon: React.ReactNode }
-> = {
-  basicDetails: {
-    label: 'Basic Details',
-    icon: <User className='h-5 w-5' />,
-  },
-  venues: {
-    label: 'Venues',
-    icon: <MapPin className='h-5 w-5' />,
-  },
-  dates: {
-    label: 'Dates',
-    icon: <Calendar className='h-5 w-5' />,
-  },
-  times: {
-    label: 'Time Slots',
-    icon: <Clock className='h-5 w-5' />,
-  },
-  tickets: {
-    label: 'Tickets',
-    icon: <Ticket className='h-5 w-5' />,
-  },
-  media: {
-    label: 'Media',
-    icon: <FileImage className='h-5 w-5' />,
-  },
-  additionalInfo: {
-    label: 'Additional Info',
-    icon: <Info className='h-5 w-5' />,
-  },
-  review: {
-    label: 'Review',
-    icon: <CheckCircle className='h-5 w-5' />,
-  },
-};
+// const eventStepConfig: Record<
+//   EventCreationStep,
+//   { label: string; icon: React.ReactNode }
+// > = {
+//   basicDetails: {
+//     label: 'Basic Details',
+//     icon: <User className='h-5 w-5' />,
+//   },
+//   venues: {
+//     label: 'Venues',
+//     icon: <MapPin className='h-5 w-5' />,
+//   },
+//   dates: {
+//     label: 'Dates',
+//     icon: <Calendar className='h-5 w-5' />,
+//   },
+//   times: {
+//     label: 'Time Slots',
+//     icon: <Clock className='h-5 w-5' />,
+//   },
+//   tickets: {
+//     label: 'Tickets',
+//     icon: <Ticket className='h-5 w-5' />,
+//   },
+//   media: {
+//     label: 'Media',
+//     icon: <FileImage className='h-5 w-5' />,
+//   },
+//   additionalInfo: {
+//     label: 'Additional Info',
+//     icon: <Info className='h-5 w-5' />,
+//   },
+//   review: {
+//     label: 'Review',
+//     icon: <CheckCircle className='h-5 w-5' />,
+//   },
+// };
 
 // Define sidebar navigation items
 const mainNavItems: SidebarItemProps[] = [
@@ -143,6 +144,12 @@ const mainNavItems: SidebarItemProps[] = [
             title: 'Tickets',
             href: '/events/create#tickets',
             icon: <Ticket className='h-4 w-4' />,
+            moduleName: 'events',
+          },
+          {
+            title: 'Assign Tickets',
+            href: '/events/create#assigntickets',
+            icon: <TicketCheck className='h-4 w-4' />,
             moduleName: 'events',
           },
           {

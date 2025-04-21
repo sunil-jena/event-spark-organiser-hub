@@ -28,6 +28,7 @@ import { AdditionalInfoStep } from '@/components/events/steps/AdditionalInfoStep
 import { ReviewStep } from '@/components/events/steps/ReviewStep';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BasicDetailsStep } from '@/components/events/steps/BasicDetailsStep';
+import { TicketAssignmentStep } from '@/components/events/steps/TicketAssignmentStep';
 // import TicketTypes from '../tickets/TicketTypes';
 
 const CreateEvent = () => {
@@ -55,6 +56,8 @@ const CreateEvent = () => {
     setAdditionalInfo,
     artists,
     setArtists,
+    assignments,
+    setAssignments,
     currentStep: eventContextCurrentStep,
     setCurrentStep: setEventContextCurrentStep,
   } = useEventContext();
@@ -205,6 +208,22 @@ const CreateEvent = () => {
     }));
 
     setTickets(updatedValues);
+    completeStep('assigntickets');
+  };
+
+  const handleTicketAssignSubmit = (values: any) => {
+    // Add the required properties to match the TicketStep component's expectations
+    const updatedValues = values.map((t: any) => ({
+      ...t,
+      ticketType: t.ticketType || 'standard',
+      isAllDates: t.isAllDates || false,
+      availableDateIds: t.availableDateIds || [],
+      isAllTimeSlots: t.isAllTimeSlots || false,
+      availableTimeSlotIds: t.availableTimeSlotIds || [],
+      isLimited: t.isLimited || false,
+    }));
+
+    setAssignments(updatedValues);
     completeStep('media');
   };
 
@@ -217,10 +236,7 @@ const CreateEvent = () => {
     // Ensure faqItems is a string if needed
     const updatedValues = {
       ...values,
-      faqItems:
-        typeof values.faqItems === 'object'
-          ? JSON.stringify(values.faqItems)
-          : values.faqItems,
+      faqItems: values.faqItems,
     };
 
     setAdditionalInfo(updatedValues);
@@ -237,6 +253,7 @@ const CreateEvent = () => {
         type: d.dateType === 'multiple' ? 'single' : d.dateType,
       })),
       timeSlots,
+      assigntickets: assignments,
       tickets: tickets.map((t) => ({
         ...t,
         ticketType: t.ticketType || 'standard',
@@ -328,12 +345,26 @@ const CreateEvent = () => {
             onBack={() => handleStepClick('times')}
           />
         );
+      case 'assigntickets':
+        return (
+          <TicketAssignmentStep
+            // tickets={tickets}
+            tickets={tickets}
+            dates={dates}
+            timeSlots={timeSlots}
+            venues={venues}
+            assignments={assignments}
+            setAssignments={setAssignments}
+            onSubmit={handleTicketAssignSubmit}
+            onBack={() => handleStepClick('tickets')}
+          />
+        );
       case 'media':
         return (
           <MediaStep
             initialValues={media}
             onSubmit={handleMediaSubmit}
-            onBack={() => handleStepClick('tickets')}
+            onBack={() => handleStepClick('assigntickets')}
           />
         );
       case 'additionalInfo':
@@ -355,6 +386,7 @@ const CreateEvent = () => {
                 type: d.dateType === 'multiple' ? 'single' : d.dateType,
               })),
               timeSlots,
+              assigntickets: assignments,
               tickets: tickets.map((t) => ({
                 ...t,
                 ticketType: t.ticketType || 'standard',

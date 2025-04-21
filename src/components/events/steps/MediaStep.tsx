@@ -15,6 +15,8 @@ import {
   Info,
   MoveUp,
   MoveDown,
+  Cross,
+  X,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,6 +62,9 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
   onBack,
 }) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const getVideoSrc = (video: File | string) =>
+    typeof video === 'string' ? video : URL.createObjectURL(video);
 
   const defaultValues: MediaFormValues = {
     eventcardImage: null,
@@ -272,6 +277,8 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
     );
   };
 
+  console.log(formik.values, 'formik');
+
   return (
     <Card className='w-full max-w-4xl mx-auto'>
       <CardContent className='pt-6'>
@@ -389,7 +396,7 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
                     <img
                       src={getImageUrl(formik.values.eventVerticalCardImage)}
                       alt='Vertical Card Preview'
-                      className='w-full h-40 object-cover rounded border'
+                      className='w-full h-40 object-contain rounded border'
                     />
                     <div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100'>
                       <Button
@@ -474,7 +481,7 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
               </TooltipProvider>
             </div>
 
-            <div className='grid gap-6 sm:grid-cols-2'>
+            <div className='grid gap-6 sm:grid-cols-1'>
               {/* Horizontal Banner Images */}
               <div className='border rounded-lg p-4 bg-gray-50 shadow-sm'>
                 <h4 className='font-medium mb-2 flex items-center gap-2'>
@@ -499,7 +506,7 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
                             <img
                               src={getImageUrl(image)}
                               alt={`Banner Image ${index + 1}`}
-                              className='w-full h-32 object-cover'
+                              className='w-full h-40 object-cover'
                             />
                             <div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100'>
                               <Button
@@ -580,7 +587,7 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
                 {formik.values.eventVerticalBannerImage.length > 0 ? (
                   <div className='mb-4'>
                     <ScrollArea className='h-64 w-full rounded border bg-white p-2'>
-                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 p-2'>
+                      <div className='grid grid-cols-1 sm:grid-cols-4 gap-4 p-2'>
                         {formik.values.eventVerticalBannerImage.map(
                           (image, index) => (
                             <div
@@ -590,7 +597,7 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
                               <img
                                 src={getImageUrl(image)}
                                 alt={`Vertical Banner Image ${index + 1}`}
-                                className='w-full h-32 object-cover'
+                                className='w-full h-40 object-contain'
                               />
                               <div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100'>
                                 <Button
@@ -699,7 +706,7 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
                           <img
                             src={getImageUrl(image)}
                             alt={`Gallery Image ${index + 1}`}
-                            className='w-full h-24 object-cover'
+                            className='w-full h-40 object-contain'
                           />
                           <div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100'>
                             <Button
@@ -855,28 +862,15 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
                     videos provide advanced CTR analytics and full control over
                     playback experience.
                   </p>
-
                   {formik.values.eventVerticalVideo ? (
                     <div className='relative mb-4'>
-                      <div className='border rounded p-3 bg-white'>
-                        <Video className='h-6 w-6 text-primary mb-2' />
-                        <p className='font-medium text-sm truncate'>
-                          {
-                            (
-                              formik.values
-                                .eventVerticalVideo as unknown as File
-                            ).name
-                          }
-                        </p>
-                        <p className='text-xs text-gray-500 mt-1'>
-                          {formatFileSize(
-                            (
-                              formik.values
-                                .eventVerticalVideo as unknown as File
-                            ).size
-                          )}
-                        </p>
-                      </div>
+                      <video
+                        controls
+                        src={getVideoSrc(
+                          formik.values.eventVerticalVideo as File | string
+                        )}
+                        className='w-full h-40 object-contain rounded border'
+                      />
                       <Button
                         type='button'
                         variant='destructive'
@@ -888,11 +882,9 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
                       </Button>
                     </div>
                   ) : (
-                    <div className='border border-dashed rounded-lg flex flex-col items-center justify-center h-40 mb-4 bg-white'>
+                    <div className='border-dashed border rounded-lg flex flex-col items-center justify-center h-40 bg-white'>
                       <Video className='h-8 w-8 text-gray-400 mb-2' />
-                      <p className='text-sm text-gray-500'>
-                        No video file selected
-                      </p>
+                      <p className='text-sm text-gray-500'>No video selected</p>
                     </div>
                   )}
 
@@ -951,10 +943,10 @@ const MediaStep: React.FC<MediaUploadFormProps> = ({
             <Button
               variant='outline'
               size='icon'
-              className='absolute top-4 right-4 bg-black/30 text-white hover:bg-black/50 border-none'
+              className='absolute top-4 right-4 bg-black/30 text-white hover:bg-black/50 hover:text-white border-none'
               onClick={() => setPreviewImage(null)}
             >
-              <Trash2 className='h-4 w-4' />
+              <X className='h-4 w-4' />
             </Button>
             <img
               src={previewImage}

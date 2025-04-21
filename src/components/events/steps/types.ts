@@ -121,6 +121,35 @@ export interface TicketFormValues {
   // }[];
 }
 
+export interface TicketAssignmentValues {
+  id: string;
+  ticketId: string;
+  timeSlotId: string;
+  venueId: string;
+  dateId: string;
+  name: string;
+  description: string[];
+  price: number;
+  quantity: number;
+  ticketType: 'free' | 'paid'; // Only free or paid tickets allowed
+  ticketCategory: 'standard' | 'early-bird' | 'vip' | 'season-pass' | string;
+  entryPerTicket: number;
+  bookingPerTicket: number;
+  ticketStatus:
+    | 'active'
+    | 'inactive'
+    | 'sold out'
+    | 'expired'
+    | 'filling fast'
+    | 'coming soon'
+    | 'few tickets left'
+    | 'offline sell';
+  isCombo: boolean;
+  isLimited?: boolean; // Required property
+  saleStartDate?: number;
+  saleEndDate?: number;
+}
+
 export interface MediaFormValues {
   galleryImages: string[];
   eventcardImage?: string | null;
@@ -181,6 +210,7 @@ export interface EventData {
   timeSlots: TimeSlotFormValues[];
   tickets: TicketFormValues[];
   media: MediaFormValues;
+  assigntickets: TicketAssignmentValues[];
   additionalInfo: AdditionalInfoFormValues;
   artists?: ArtistFormValues[];
 }
@@ -230,6 +260,7 @@ export type EventCreationStep =
   | 'dates'
   | 'times'
   | 'tickets'
+  | 'assigntickets'
   | 'media'
   | 'additionalInfo'
   | 'review';

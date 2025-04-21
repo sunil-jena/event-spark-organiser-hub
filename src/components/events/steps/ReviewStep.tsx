@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { EventData } from './types';
+import { EventData, TicketAssignmentValues } from './types';
 
 // Helper function to format Indian price
 const formatIndianPrice = (amount: number): string => {
@@ -110,6 +110,20 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   // -----------------------------
   const venues = eventData.venues || [];
 
+  // Build lookup maps
+  const venueMap = new Map(venues.map((v) => [v.id, v]));
+  const dateMap = new Map(eventData.dates.map((d) => [d.id, d]));
+  const slotMap = new Map(eventData.timeSlots.map((s) => [s.id, s]));
+  const ticketMap = new Map(eventData.tickets.map((t) => [t.id, t]));
+
+  // Group assigned tickets by ticket name
+  const grouped: Record<string, TicketAssignmentValues[]> = {};
+  eventData.assigntickets.forEach((a: TicketAssignmentValues) => {
+    const ticket = ticketMap.get(a.ticketId);
+    const name = ticket ? ticket.name : 'Unknown';
+    if (!grouped[name]) grouped[name] = [];
+    grouped[name].push(a);
+  });
   // -----------------------------
   // Dates & Time Slots
   // -----------------------------
@@ -146,6 +160,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                   <span>
                     {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                   </span>
+                  <span></span>
                 </div>
               ))}
             </div>
@@ -230,7 +245,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               <img
                 src={getImageUrl(bannerImage)}
                 alt='Event Banner'
-                className='h-full w-full object-cover'
+                className='h-full w-full object-contain'
               />
             ) : (
               <div className='flex flex-col items-center justify-center'>
@@ -341,6 +356,37 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             <h3 className='text-2xl font-bold mb-4'>Tickets</h3>
             {renderTickets()}
           </div>
+          <div className='p-6'>
+            <h3 className='text-2xl font-bold mb-4'>Assigned Tickets</h3>
+            {Object.keys(grouped).length === 0 ? (
+              <p className='text-sm text-gray-500'>No assigned tickets</p>
+            ) : (
+              Object.entries(grouped).map(([ticketName, assigns]) => (
+                <div key={ticketName} className='mb-4'>
+                  <h4 className='text-xl font-semibold'>{ticketName}</h4>
+                  <ul className='list-disc list-inside'>
+                    {assigns.map((a, idx) => {
+                      const venue = venueMap.get(a.venueId);
+                      const dateObj = dateMap.get(a.dateId);
+                      const slot = slotMap.get(a.timeSlotId);
+                      const dateStr = dateObj
+                        ? format(convertNumberToDate(dateObj.startDate), 'PPP')
+                        : 'Unknown date';
+                      const timeStr = slot
+                        ? `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`
+                        : 'Unknown time';
+                      return (
+                        <li key={idx} className='text-sm text-gray-700'>
+                          {venue ? venue.name : 'Unknown venue'} — {dateStr},{' '}
+                          {timeStr}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))
+            )}
+          </div>
 
           {/* Media Section */}
           <div>
@@ -354,7 +400,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                   <img
                     src={getImageUrl(media.eventcardImage)}
                     alt='Card'
-                    className='w-full h-32 object-cover rounded-md border'
+                    className='w-full h-32 object-contain rounded-md border'
                   />
                 </div>
               )}
@@ -366,7 +412,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                   <img
                     src={getImageUrl(media.eventVerticalCardImage)}
                     alt='Vertical Card'
-                    className='w-full h-32 object-cover rounded-md border'
+                    className='w-full h-32 object-contain rounded-md border'
                   />
                 </div>
               )}
@@ -376,11 +422,20 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                 <h4 className='text-sm font-medium text-gray-500 mb-2'>
                   Banner Image
                 </h4>
-                <img
-                  src={getImageUrl(media.eventBannerImage[0])}
-                  alt='Banner'
-                  className='w-full h-24 object-cover rounded-md border'
-                />
+                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
+                  {media.eventBannerImage.map((image, index) => (
+                    <div
+                      key={index}
+                      className='relative group rounded-md overflow-hidden border'
+                    >
+                      <img
+                        src={getImageUrl(image)}
+                        alt={`Banner Image ${index + 1}`}
+                        className='w-full h-40 object-contain'
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             {media.youtubeLink && (
@@ -428,18 +483,23 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                     <h4 className='text-lg font-medium text-gray-500 mb-1'>
                       Terms & Conditions
                     </h4>
-                    <p className='text-sm whitespace-pre-wrap'>
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: additionalInfo.termsAndConditions,
+                      }}
+                    ></div>
+                    {/* <p className='text-sm whitespace-pre-wrap'>
                       {additionalInfo.termsAndConditions}
-                    </p>
+                    </p> */}
                   </div>
                 )}
-                {additionalInfo.faqItems &&
-                  additionalInfo.faqItems.length > 0 && (
+                {additionalInfo?.faqItems &&
+                  additionalInfo?.faqItems?.length > 0 && (
                     <div>
                       <h4 className='text-lg font-medium text-gray-500 mb-1'>
                         FAQ
                       </h4>
-                      {additionalInfo.faqItems.map((faq, index) => (
+                      {additionalInfo?.faqItems?.map((faq, index) => (
                         <div key={index} className='mb-2'>
                           <p className='font-medium'>{faq.question}</p>
                           <p className='text-sm'>{faq.answer}</p>

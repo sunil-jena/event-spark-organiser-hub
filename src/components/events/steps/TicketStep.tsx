@@ -615,7 +615,7 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     placeholder='0'
-                    className={`pl-8 ${
+                    className={`${
                       getFieldError('price')
                         ? 'border-destructive'
                         : 'hover:border-primary focus:border-primary transition-colors'
@@ -1337,6 +1337,26 @@ const TicketStep: React.FC<TicketConfiguratorProps> = ({
                             {formatIndianPrice(ticket.price * ticket.quantity)}
                           </span>
                         </div>
+                        {ticket.isLimited &&
+                          ticket.saleStartDate &&
+                          ticket.saleEndDate && (
+                            <div className='flex justify-between'>
+                              <span className='text-muted-foreground'>
+                                Sale Duration:
+                              </span>
+                              <span className='text-right'>
+                                {format(
+                                  parseDateNumber(ticket.saleStartDate),
+                                  'dd MMM yyyy'
+                                )}{' '}
+                                →{' '}
+                                {format(
+                                  parseDateNumber(ticket.saleEndDate),
+                                  'dd MMM yyyy'
+                                )}
+                              </span>
+                            </div>
+                          )}
                         {ticket.description &&
                           ticket.description.length > 0 &&
                           ticket.description[0] !== '' && (

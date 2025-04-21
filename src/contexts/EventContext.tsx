@@ -18,6 +18,7 @@ import {
   ArtistFormValues,
   EventCreationStep,
   StepStatus,
+  TicketAssignmentValues,
 } from '@/components/events/steps/types';
 
 // Define initial form values
@@ -92,6 +93,8 @@ interface EventContextState {
   setTimeSlots: (data: TimeSlotFormValues[]) => void;
   tickets: TicketFormValues[];
   setTickets: (data: TicketFormValues[]) => void;
+  assignments: TicketAssignmentValues[];
+  setAssignments: (data: TicketAssignmentValues[]) => void;
   media: MediaFormValues;
   setMedia: (data: MediaFormValues) => void;
   additionalInfo: AdditionalInfoFormValues;
@@ -139,6 +142,13 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [assignments, setAssignments] = useState<TicketAssignmentValues[]>(
+    () => {
+      const saved = localStorage.getItem('event_assign_tickets');
+      return saved ? JSON.parse(saved) : [];
+    }
+  );
+
   const [media, setMedia] = useState<MediaFormValues>(() => {
     const saved = localStorage.getItem('event_media');
     return saved ? JSON.parse(saved) : initialMedia;
@@ -183,6 +193,10 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
   }, [tickets]);
 
   useEffect(() => {
+    localStorage.setItem('event_assign_tickets', JSON.stringify(assignments));
+  }, [assignments]);
+
+  useEffect(() => {
     localStorage.setItem('event_media', JSON.stringify(media));
   }, [media]);
 
@@ -211,6 +225,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     setMedia(initialMedia);
     setAdditionalInfo(initialAdditionalInfo);
     setArtists([]);
+    setAssignments([]);
     setCurrentStep('basicDetails');
 
     // Clear localStorage
@@ -233,6 +248,7 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
       dates,
       timeSlots,
       tickets,
+      assignments,
       media,
       additionalInfo,
       artists,
@@ -251,6 +267,8 @@ export const EventContextProvider = ({ children }: { children: ReactNode }) => {
     setTimeSlots,
     tickets,
     setTickets,
+    assignments,
+    setAssignments,
     media,
     setMedia,
     additionalInfo,
