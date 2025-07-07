@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import { 
+import {
   Ticket,
   Plus,
   Trash2,
@@ -7,10 +8,6 @@ import {
   Copy,
   Filter,
   Search,
-  EyeOff,
-  ChevronDown,
-  ArrowUpDown,
-  Info,
   ArrowUp,
   ArrowDown,
   Loader2,
@@ -18,13 +15,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -34,14 +31,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -77,7 +74,8 @@ const TicketTypes = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  // Use "all" as the default value so that it matches a valid (non-empty) option.
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortField, setSortField] = useState<keyof TicketType>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -244,28 +242,29 @@ const TicketTypes = () => {
     }
   ]);
 
+  // Update the filtering logic to use "all" as a value that indicates no filtering.
   const filteredTickets = ticketTypes.filter(ticket => {
-    const matchesSearch = 
+    const matchesSearch =
       ticket.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.eventName.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = !filterStatus || ticket.status === filterStatus;
-    
+
+    const matchesStatus = filterStatus === "all" || ticket.status === filterStatus;
+
     return matchesSearch && matchesStatus;
   });
 
   const sortedTickets = [...filteredTickets].sort((a, b) => {
     const fieldA = a[sortField];
     const fieldB = b[sortField];
-    
+
     if (typeof fieldA === 'string' && typeof fieldB === 'string') {
-      return sortDirection === 'asc' 
-        ? fieldA.localeCompare(fieldB) 
+      return sortDirection === 'asc'
+        ? fieldA.localeCompare(fieldB)
         : fieldB.localeCompare(fieldA);
     } else if (typeof fieldA === 'number' && typeof fieldB === 'number') {
       return sortDirection === 'asc' ? fieldA - fieldB : fieldB - fieldA;
     }
-    
+
     return 0;
   });
 
@@ -292,19 +291,19 @@ const TicketTypes = () => {
 
   const saveTicket = () => {
     if (!selectedTicket) return;
-    
+
     setIsLoading(true);
-    
+
     setTimeout(() => {
-      setTicketTypes(prev => 
-        prev.map(ticket => 
+      setTicketTypes(prev =>
+        prev.map(ticket =>
           ticket.id === selectedTicket.id ? selectedTicket : ticket
         )
       );
-      
+
       setEditModalOpen(false);
       setIsLoading(false);
-      
+
       toast({
         title: "Ticket updated",
         description: `Ticket "${selectedTicket.name}" has been updated successfully.`,
@@ -314,14 +313,14 @@ const TicketTypes = () => {
 
   const confirmDeleteTicket = () => {
     if (!selectedTicket) return;
-    
+
     setIsLoading(true);
-    
+
     setTimeout(() => {
       setTicketTypes(prev => prev.filter(ticket => ticket.id !== selectedTicket.id));
       setDeleteModalOpen(false);
       setIsLoading(false);
-      
+
       toast({
         title: "Ticket deleted",
         description: `Ticket "${selectedTicket.name}" has been deleted successfully.`,
@@ -350,9 +349,9 @@ const TicketTypes = () => {
       id: `${ticket.id}-copy-${Math.floor(Math.random() * 1000)}`,
       name: `${ticket.name} (Copy)`,
     };
-    
+
     setTicketTypes(prev => [...prev, duplicatedTicket]);
-    
+
     toast({
       title: "Ticket duplicated",
       description: `A copy of "${ticket.name}" has been created.`,
@@ -360,11 +359,12 @@ const TicketTypes = () => {
   };
 
   const handleAddTicket = () => {
+    // Set a valid default event name instead of an empty string.
     const newTicket: TicketType = {
       id: `new-${Date.now()}`,
       name: 'New Ticket Type',
       price: 0,
-      eventName: '',
+      eventName: 'Summer Music Festival',
       status: 'draft',
       totalQuantity: 0,
       availableQuantity: 0,
@@ -373,7 +373,7 @@ const TicketTypes = () => {
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date().toISOString().split('T')[0]
     };
-    
+
     setSelectedTicket(newTicket);
     setEditModalOpen(true);
   };
@@ -408,15 +408,15 @@ const TicketTypes = () => {
                 className="pl-10"
               />
             </div>
-            <Select value={filterStatus || ""} onValueChange={(value) => setFilterStatus(value || null)}>
+            <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value)}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4" />
-                  <span>{filterStatus ? `Status: ${filterStatus}` : 'Filter status'}</span>
+                  <span>{filterStatus !== "all" ? `Status: ${filterStatus}` : 'Filter status'}</span>
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All statuses</SelectItem>
+                <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="sold_out">Sold out</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
@@ -430,7 +430,7 @@ const TicketTypes = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[250px]">
-                    <button 
+                    <button
                       className="flex items-center gap-1 hover:text-primary"
                       onClick={() => toggleSort('name')}
                     >
@@ -441,7 +441,7 @@ const TicketTypes = () => {
                     </button>
                   </TableHead>
                   <TableHead>
-                    <button 
+                    <button
                       className="flex items-center gap-1 hover:text-primary"
                       onClick={() => toggleSort('price')}
                     >
@@ -453,7 +453,7 @@ const TicketTypes = () => {
                   </TableHead>
                   <TableHead className="hidden md:table-cell">Event</TableHead>
                   <TableHead className="hidden lg:table-cell">
-                    <button 
+                    <button
                       className="flex items-center gap-1 hover:text-primary"
                       onClick={() => toggleSort('availableQuantity')}
                     >
@@ -503,7 +503,7 @@ const TicketTypes = () => {
                             <DropdownMenuItem onClick={() => handleDuplicateTicket(ticket)}>
                               <Copy className="h-4 w-4 mr-2" /> Duplicate
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleDeleteTicket(ticket)}
                               className="text-red-600 focus:text-red-600"
                             >
@@ -539,12 +539,12 @@ const TicketTypes = () => {
               {selectedTicket?.id.startsWith('new-') ? 'Create New Ticket Type' : 'Edit Ticket Type'}
             </DialogTitle>
             <DialogDescription>
-              {selectedTicket?.id.startsWith('new-') 
-                ? 'Add details for the new ticket type' 
+              {selectedTicket?.id.startsWith('new-')
+                ? 'Add details for the new ticket type'
                 : `Make changes to the "${selectedTicket?.name}" ticket type`}
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedTicket && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -553,7 +553,7 @@ const TicketTypes = () => {
                   <Input
                     id="ticketName"
                     value={selectedTicket.name}
-                    onChange={(e) => setSelectedTicket({...selectedTicket, name: e.target.value})}
+                    onChange={(e) => setSelectedTicket({ ...selectedTicket, name: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -562,17 +562,17 @@ const TicketTypes = () => {
                     id="ticketPrice"
                     type="number"
                     value={selectedTicket.price}
-                    onChange={(e) => setSelectedTicket({...selectedTicket, price: Number(e.target.value)})}
+                    onChange={(e) => setSelectedTicket({ ...selectedTicket, price: Number(e.target.value) })}
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="eventName">Event</Label>
-                  <Select 
-                    value={selectedTicket.eventName} 
-                    onValueChange={(value) => setSelectedTicket({...selectedTicket, eventName: value})}
+                  <Select
+                    value={selectedTicket.eventName}
+                    onValueChange={(value) => setSelectedTicket({ ...selectedTicket, eventName: value })}
                   >
                     <SelectTrigger id="eventName">
                       <SelectValue placeholder="Select event" />
@@ -589,9 +589,9 @@ const TicketTypes = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="ticketStatus">Status</Label>
-                  <Select 
-                    value={selectedTicket.status} 
-                    onValueChange={(value: any) => setSelectedTicket({...selectedTicket, status: value})}
+                  <Select
+                    value={selectedTicket.status}
+                    onValueChange={(value: any) => setSelectedTicket({ ...selectedTicket, status: value })}
                   >
                     <SelectTrigger id="ticketStatus">
                       <SelectValue placeholder="Select status" />
@@ -605,7 +605,7 @@ const TicketTypes = () => {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="totalQuantity">Total Quantity</Label>
@@ -613,7 +613,7 @@ const TicketTypes = () => {
                     id="totalQuantity"
                     type="number"
                     value={selectedTicket.totalQuantity}
-                    onChange={(e) => setSelectedTicket({...selectedTicket, totalQuantity: Number(e.target.value)})}
+                    onChange={(e) => setSelectedTicket({ ...selectedTicket, totalQuantity: Number(e.target.value) })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -622,11 +622,11 @@ const TicketTypes = () => {
                     id="availableQuantity"
                     type="number"
                     value={selectedTicket.availableQuantity}
-                    onChange={(e) => setSelectedTicket({...selectedTicket, availableQuantity: Number(e.target.value)})}
+                    onChange={(e) => setSelectedTicket({ ...selectedTicket, availableQuantity: Number(e.target.value) })}
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="startDate">Start Date</Label>
@@ -634,7 +634,7 @@ const TicketTypes = () => {
                     id="startDate"
                     type="date"
                     value={selectedTicket.startDate}
-                    onChange={(e) => setSelectedTicket({...selectedTicket, startDate: e.target.value})}
+                    onChange={(e) => setSelectedTicket({ ...selectedTicket, startDate: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -643,16 +643,16 @@ const TicketTypes = () => {
                     id="endDate"
                     type="date"
                     value={selectedTicket.endDate}
-                    onChange={(e) => setSelectedTicket({...selectedTicket, endDate: e.target.value})}
+                    onChange={(e) => setSelectedTicket({ ...selectedTicket, endDate: e.target.value })}
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Select 
-                  value={selectedTicket.category} 
-                  onValueChange={(value) => setSelectedTicket({...selectedTicket, category: value})}
+                <Select
+                  value={selectedTicket.category}
+                  onValueChange={(value) => setSelectedTicket({ ...selectedTicket, category: value })}
                 >
                   <SelectTrigger id="category">
                     <SelectValue placeholder="Select category" />
@@ -665,19 +665,19 @@ const TicketTypes = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   value={selectedTicket.description}
-                  onChange={(e) => setSelectedTicket({...selectedTicket, description: e.target.value})}
+                  onChange={(e) => setSelectedTicket({ ...selectedTicket, description: e.target.value })}
                   rows={3}
                 />
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditModalOpen(false)}>Cancel</Button>
             <Button onClick={saveTicket} disabled={isLoading}>
